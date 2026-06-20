@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartCoaching.Application;
 using SmartCoaching.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,11 +7,14 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Entity Framework Core (PostgreSQL) yapılandırması eklendi!
+// Entity Framework Core (PostgreSQL) yapılandırması
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Application katmanı servislerini (MediatR & FluentValidation) sisteme dahil ediyoruz
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
