@@ -17,7 +17,6 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
-        // Eğer bu istek için yazılmış bir kural (Validator) yoksa, kodu çalıştırmaya (next) devam et.
         if (!_validators.Any())
         {
             return await next();
@@ -25,23 +24,42 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         var context = new ValidationContext<TRequest>(request);
 
-        // Tüm kuralları çalıştır ve hataları topla
-        var errors = _validators
-            .Select(x => x.Validate(context))
-            .SelectMany(x => x.Errors)
-            .Where(x => x != null)
-            .Select(x => new Error(x.PropertyName, x.ErrorMessage))
+        // 1. DÜZELTME: Senkron (Validate) yerine Asenkron (ValidateAsync) kullanıldı.
+        // Bu sayede veritabanına giden kurallar (Örn: Email kullanımda mı?) thread'i bloklamadan çalışabilir.
+        var validationResults = await Task.WhenAll(
+            _validators.Select(v => v.ValidateAsync(context, cancellationToken)));
+
+        var errors = validationResults
+            .SelectMany(r => r.Errors)
+            .Where(f => f != null)
+            .Select(f => new Error(f.PropertyName, f.ErrorMessage))
             .Distinct()
             .ToArray();
 
-        // Eğer hata varsa, işlemi iptal et ve geriye anında Result.Failure dön!
         if (errors.Any())
         {
-            var error = errors.First(); // Şimdilik sadece ilk hatayı döndürüyoruz.
-            return (dynamic)Result.Failure(error); 
+            var error = errors.First();
+
+            // 2. DÜZELTME: Tip Güvenliği (Reflection kullanımı)
+            // Eğer dönen tip Result<T> ise (Örn: Result<Guid>) o tipi bulup dinamik olarak doğru Result nesnesini üretiyoruz.
+            if (typeof(TResponse).IsGenericType &&
+                typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>))
+            {
+                var resultType = typeof(TResponse).GetGenericArguments()[0]; // T tipini (Örn: Guid) yakala
+                
+                // Result sınıfındaki jenerik Failure<T> metodunu bul ve çalıştır
+                var failureMethod = typeof(Result)
+                    .GetMethods()
+                    .First(m => m.Name == nameof(Result.Failure) && m.IsGenericMethod)
+                    .MakeGenericMethod(resultType);
+
+                return (TResponse)failureMethod.Invoke(null, new object[] { error })!;
+            }
+
+            // Eğer düz Result ise (geriye veri dönmüyorsa) normal şekilde dön
+            return (TResponse)(object)Result.Failure(error);
         }
 
-        // Hata yoksa işlemi yapması için asıl metoda (Handler'a) geçiş yap.
         return await next();
     }
 }
