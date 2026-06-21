@@ -12,10 +12,12 @@ namespace SmartCoaching.Application.Features.Coaches.Commands.CreateCoach;
 public class CreateCoachCommandHandler : IRequestHandler<CreateCoachCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public CreateCoachCommandHandler(IApplicationDbContext context)
+    public CreateCoachCommandHandler(IApplicationDbContext context, IPasswordHasher passwordHasher)
     {
         _context = context;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<Guid>> Handle(CreateCoachCommand request, CancellationToken cancellationToken)
@@ -27,8 +29,9 @@ public class CreateCoachCommandHandler : IRequestHandler<CreateCoachCommand, Res
             return Result.Failure<Guid>(new Error("Coach.DuplicateEmail", "Bu e-posta adresi zaten kullanımda.", ErrorType.Conflict));
         }
 
-        // 2. Yeni Antrenörü Yarat (İleride şifreyi Hash'leyeceğiz, şimdilik düz kaydediyoruz)
-        var coach = new Coach(request.FirstName, request.LastName, request.Email, request.Password);
+        // 2. Şifreyi Hashle ve Yeni Antrenörü Yarat
+        string hashedPassword = _passwordHasher.Hash(request.Password);
+        var coach = new Coach(request.FirstName, request.LastName, request.Email, hashedPassword);
 
         // 3. Veritabanına kaydet
         _context.Coaches.Add(coach);

@@ -12,4 +12,12 @@ public class CoachesController(ISender sender) : ApiControllerBase
     {
         return HandleResult(await sender.Send(command));
     }
+
+    [HttpGet]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> GetCoaches([FromServices] SmartCoaching.Application.Common.Interfaces.IApplicationDbContext context)
+    {
+        var coaches = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Coaches);
+        return Ok(coaches);
+    }
 }

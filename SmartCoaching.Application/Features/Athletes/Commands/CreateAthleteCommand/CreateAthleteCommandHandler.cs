@@ -13,24 +13,26 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICurrentUserService _currentUserService;
 
-    // Veritabanı bağlantısını Constructor üzerinden alıyoruz (Dependency Injection)
-    public CreateAthleteCommandHandler(IApplicationDbContext context)
+    public CreateAthleteCommandHandler(IApplicationDbContext context, ICurrentUserService currentUserService)
     {
         _context = context;
+        _currentUserService = currentUserService;
     }
 
     public async Task<Result<Guid>> Handle(CreateAthleteCommand request, CancellationToken cancellationToken)
     {
-        // 1. Önce böyle bir antrenör (Coach) var mı diye kontrol et (Kural Motoru)
-        var coachExists = await _context.Coaches.AnyAsync(c => c.Id == request.CoachId, cancellationToken);
+        // 1. Önce giriş yapmış bir antrenör var mı diye kontrol et (Kural Motoru)
+        var coachId = _currentUserService.TenantId;
+        var coachExists = await _context.Coaches.AnyAsync(c => c.Id == coachId, cancellationToken);
         if (!coachExists)
         {
-            return Result.Failure<Guid>(new Error("Coach.NotFound", "Sisteme bağlı böyle bir antrenör bulunamadı.", ErrorType.NotFound));
+            return Result.Failure<Guid>(new Error("Coach.NotFound", "Sisteme giriş yapmış geçerli bir antrenör bulunamadı.", ErrorType.Unauthorized));
         }
 
         // 2. Güvenlikten geçtik, yeni sporcuyu (Entity) yarat
-        var athlete = new Athlete(request.FirstName, request.LastName, request.CoachId, request.DateOfBirth);
+        var athlete = new Athlete(request.FirstName, request.LastName, coachId, request.DateOfBirth);
 
         // 3. Veritabanına ekle ve kaydet
         _context.Athletes.Add(athlete);
