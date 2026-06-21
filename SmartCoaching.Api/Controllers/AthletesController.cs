@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using SmartCoaching.Application.Features.Athletes.Commands.CreateAthleteCommand;
+using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;

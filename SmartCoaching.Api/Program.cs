@@ -13,6 +13,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+builder.Services.AddScoped<SmartCoaching.Application.Common.Interfaces.IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
 // Application katmanı servislerini (MediatR & FluentValidation) sisteme dahil ediyoruz
 builder.Services.AddApplication();
 

@@ -1,7 +1,7 @@
 using FluentValidation;
 using System;
 
-namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthleteCommand;
+namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 
 public class CreateAthleteCommandValidator : AbstractValidator<CreateAthleteCommand>
 {

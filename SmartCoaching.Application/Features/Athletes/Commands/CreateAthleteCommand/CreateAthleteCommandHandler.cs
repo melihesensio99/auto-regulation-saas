@@ -7,7 +7,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthleteCommand;
+namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 
 // IRequestHandler demek: "CreateAthleteCommand bana gelirse, onu ben karşılarım ve geriye Result<Guid> dönerim" demektir.
 public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand, Result<Guid>>

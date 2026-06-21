@@ -1,0 +1,42 @@
+{
+	"info": {
+		"_postman_id": "b1b2c3d4-e5f6-7890",
+		"name": "SmartCoaching API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Athletes",
+			"item": [
+				{
+					"name": "Create Athlete",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"firstName\": \"Melih\",\r\n  \"lastName\": \"Esensio\",\r\n  \"coachId\": \"12345678-1234-1234-1234-123456789012\",\r\n  \"dateOfBirth\": \"1995-01-01T00:00:00Z\"\r\n}"
+						},
+						"url": {
+							"raw": "https://localhost:7009/api/athletes",
+							"protocol": "https",
+							"host": [
+								"localhost"
+							],
+							"port": "7009",
+							"path": [
+								"api",
+								"athletes"
+							]
+						}
+					}
+				}
+			]
+		}
+	]
+}
