@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Entities;
 
 namespace SmartCoaching.Infrastructure.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -25,7 +26,7 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(a => a.CoachId)
             .OnDelete(DeleteBehavior.Cascade); // Antrenör silinirse sporcuları da silinsin
 
-        // Email alanını veritabanında benzersiz (unique) yapalım ki aynı e-posta ile iki kişi üye olamasın
+        // Email alanını veritabanında benzersiz (unique) yapalım
         modelBuilder.Entity<Coach>()
             .HasIndex(c => c.Email)
             .IsUnique();
