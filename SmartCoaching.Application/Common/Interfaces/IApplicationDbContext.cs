@@ -9,7 +9,7 @@ public interface IApplicationDbContext
 {
     DbSet<Coach> Coaches { get; }
     DbSet<Athlete> Athletes { get; }
-    DbSet<DailyMetric> DailyMetrics { get; }
+    DbSet<DailyProgress> DailyProgresses { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

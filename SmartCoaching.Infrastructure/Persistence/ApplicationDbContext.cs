@@ -16,7 +16,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Coach> Coaches { get; set; }
     public DbSet<Athlete> Athletes { get; set; }
-    public DbSet<DailyMetric> DailyMetrics { get; set; }
+    public DbSet<DailyProgress> DailyProgresses { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -38,5 +38,16 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         // Eğer sistemde giriş yapmış bir kullanıcı varsa, sorguları sadece o kullanıcının TenantId'sine göre filtrele.
         modelBuilder.Entity<Athlete>()
             .HasQueryFilter(a => _currentUserService.TenantId == Guid.Empty || a.CoachId == _currentUserService.TenantId);
+
+        // Athlete - DailyProgress İlişkisi (1'e Çok)
+        modelBuilder.Entity<Athlete>()
+            .HasMany(a => a.DailyProgresses)
+            .WithOne(dp => dp.Athlete)
+            .HasForeignKey(dp => dp.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // DailyProgress MULTI-TENANCY Kalkanı
+        modelBuilder.Entity<DailyProgress>()
+            .HasQueryFilter(dp => _currentUserService.TenantId == Guid.Empty || dp.Athlete.CoachId == _currentUserService.TenantId);
     }
 }

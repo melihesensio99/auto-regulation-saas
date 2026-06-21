@@ -19,15 +19,28 @@ public class AthletesController(ISender sender) : ApiControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAthletes()
     {
-        return HandleResult(await sender.Send(new SmartCoaching.Application.Features.Athletes.Queries.GetAthletes.GetAthletesQuery()));
+        return HandleResult(await sender.Send(new GetAthletesQuery()));
     }
 
     [HttpPut("{id}/targets")]
-    public async Task<IActionResult> UpdateTargets(Guid id, [FromBody] SmartCoaching.Application.Features.Athletes.Commands.UpdateAthleteTargetsCommand.UpdateAthleteTargetsCommand command)
+    public async Task<IActionResult> UpdateTargets(Guid id, [FromBody] UpdateAthleteTargetsRequestDto dto)
     {
-        // URL'den gelen id değerini, command objesinin içine yerleştiriyoruz
-        var commandWithId = command with { AthleteId = id };
-        return HandleResult(await sender.Send(commandWithId));
+        var command = new UpdateAthleteTargetsCommand(id, dto.TargetCalories, dto.TargetSteps);
+        return HandleResult(await sender.Send(command));
+    }
+
+    [HttpPost("{id}/progress")]
+    public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogDailyProgressRequestDto dto)
+    {
+        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.Notes);
+        return HandleResult(await sender.Send(command));
+    }
+
+    [HttpGet("{id}/progress")]
+    public async Task<IActionResult> GetProgress(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    {
+        var query = new GetAthleteProgressQuery(id, startDate, endDate);
+        return HandleResult(await sender.Send(query));
     }
 
     [HttpGet("crash")]

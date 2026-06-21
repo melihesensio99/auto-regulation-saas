@@ -15,6 +15,10 @@ public class Athlete : BaseEntity
     public decimal TargetCalories { get; private set; }
     public int TargetSteps { get; private set; }
 
+    // 1-N İlişki: Bir sporcunun birden fazla günlük gelişimi olabilir
+    private readonly List<DailyProgress> _dailyProgresses = new();
+    public IReadOnlyCollection<DailyProgress> DailyProgresses => _dailyProgresses.AsReadOnly();
+
     private Athlete() { } // EF Core için
 
     public Athlete(string firstName, string lastName, Guid coachId, DateTime dateOfBirth)
@@ -30,5 +34,10 @@ public class Athlete : BaseEntity
         TargetCalories = calories;
         TargetSteps = steps;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AddDailyProgress(DailyProgress progress)
+    {
+        _dailyProgresses.Add(progress);
     }
 }
