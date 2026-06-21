@@ -26,7 +26,7 @@ public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand,
         var coachExists = await _context.Coaches.AnyAsync(c => c.Id == request.CoachId, cancellationToken);
         if (!coachExists)
         {
-            return Result.Failure<Guid>(new Error("Coach.NotFound", "Sisteme bağlı böyle bir antrenör bulunamadı."));
+            return Result.Failure<Guid>(new Error("Coach.NotFound", "Sisteme bağlı böyle bir antrenör bulunamadı.", ErrorType.NotFound));
         }
 
         // 2. Güvenlikten geçtik, yeni sporcuyu (Entity) yarat
