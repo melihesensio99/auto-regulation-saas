@@ -12,6 +12,7 @@ public class Athlete : BaseEntity
     public Coach Coach { get; private set; }
 
     public DateTime DateOfBirth { get; private set; }
+    public int HeightCm { get; private set; }
     public decimal TargetCalories { get; private set; }
     public int TargetSteps { get; private set; }
 
@@ -19,14 +20,19 @@ public class Athlete : BaseEntity
     private readonly List<DailyProgress> _dailyProgresses = new();
     public IReadOnlyCollection<DailyProgress> DailyProgresses => _dailyProgresses.AsReadOnly();
 
+    // 1-N İlişki: Bir sporcunun birden fazla haftalık form kontrolü olabilir
+    private readonly List<WeeklyCheckIn> _weeklyCheckIns = new();
+    public IReadOnlyCollection<WeeklyCheckIn> WeeklyCheckIns => _weeklyCheckIns.AsReadOnly();
+
     private Athlete() { } // EF Core için
 
-    public Athlete(string firstName, string lastName, Guid coachId, DateTime dateOfBirth)
+    public Athlete(string firstName, string lastName, Guid coachId, DateTime dateOfBirth, int heightCm = 170)
     {
         FirstName = firstName;
         LastName = lastName;
         CoachId = coachId;
         DateOfBirth = dateOfBirth;
+        HeightCm = heightCm;
     }
 
     public void UpdateTargets(decimal calories, int steps)
@@ -39,5 +45,10 @@ public class Athlete : BaseEntity
     public void AddDailyProgress(DailyProgress progress)
     {
         _dailyProgresses.Add(progress);
+    }
+
+    public void AddWeeklyCheckIn(WeeklyCheckIn checkIn)
+    {
+        _weeklyCheckIns.Add(checkIn);
     }
 }
