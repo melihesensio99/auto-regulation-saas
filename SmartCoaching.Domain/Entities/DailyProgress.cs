@@ -19,7 +19,7 @@ public class DailyProgress : BaseEntity
     private DailyProgress(Guid athleteId, DateTime date, decimal consumedCalories, int takenSteps, double? weightKg, string? notes)
     {
         AthleteId = athleteId;
-        Date = date.Date; // Sadece tarihi baz al (saati 00:00:00 yap)
+        Date = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
         ConsumedCalories = consumedCalories;
         TakenSteps = takenSteps;
         WeightKg = weightKg;

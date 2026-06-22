@@ -36,7 +36,7 @@ public class Athlete : BaseEntity
         LastName = lastName;
         Email = email;
         PasswordHash = passwordHash;
-        DateOfBirth = dateOfBirth;
+        DateOfBirth = dateOfBirth.ToUniversalTime();
         HeightCm = heightCm;
         StartingWeightKg = startingWeightKg;
         CoachId = coachId;

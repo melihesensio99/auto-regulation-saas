@@ -24,7 +24,7 @@ public class WeeklyCheckIn : BaseEntity
     public WeeklyCheckIn(Guid athleteId, DateTime date, decimal weightKg, string? frontPhotoUrl, string? backPhotoUrl, string? sidePhotoUrl)
     {
         AthleteId = athleteId;
-        Date = date;
+        Date = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
         WeightKg = weightKg;
         FrontPhotoUrl = frontPhotoUrl;
         BackPhotoUrl = backPhotoUrl;
