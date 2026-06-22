@@ -10,10 +10,11 @@ public static class DependencyInjection
     {
         var assembly = typeof(DependencyInjection).Assembly;
 
-        // MediatR kütüphanesini ve bizim yazdığımız Validation (Doğrulama) filtresini sisteme tanıtıyoruz.
+        // MediatR kütüphanesini ve bizim yazdığımız Validation (Doğrulama) ile Logging filtrelerini sisteme tanıtıyoruz.
         services.AddMediatR(configuration =>
         {
             configuration.RegisterServicesFromAssembly(assembly);
+            configuration.AddOpenBehavior(typeof(LoggingBehavior<,>));
             configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
