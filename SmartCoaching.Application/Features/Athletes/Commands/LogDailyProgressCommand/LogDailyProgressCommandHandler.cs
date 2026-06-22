@@ -33,23 +33,21 @@ public class LogDailyProgressCommandHandler : IRequestHandler<LogDailyProgressCo
         // Akıllı Kaydetme (Upsert) Kuralı Devrede!
         var existingProgress = athlete.DailyProgresses.FirstOrDefault(p => p.Date == request.Date.Date);
 
-        if (existingProgress is not null)
+        if (existingProgress != null)
         {
-            // O günün kaydı VARSA -> Güncelle (Update)
-            existingProgress.UpdateMetrics(request.ConsumedCalories, request.TakenSteps, request.Notes);
+            existingProgress.UpdateMetrics(request.ConsumedCalories, request.TakenSteps, request.WeightKg, request.Notes);
         }
         else
         {
-            // O günün kaydı YOKSA -> Yeni Oluştur (Insert)
-            var progress = new DailyProgress(
+            var newProgress = DailyProgress.Create(
                 athlete.Id,
                 request.Date,
                 request.ConsumedCalories,
                 request.TakenSteps,
+                request.WeightKg,
                 request.Notes
             );
-
-            athlete.AddDailyProgress(progress);
+            athlete.AddDailyProgress(newProgress);
         }
 
         await _context.SaveChangesAsync(cancellationToken);

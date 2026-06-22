@@ -11,23 +11,31 @@ public class DailyProgress : BaseEntity
     public DateTime Date { get; private set; }
     public decimal ConsumedCalories { get; private set; }
     public int TakenSteps { get; private set; }
+    public double? WeightKg { get; private set; }
     public string? Notes { get; private set; }
 
     private DailyProgress() { } // EF Core gereksinimi
 
-    public DailyProgress(Guid athleteId, DateTime date, decimal consumedCalories, int takenSteps, string? notes)
+    private DailyProgress(Guid athleteId, DateTime date, decimal consumedCalories, int takenSteps, double? weightKg, string? notes)
     {
         AthleteId = athleteId;
         Date = date.Date; // Sadece tarihi baz al (saati 00:00:00 yap)
         ConsumedCalories = consumedCalories;
         TakenSteps = takenSteps;
+        WeightKg = weightKg;
         Notes = notes;
     }
 
-    public void UpdateMetrics(decimal consumedCalories, int takenSteps, string? notes)
+    public static DailyProgress Create(Guid athleteId, DateTime date, decimal consumedCalories, int takenSteps, double? weightKg, string? notes)
+    {
+        return new DailyProgress(athleteId, date, consumedCalories, takenSteps, weightKg, notes);
+    }
+
+    public void UpdateMetrics(decimal consumedCalories, int takenSteps, double? weightKg, string? notes)
     {
         ConsumedCalories = consumedCalories;
         TakenSteps = takenSteps;
+        WeightKg = weightKg;
         Notes = notes;
         UpdatedAt = DateTime.UtcNow;
     }

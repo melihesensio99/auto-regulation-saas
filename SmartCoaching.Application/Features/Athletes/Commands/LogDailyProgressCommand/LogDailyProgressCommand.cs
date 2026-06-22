@@ -10,5 +10,6 @@ public record LogDailyProgressCommand(
     DateTime Date,
     decimal ConsumedCalories,
     int TakenSteps,
-    string? Notes
-) : IRequest<Result>;
+    double? WeightKg,
+    string Notes
+) : IRequest<Result<Guid>>;

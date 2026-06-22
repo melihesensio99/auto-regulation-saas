@@ -6,5 +6,6 @@ public record LogDailyProgressRequestDto(
     DateTime Date,
     decimal ConsumedCalories,
     int TakenSteps,
-    string? Notes
+    double? WeightKg,
+    string Notes
 );

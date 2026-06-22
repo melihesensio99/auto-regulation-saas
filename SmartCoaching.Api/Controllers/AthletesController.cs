@@ -36,7 +36,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     [Authorize(Roles = "Athlete")]
     public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogDailyProgressRequestDto dto)
     {
-        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.Notes);
+        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.WeightKg, dto.Notes);
         return HandleResult(await sender.Send(command));
     }
 
