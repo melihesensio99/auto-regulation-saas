@@ -21,5 +21,10 @@ public class CreateAthleteCommandValidator : AbstractValidator<CreateAthleteComm
         RuleFor(x => x.DateOfBirth)
             .NotEmpty().WithMessage("Doğum tarihi boş olamaz.")
             .LessThan(DateTime.UtcNow).WithMessage("Doğum tarihi bugünden küçük olmalıdır.");
+
+        // Abonelik bitiş tarihi bugünden ileri bir tarih olmalı
+        RuleFor(x => x.SubscriptionEndDate)
+            .NotEmpty().WithMessage("Üyelik bitiş tarihi boş olamaz.")
+            .GreaterThan(DateTime.UtcNow).WithMessage("Üyelik bitiş tarihi bugünden daha ileri bir tarih olmalıdır.");
     }
 }

@@ -59,6 +59,12 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<double>("StartingWeightKg")
                         .HasColumnType("double precision");
 
+                    b.Property<DateTime>("SubscriptionEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("SubscriptionStartDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("TargetCalories")
                         .HasColumnType("numeric");
 

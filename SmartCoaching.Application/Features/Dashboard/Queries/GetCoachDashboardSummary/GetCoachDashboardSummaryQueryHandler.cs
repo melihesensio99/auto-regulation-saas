@@ -70,6 +70,9 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
             bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
             bool isSlacking = progressDict.Count < (daysElapsed / 2.0); // Veri girişi yarıdan azsa tembeldir
 
+            int remainingSubscriptionDays = (athlete.SubscriptionEndDate - DateTime.UtcNow.Date).Days;
+            if (remainingSubscriptionDays < 0) remainingSubscriptionDays = 0;
+
             performances.Add(new AthletePerformanceDto(
                 athlete.Id,
                 $"{athlete.FirstName} {athlete.LastName}",
@@ -79,7 +82,8 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
                 isMetCalorieTarget,
                 latestCheckIn?.WeightKg ?? 0,
                 latestCheckIn?.FrontPhotoUrl,
-                isSlacking
+                isSlacking,
+                remainingSubscriptionDays
             ));
         }
 

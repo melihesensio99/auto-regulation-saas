@@ -11,5 +11,6 @@ public record AthletePerformanceDto(
     bool IsMetCalorieTarget,
     decimal LatestWeightKg,
     string? LatestFrontPhotoUrl,
-    bool IsSlacking // Veri girmediyse veya hedeften çok saptıysa
+    bool IsSlacking, // Veri girmediyse veya hedeften çok saptıysa
+    int RemainingSubscriptionDays
 );
