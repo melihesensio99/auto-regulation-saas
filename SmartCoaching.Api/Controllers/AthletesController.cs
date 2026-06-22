@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetWorkoutProgram;
+using SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram;
+using SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
 using SmartCoaching.Domain.Constants;
 using System.Threading.Tasks;
 
@@ -72,6 +74,22 @@ public class AthletesController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> GetWorkoutProgram(Guid id)
     {
         var query = new GetAthleteWorkoutProgramQuery(id);
+        return HandleResult(await sender.Send(query));
+    }
+
+    [HttpPost("{id}/diet-programs")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<IActionResult> AssignDietProgram(Guid id, [FromBody] AssignDietProgramRequestDto dto)
+    {
+        var command = new AssignDietProgramCommand { AthleteId = id, Meals = dto.Meals };
+        return HandleResult(await sender.Send(command));
+    }
+
+    [HttpGet("{id}/diet-programs")]
+    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
+    public async Task<IActionResult> GetDietProgram(Guid id)
+    {
+        var query = new GetAthleteDietProgramQuery(id);
         return HandleResult(await sender.Send(query));
     }
 

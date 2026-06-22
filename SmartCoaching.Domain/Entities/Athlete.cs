@@ -34,6 +34,10 @@ public class Athlete : BaseEntity
     private readonly List<WorkoutExercise> _workoutExercises = new();
     public IReadOnlyCollection<WorkoutExercise> WorkoutExercises => _workoutExercises.AsReadOnly();
 
+    // 1-N İlişki: Sporcunun diyet öğünleri
+    private readonly List<DietMeal> _dietMeals = new();
+    public IReadOnlyCollection<DietMeal> DietMeals => _dietMeals.AsReadOnly();
+
     private Athlete() { } // EF Core için
 
     private Athlete(Guid id, string firstName, string lastName, string email, string passwordHash, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId, DateTime subscriptionStartDate, DateTime subscriptionEndDate)
@@ -83,9 +87,15 @@ public class Athlete : BaseEntity
         _weeklyCheckIns.Add(checkIn);
     }
 
-    public void SetWorkoutExercises(IEnumerable<WorkoutExercise> exercises)
+    public void SetWorkoutExercises(List<WorkoutExercise> exercises)
     {
         _workoutExercises.Clear();
         _workoutExercises.AddRange(exercises);
+    }
+
+    public void SetDietMeals(List<DietMeal> meals)
+    {
+        _dietMeals.Clear();
+        _dietMeals.AddRange(meals);
     }
 }

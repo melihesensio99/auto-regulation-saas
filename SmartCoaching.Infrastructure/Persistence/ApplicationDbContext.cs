@@ -17,9 +17,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Coach> Coaches => Set<Coach>();
     public DbSet<Athlete> Athletes => Set<Athlete>();
-    public DbSet<DailyProgress> DailyProgresses => Set<DailyProgress>();
-    public DbSet<WeeklyCheckIn> WeeklyCheckIns => Set<WeeklyCheckIn>();
-    public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
+    public DbSet<DailyProgress> DailyProgresses { get; set; }
+    public DbSet<WeeklyCheckIn> WeeklyCheckIns { get; set; }
+    public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
+    public DbSet<DietMeal> DietMeals { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,5 +80,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             _currentUserService.TenantId == Guid.Empty || 
             (_currentUserService.Role == Roles.Coach && we.Athlete.CoachId == _currentUserService.TenantId) || 
             (_currentUserService.Role == Roles.Athlete && we.AthleteId == _currentUserService.TenantId));
+
+        modelBuilder.Entity<DietMeal>().HasQueryFilter(d => 
+            _currentUserService.TenantId == Guid.Empty || 
+            (_currentUserService.Role == Roles.Coach && d.Athlete.CoachId == _currentUserService.TenantId) || 
+            (_currentUserService.Role == Roles.Athlete && d.AthleteId == _currentUserService.TenantId));
     }
 }

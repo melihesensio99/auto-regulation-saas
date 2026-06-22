@@ -12,6 +12,7 @@ public interface IApplicationDbContext
     DbSet<DailyProgress> DailyProgresses { get; }
     DbSet<WeeklyCheckIn> WeeklyCheckIns { get; }
     DbSet<WorkoutExercise> WorkoutExercises { get; }
+    DbSet<DietMeal> DietMeals { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }
