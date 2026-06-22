@@ -12,22 +12,26 @@ namespace SmartCoaching.Application.Features.Dashboard.Queries.GetCoachDashboard
 public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDashboardSummaryQuery, Result<CoachDashboardDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IAiService _aiService;
 
-    public GetCoachDashboardSummaryQueryHandler(IApplicationDbContext dbContext)
+    public GetCoachDashboardSummaryQueryHandler(IApplicationDbContext dbContext, IAiService aiService)
     {
         _dbContext = dbContext;
+        _aiService = aiService;
     }
 
     public async Task<Result<CoachDashboardDto>> Handle(GetCoachDashboardSummaryQuery request, CancellationToken cancellationToken)
     {
-        // 1. Son 7 günün aralığını bul
+        // 1. O haftanın Pazartesi gününü bul
         var today = DateTime.UtcNow.Date;
-        var sevenDaysAgo = today.AddDays(-7);
+        int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
+        var startOfWeek = today.AddDays(-1 * diff).Date; // O haftanın Pazartesisi
+        var endOfWeek = startOfWeek.AddDays(6).Date;     // O haftanın Pazarı
 
         // 2. Global Query Filter sayesinde sadece bu antrenörün sporcuları gelir.
         var athletes = await _dbContext.Athletes
-            .Include(a => a.DailyProgresses.Where(dp => dp.Date >= sevenDaysAgo))
-            .Include(a => a.WeeklyCheckIns.OrderByDescending(w => w.Date).Take(1))
+            .Include(a => a.DailyProgresses.Where(dp => dp.Date >= startOfWeek && dp.Date <= endOfWeek))
+            .Include(a => a.WeeklyCheckIns.Where(w => w.Date >= startOfWeek && w.Date <= endOfWeek).OrderByDescending(w => w.Date).Take(1))
             .ToListAsync(cancellationToken);
 
         int totalAthletes = athletes.Count;
@@ -65,8 +69,15 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
         double complianceRate = totalExpectedDays == 0 ? 0 : Math.Round((double)totalComplianceDays / totalExpectedDays * 100, 2);
 
-        // AI Insight Placeholder (Gelecekte LLM servisi ile burası dolacak)
-        string aiInsight = "Takımınız hafta sonları kalori hedeflerini %40 oranında aşıyor. Hafta sonu için daha esnek bir diyet planı düşünebilirsiniz.";
+        // 3. Yapay Zeka Analizi
+        var teamDataJson = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            TotalAthletes = totalAthletes,
+            WeeklyComplianceRate = complianceRate,
+            Performances = performances
+        });
+
+        string aiInsight = await _aiService.GenerateInsightAsync(teamDataJson, cancellationToken);
 
         var dto = new CoachDashboardDto(
             totalAthletes,

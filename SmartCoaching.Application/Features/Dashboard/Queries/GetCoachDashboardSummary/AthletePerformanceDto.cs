@@ -5,7 +5,7 @@ namespace SmartCoaching.Application.Features.Dashboard.Queries.GetCoachDashboard
 public record AthletePerformanceDto(
     Guid AthleteId,
     string FullName,
-    int HeightCm,
+    double HeightCm,
     decimal WeeklyTargetCalories,
     decimal WeeklyConsumedCalories,
     bool IsMetCalorieTarget,

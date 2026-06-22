@@ -12,7 +12,8 @@ public class Athlete : BaseEntity
     public Coach Coach { get; private set; }
 
     public DateTime DateOfBirth { get; private set; }
-    public int HeightCm { get; private set; }
+    public double HeightCm { get; private set; }
+    public double StartingWeightKg { get; private set; }
     public decimal TargetCalories { get; private set; }
     public int TargetSteps { get; private set; }
 
@@ -26,13 +27,20 @@ public class Athlete : BaseEntity
 
     private Athlete() { } // EF Core için
 
-    public Athlete(string firstName, string lastName, Guid coachId, DateTime dateOfBirth, int heightCm = 170)
+    private Athlete(Guid id, string firstName, string lastName, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
     {
+        Id = id;
         FirstName = firstName;
         LastName = lastName;
-        CoachId = coachId;
         DateOfBirth = dateOfBirth;
         HeightCm = heightCm;
+        StartingWeightKg = startingWeightKg;
+        CoachId = coachId;
+    }
+
+    public static Athlete Create(string firstName, string lastName, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
+    {
+        return new Athlete(Guid.NewGuid(), firstName, lastName, dateOfBirth, heightCm, startingWeightKg, coachId);
     }
 
     public void UpdateTargets(decimal calories, int steps)

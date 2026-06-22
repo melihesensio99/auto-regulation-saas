@@ -32,7 +32,7 @@ public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand,
         }
 
         // 2. Güvenlikten geçtik, yeni sporcuyu (Entity) yarat
-        var athlete = new Athlete(request.FirstName, request.LastName, coachId, request.DateOfBirth);
+        var athlete = Athlete.Create(request.FirstName, request.LastName, request.DateOfBirth, request.HeightCm, request.StartingWeightKg, coachId);
 
         // 3. Veritabanına ekle ve kaydet
         _context.Athletes.Add(athlete);

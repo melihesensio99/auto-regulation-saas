@@ -7,5 +7,7 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 public record CreateAthleteCommand(
     string FirstName,
     string LastName,
-    DateTime DateOfBirth) : IRequest<Result<Guid>>;
+    DateTime DateOfBirth,
+    double HeightCm,
+    double StartingWeightKg) : IRequest<Result<Guid>>;
 
