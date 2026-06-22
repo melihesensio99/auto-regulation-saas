@@ -36,6 +36,13 @@ public class AthletesController(ISender sender) : ApiControllerBase
         return HandleResult(await sender.Send(command));
     }
 
+    [HttpPost("{id}/check-in")]
+    public async Task<IActionResult> SubmitCheckIn(Guid id, [FromBody] SubmitWeeklyCheckInRequestDto dto)
+    {
+        var command = new SubmitWeeklyCheckInCommand(id, dto.Date, dto.WeightKg, dto.FrontPhotoUrl, dto.BackPhotoUrl, dto.SidePhotoUrl);
+        return HandleResult(await sender.Send(command));
+    }
+
     [HttpGet("{id}/progress")]
     public async Task<IActionResult> GetProgress(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {

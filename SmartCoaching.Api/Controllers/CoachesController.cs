@@ -20,4 +20,11 @@ public class CoachesController(ISender sender) : ApiControllerBase
         var coaches = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(context.Coaches);
         return Ok(coaches);
     }
+
+    [HttpGet("dashboard")]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public async Task<IActionResult> GetDashboard()
+    {
+        return HandleResult(await sender.Send(new GetCoachDashboardSummaryQuery()));
+    }
 }
