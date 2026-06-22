@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SmartCoaching.Application.Common.Interfaces;
+using SmartCoaching.Domain.Constants;
 using SmartCoaching.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ public sealed class JwtProvider : IJwtProvider
         {
             new Claim(JwtRegisteredClaimNames.Sub, coach.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, coach.Email),
-            new Claim(ClaimTypes.Role, "Coach"),
+            new Claim(ClaimTypes.Role, Roles.Coach),
             // Buradaki Custom Claim ile CoachId'yi token içine gömüyoruz
             new Claim("tenantId", coach.Id.ToString()) 
         };
@@ -51,7 +52,7 @@ public sealed class JwtProvider : IJwtProvider
         {
             new Claim(JwtRegisteredClaimNames.Sub, athlete.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, athlete.Email),
-            new Claim(ClaimTypes.Role, "Athlete"),
+            new Claim(ClaimTypes.Role, Roles.Athlete),
             // Sporcu da kendi koçunun TenantId'sine aittir.
             new Claim("tenantId", athlete.CoachId.ToString()) 
         };

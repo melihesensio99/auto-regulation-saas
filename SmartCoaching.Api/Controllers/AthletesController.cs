@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
+using SmartCoaching.Domain.Constants;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;
@@ -11,21 +12,21 @@ namespace SmartCoaching.Api.Controllers;
 public class AthletesController(ISender sender) : ApiControllerBase
 {
     [HttpPost]
-    [Authorize(Roles = "Coach")]
+    [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> CreateAthlete([FromBody] CreateAthleteCommand command)
     {
         return HandleResult(await sender.Send(command));
     }
 
     [HttpGet]
-    [Authorize(Roles = "Coach")]
+    [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> GetAthletes()
     {
         return HandleResult(await sender.Send(new GetAthletesQuery()));
     }
 
     [HttpPut("{id}/targets")]
-    [Authorize(Roles = "Coach")]
+    [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> UpdateTargets(Guid id, [FromBody] UpdateAthleteTargetsRequestDto dto)
     {
         var command = new UpdateAthleteTargetsCommand(id, dto.TargetCalories, dto.TargetSteps);
@@ -33,7 +34,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     }
 
     [HttpPost("{id}/progress")]
-    [Authorize(Roles = "Athlete")]
+    [Authorize(Roles = Roles.Athlete)]
     public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogDailyProgressRequestDto dto)
     {
         var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.WeightKg, dto.Notes);
@@ -41,7 +42,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     }
 
     [HttpPost("{id}/check-in")]
-    [Authorize(Roles = "Athlete")]
+    [Authorize(Roles = Roles.Athlete)]
     public async Task<IActionResult> SubmitCheckIn(Guid id, [FromBody] SubmitWeeklyCheckInRequestDto dto)
     {
         var command = new SubmitWeeklyCheckInCommand(id, dto.Date, dto.WeightKg, dto.FrontPhotoUrl, dto.BackPhotoUrl, dto.SidePhotoUrl);
@@ -49,7 +50,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     }
 
     [HttpGet("{id}/progress")]
-    [Authorize(Roles = "Coach,Athlete")]
+    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
     public async Task<IActionResult> GetProgress(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
         var query = new GetAthleteProgressQuery(id, startDate, endDate);

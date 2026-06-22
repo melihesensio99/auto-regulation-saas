@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartCoaching.Application.Features.Auth.Commands.Login;
+using SmartCoaching.Domain.Constants;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;
@@ -20,7 +21,7 @@ public class AuthController(ISender sender) : ApiControllerBase
         return HandleResult(await sender.Send(command));
     }
 
-    [Authorize(Roles = "Athlete")]
+    [Authorize(Roles = Roles.Athlete)]
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] SmartCoaching.Application.Features.Auth.Commands.ChangePassword.ChangePasswordCommand command)
     {

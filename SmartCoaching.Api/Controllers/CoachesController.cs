@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using SmartCoaching.Application.Features.Coaches.Commands.CreateCoach;
+using SmartCoaching.Domain.Constants;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;
@@ -14,7 +15,7 @@ public class CoachesController(ISender sender) : ApiControllerBase
     }
 
     [HttpGet("dashboard")]
-    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Coach")]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> GetDashboard()
     {
         return HandleResult(await sender.Send(new GetCoachDashboardSummaryQuery()));
