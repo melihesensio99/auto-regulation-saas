@@ -25,8 +25,35 @@ public sealed class JwtProvider : IJwtProvider
         {
             new Claim(JwtRegisteredClaimNames.Sub, coach.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, coach.Email),
+            new Claim(ClaimTypes.Role, "Coach"),
             // Buradaki Custom Claim ile CoachId'yi token içine gömüyoruz
-            new Claim("tenantId", coach.TenantId.ToString()) 
+            new Claim("tenantId", coach.Id.ToString()) 
+        };
+
+        var signingCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey)),
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            _options.Issuer,
+            _options.Audience,
+            claims,
+            null,
+            DateTime.UtcNow.AddHours(12),
+            signingCredentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public string GenerateForAthlete(Athlete athlete)
+    {
+        var claims = new Claim[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, athlete.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, athlete.Email),
+            new Claim(ClaimTypes.Role, "Athlete"),
+            // Sporcu da kendi koçunun TenantId'sine aittir.
+            new Claim("tenantId", athlete.CoachId.ToString()) 
         };
 
         var signingCredentials = new SigningCredentials(

@@ -6,6 +6,8 @@ public class Athlete : BaseEntity
 {
     public string FirstName { get; private set; }
     public string LastName { get; private set; }
+    public string Email { get; private set; }
+    public string PasswordHash { get; private set; }
     
     // Multi-tenancy: Bu sporcu hangi antrenöre (kiracıya) ait?
     public Guid CoachId { get; private set; } 
@@ -27,26 +29,34 @@ public class Athlete : BaseEntity
 
     private Athlete() { } // EF Core için
 
-    private Athlete(Guid id, string firstName, string lastName, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
+    private Athlete(Guid id, string firstName, string lastName, string email, string passwordHash, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
     {
         Id = id;
         FirstName = firstName;
         LastName = lastName;
+        Email = email;
+        PasswordHash = passwordHash;
         DateOfBirth = dateOfBirth;
         HeightCm = heightCm;
         StartingWeightKg = startingWeightKg;
         CoachId = coachId;
     }
 
-    public static Athlete Create(string firstName, string lastName, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
+    public static Athlete Create(string firstName, string lastName, string email, string passwordHash, DateTime dateOfBirth, double heightCm, double startingWeightKg, Guid coachId)
     {
-        return new Athlete(Guid.NewGuid(), firstName, lastName, dateOfBirth, heightCm, startingWeightKg, coachId);
+        return new Athlete(Guid.NewGuid(), firstName, lastName, email, passwordHash, dateOfBirth, heightCm, startingWeightKg, coachId);
     }
 
     public void UpdateTargets(decimal calories, int steps)
     {
         TargetCalories = calories;
         TargetSteps = steps;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePassword(string newPasswordHash)
+    {
+        PasswordHash = newPasswordHash;
         UpdatedAt = DateTime.UtcNow;
     }
 

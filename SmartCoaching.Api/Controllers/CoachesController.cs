@@ -22,7 +22,7 @@ public class CoachesController(ISender sender) : ApiControllerBase
     }
 
     [HttpGet("dashboard")]
-    [Microsoft.AspNetCore.Authorization.Authorize]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Coach")]
     public async Task<IActionResult> GetDashboard()
     {
         return HandleResult(await sender.Send(new GetCoachDashboardSummaryQuery()));
