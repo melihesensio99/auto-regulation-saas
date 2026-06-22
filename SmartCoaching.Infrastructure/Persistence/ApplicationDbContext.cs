@@ -14,9 +14,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         _currentUserService = currentUserService;
     }
 
-    public DbSet<Coach> Coaches { get; set; }
-    public DbSet<Athlete> Athletes { get; set; }
-    public DbSet<DailyProgress> DailyProgresses { get; set; }
+    public DbSet<Coach> Coaches => Set<Coach>();
+    public DbSet<Athlete> Athletes => Set<Athlete>();
+    public DbSet<DailyProgress> DailyProgresses => Set<DailyProgress>();
+    public DbSet<WeeklyCheckIn> WeeklyCheckIns => Set<WeeklyCheckIn>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,11 +35,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasIndex(c => c.Email)
             .IsUnique();
 
-        // MULTI-TENANCY: Global Query Filter (Küresel Filtre)
-        // Eğer sistemde giriş yapmış bir kullanıcı varsa, sorguları sadece o kullanıcının TenantId'sine göre filtrele.
-        modelBuilder.Entity<Athlete>()
-            .HasQueryFilter(a => _currentUserService.TenantId == Guid.Empty || a.CoachId == _currentUserService.TenantId);
-
         // Athlete - DailyProgress İlişkisi (1'e Çok)
         modelBuilder.Entity<Athlete>()
             .HasMany(a => a.DailyProgresses)
@@ -46,8 +42,17 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasForeignKey(dp => dp.AthleteId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // DailyProgress MULTI-TENANCY Kalkanı
-        modelBuilder.Entity<DailyProgress>()
-            .HasQueryFilter(dp => _currentUserService.TenantId == Guid.Empty || dp.Athlete.CoachId == _currentUserService.TenantId);
+        // Athlete - WeeklyCheckIn İlişkisi (1'e Çok)
+        modelBuilder.Entity<Athlete>()
+            .HasMany(a => a.WeeklyCheckIns)
+            .WithOne(w => w.Athlete)
+            .HasForeignKey(w => w.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // MULTI-TENANCY: Global Query Filters
+        // If there's a logged-in coach (TenantId), filter by their CoachId.
+        modelBuilder.Entity<Athlete>().HasQueryFilter(a => _currentUserService.TenantId == Guid.Empty || a.CoachId == _currentUserService.TenantId);
+        modelBuilder.Entity<DailyProgress>().HasQueryFilter(dp => _currentUserService.TenantId == Guid.Empty || dp.Athlete.CoachId == _currentUserService.TenantId);
+        modelBuilder.Entity<WeeklyCheckIn>().HasQueryFilter(w => _currentUserService.TenantId == Guid.Empty || w.Athlete.CoachId == _currentUserService.TenantId);
     }
 }
