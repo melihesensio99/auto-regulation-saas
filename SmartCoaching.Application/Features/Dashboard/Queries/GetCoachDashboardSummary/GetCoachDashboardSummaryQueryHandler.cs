@@ -39,20 +39,36 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
         var performances = new System.Collections.Generic.List<AthletePerformanceDto>();
         int totalComplianceDays = 0;
-        int totalExpectedDays = totalAthletes * 7;
+        int totalExpectedDays = 0;
 
         foreach (var athlete in athletes)
         {
             var latestCheckIn = athlete.WeeklyCheckIns.FirstOrDefault();
             
-            // Haftalık hedefler (örneğin günlük hedef * 7)
+            int daysElapsed = (int)(today - startOfWeek).TotalDays + 1;
+            int athleteComplianceDays = 0;
+            
+            var progressDict = athlete.DailyProgresses.ToDictionary(dp => dp.Date.Date);
+            
+            for (var d = startOfWeek; d <= today; d = d.AddDays(1))
+            {
+                if (progressDict.TryGetValue(d, out var dp))
+                {
+                    if (dp.ConsumedCalories > 0 && dp.ConsumedCalories <= athlete.TargetCalories)
+                    {
+                        athleteComplianceDays++;
+                    }
+                }
+            }
+
+            totalExpectedDays += daysElapsed;
+            totalComplianceDays += athleteComplianceDays;
+
             decimal weeklyTargetCalories = athlete.TargetCalories * 7;
             decimal weeklyConsumedCalories = athlete.DailyProgresses.Sum(dp => dp.ConsumedCalories);
             
-            bool isMetCalorieTarget = weeklyConsumedCalories > 0 && weeklyConsumedCalories <= weeklyTargetCalories;
-            bool isSlacking = !athlete.DailyProgresses.Any(); // Eğer hiç veri girmediyse tembeldir
-
-            if (isMetCalorieTarget) totalComplianceDays += 7; // Basitleştirilmiş hesaplama
+            bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
+            bool isSlacking = progressDict.Count < (daysElapsed / 2.0); // Veri girişi yarıdan azsa tembeldir
 
             performances.Add(new AthletePerformanceDto(
                 athlete.Id,
