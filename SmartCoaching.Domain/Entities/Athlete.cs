@@ -11,7 +11,7 @@ public class Athlete : BaseEntity
     
     // Multi-tenancy: Bu sporcu hangi antrenöre (kiracıya) ait?
     public Guid CoachId { get; private set; } 
-    public Coach Coach { get; private set; }
+    public Coach Coach { get; private set; } = null!;
 
     public DateTime DateOfBirth { get; private set; }
     public double HeightCm { get; private set; }
@@ -29,6 +29,10 @@ public class Athlete : BaseEntity
     // 1-N İlişki: Bir sporcunun birden fazla haftalık form kontrolü olabilir
     private readonly List<WeeklyCheckIn> _weeklyCheckIns = new();
     public IReadOnlyCollection<WeeklyCheckIn> WeeklyCheckIns => _weeklyCheckIns.AsReadOnly();
+
+    // 1-N İlişki: Sporcunun aktif antrenman programı egzersizleri
+    private readonly List<WorkoutExercise> _workoutExercises = new();
+    public IReadOnlyCollection<WorkoutExercise> WorkoutExercises => _workoutExercises.AsReadOnly();
 
     private Athlete() { } // EF Core için
 
@@ -77,5 +81,11 @@ public class Athlete : BaseEntity
     public void AddWeeklyCheckIn(WeeklyCheckIn checkIn)
     {
         _weeklyCheckIns.Add(checkIn);
+    }
+
+    public void SetWorkoutExercises(IEnumerable<WorkoutExercise> exercises)
+    {
+        _workoutExercises.Clear();
+        _workoutExercises.AddRange(exercises);
     }
 }

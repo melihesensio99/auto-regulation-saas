@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
+using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
+using SmartCoaching.Application.Features.Athletes.Queries.GetWorkoutProgram;
 using SmartCoaching.Domain.Constants;
 using System.Threading.Tasks;
 
@@ -54,6 +56,22 @@ public class AthletesController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> GetProgress(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
         var query = new GetAthleteProgressQuery(id, startDate, endDate);
+        return HandleResult(await sender.Send(query));
+    }
+
+    [HttpPost("{id}/workout-programs")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<IActionResult> AssignWorkoutProgram(Guid id, [FromBody] AssignWorkoutProgramRequestDto dto)
+    {
+        var command = new AssignWorkoutProgramCommand(id, dto.Exercises);
+        return HandleResult(await sender.Send(command));
+    }
+
+    [HttpGet("{id}/workout-programs")]
+    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
+    public async Task<IActionResult> GetWorkoutProgram(Guid id)
+    {
+        var query = new GetAthleteWorkoutProgramQuery(id);
         return HandleResult(await sender.Send(query));
     }
 

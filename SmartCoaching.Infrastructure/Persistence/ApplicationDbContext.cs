@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<DailyProgress> DailyProgresses => Set<DailyProgress>();
     public DbSet<WeeklyCheckIn> WeeklyCheckIns => Set<WeeklyCheckIn>();
+    public DbSet<WorkoutExercise> WorkoutExercises => Set<WorkoutExercise>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasForeignKey(w => w.AthleteId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Athlete - WorkoutExercise İlişkisi (1'e Çok)
+        modelBuilder.Entity<Athlete>()
+            .HasMany(a => a.WorkoutExercises)
+            .WithOne(we => we.Athlete)
+            .HasForeignKey(we => we.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // MULTI-TENANCY: Global Query Filters
         // If there's a logged-in coach, filter by their CoachId. If athlete, filter by their AthleteId.
         modelBuilder.Entity<Athlete>().HasQueryFilter(a => 
@@ -66,5 +74,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             _currentUserService.TenantId == Guid.Empty || 
             (_currentUserService.Role == Roles.Coach && w.Athlete.CoachId == _currentUserService.TenantId) || 
             (_currentUserService.Role == Roles.Athlete && w.AthleteId == _currentUserService.TenantId));
+
+        modelBuilder.Entity<WorkoutExercise>().HasQueryFilter(we => 
+            _currentUserService.TenantId == Guid.Empty || 
+            (_currentUserService.Role == Roles.Coach && we.Athlete.CoachId == _currentUserService.TenantId) || 
+            (_currentUserService.Role == Roles.Athlete && we.AthleteId == _currentUserService.TenantId));
     }
 }
