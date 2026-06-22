@@ -50,9 +50,20 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // MULTI-TENANCY: Global Query Filters
-        // If there's a logged-in coach (TenantId), filter by their CoachId.
-        modelBuilder.Entity<Athlete>().HasQueryFilter(a => _currentUserService.TenantId == Guid.Empty || a.CoachId == _currentUserService.TenantId);
-        modelBuilder.Entity<DailyProgress>().HasQueryFilter(dp => _currentUserService.TenantId == Guid.Empty || dp.Athlete.CoachId == _currentUserService.TenantId);
-        modelBuilder.Entity<WeeklyCheckIn>().HasQueryFilter(w => _currentUserService.TenantId == Guid.Empty || w.Athlete.CoachId == _currentUserService.TenantId);
+        // If there's a logged-in coach, filter by their CoachId. If athlete, filter by their AthleteId.
+        modelBuilder.Entity<Athlete>().HasQueryFilter(a => 
+            _currentUserService.TenantId == Guid.Empty || 
+            (_currentUserService.Role == "Coach" && a.CoachId == _currentUserService.TenantId) || 
+            (_currentUserService.Role == "Athlete" && a.Id == _currentUserService.TenantId));
+            
+        modelBuilder.Entity<DailyProgress>().HasQueryFilter(dp => 
+            _currentUserService.TenantId == Guid.Empty || 
+            (_currentUserService.Role == "Coach" && dp.Athlete.CoachId == _currentUserService.TenantId) || 
+            (_currentUserService.Role == "Athlete" && dp.AthleteId == _currentUserService.TenantId));
+            
+        modelBuilder.Entity<WeeklyCheckIn>().HasQueryFilter(w => 
+            _currentUserService.TenantId == Guid.Empty || 
+            (_currentUserService.Role == "Coach" && w.Athlete.CoachId == _currentUserService.TenantId) || 
+            (_currentUserService.Role == "Athlete" && w.AthleteId == _currentUserService.TenantId));
     }
 }
