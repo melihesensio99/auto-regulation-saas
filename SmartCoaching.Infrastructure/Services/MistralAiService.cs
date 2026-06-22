@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using SmartCoaching.Application.Common.Constants;
 using SmartCoaching.Application.Common.Interfaces;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -32,7 +33,7 @@ public class MistralAiService : IAiService
             model = model,
             messages = new[]
             {
-                new { role = "system", content = "Sen profesyonel bir fitness antrenörüsün. Sana takımındaki sporcuların bu haftaki kalori ve antrenman uyum verilerini JSON olarak gönderiyorum. Lütfen bu veriyi incele ve koçluk yapmam için TÜRKÇE, teşvik edici ve 2 cümleyi geçmeyen taktiksel bir genel değerlendirme tavsiyesi ver. Yanıtın direkt tavsiye metni olsun, ekstra selamlama yapma." },
+                new { role = "system", content = PromptTemplates.CoachDashboardAnalysisSystemPrompt },
                 new { role = "user", content = teamDataJson }
             }
         };
