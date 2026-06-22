@@ -12,4 +12,4 @@ public record LogDailyProgressCommand(
     int TakenSteps,
     double? WeightKg,
     string Notes
-) : IRequest<Result<Guid>>;
+) : IRequest<Result>;
