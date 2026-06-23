@@ -37,6 +37,9 @@ app.UseMiddleware<SmartCoaching.Api.Middlewares.GlobalExceptionMiddleware>();
 // Serilog Request Logging (Gelen isteklerin loglanması)
 app.UseSerilogRequestLogging();
 
+// CORS Kalkanını Aktif Et
+app.UseCors("AllowFrontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

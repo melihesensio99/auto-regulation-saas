@@ -16,6 +16,17 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+        // CORS Ayarları (Frontend'in Backend'e erişebilmesi için)
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5173") // Sadece React Vite adresine izin ver
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
+
         // JWT Authentication Ayarları
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
