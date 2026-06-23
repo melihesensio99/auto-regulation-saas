@@ -29,7 +29,6 @@ export const useAddFeedback = () => {
             // Feedback başarıyla gidince, ekrandaki eski veriyi sil ve güncelini backend'den otomatik çek (Re-fetch)
             queryClient.invalidateQueries({ queryKey: ['checkIns', variables.athleteId] });
         }
-        }
     });
 };
 
