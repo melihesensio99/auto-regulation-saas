@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
-import { LoginRequest } from '../types';
+import type { LoginRequest } from '../types';
 
 export const useAuth = () => {
     // Component içinde görünecek Loading ve Error stateleri

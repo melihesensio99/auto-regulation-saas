@@ -1,5 +1,5 @@
 import api from '@/shared/services/api';
-import { LoginRequest, LoginResponse } from '../types';
+import type { LoginRequest, LoginResponse } from '../types';
 
 export const authService = {
     // API'ye POST isteği atıp cevabı dönen saf servis fonksiyonu
