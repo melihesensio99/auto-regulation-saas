@@ -1,5 +1,5 @@
 import api from '@/shared/services/api';
-import type { Athlete, CheckIn, AddFeedbackRequest } from '../types';
+import type { Athlete, CheckIn, AddFeedbackRequest, CreateAthleteRequest } from '../types';
 
 export const dashboardService = {
     getAthletes: async (): Promise<Athlete[]> => {
@@ -12,7 +12,12 @@ export const dashboardService = {
         return response.data;
     },
 
-    addCoachFeedback: async (athleteId: string, checkInId: string, data: AddFeedbackRequest): Promise<void> => {
-        await api.put(`/Athletes/${athleteId}/check-ins/${checkInId}/feedback`, data);
+    addFeedback: async (athleteId: string, checkInId: string, data: AddFeedbackRequest): Promise<void> => {
+        await api.put(`/athletes/${athleteId}/check-ins/${checkInId}/feedback`, data);
+    },
+
+    createAthlete: async (data: CreateAthleteRequest): Promise<string> => {
+        const response = await api.post<{ value: string }>('/athletes', data);
+        return typeof response.data === 'string' ? response.data : response.data.value; // GUID of new athlete
     }
 };

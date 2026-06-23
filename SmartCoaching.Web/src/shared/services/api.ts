@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Backend API adresimiz .env dosyasından güvenli bir şekilde okunur.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5169/api';
 
 // Tüm isteklerimizde kullanılacak ana Axios kopyası
 const api = axios.create({

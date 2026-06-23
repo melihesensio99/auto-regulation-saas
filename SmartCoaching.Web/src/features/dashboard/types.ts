@@ -19,3 +19,13 @@ export interface CheckIn {
 export interface AddFeedbackRequest {
     feedback: string;
 }
+
+export interface CreateAthleteRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    dateOfBirth: string;
+    heightCm: number;
+    startingWeightKg: number;
+    subscriptionEndDate: string;
+}

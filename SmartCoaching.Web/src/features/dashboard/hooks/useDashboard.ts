@@ -24,10 +24,24 @@ export const useAddFeedback = () => {
 
     return useMutation({
         mutationFn: ({ athleteId, checkInId, feedback }: { athleteId: string, checkInId: string, feedback: string }) => 
-            dashboardService.addCoachFeedback(athleteId, checkInId, { feedback }),
+            dashboardService.addFeedback(athleteId, checkInId, { feedback }),
         onSuccess: (_, variables) => {
             // Feedback başarıyla gidince, ekrandaki eski veriyi sil ve güncelini backend'den otomatik çek (Re-fetch)
             queryClient.invalidateQueries({ queryKey: ['checkIns', variables.athleteId] });
+        }
+        }
+    });
+};
+
+// 4. Yeni Sporcu Ekleme Hook'u
+export const useCreateAthlete = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: dashboardService.createAthlete,
+        onSuccess: () => {
+            // Başarılı olduğunda sporcular listesini yeniden çek
+            queryClient.invalidateQueries({ queryKey: ['athletes'] });
         }
     });
 };

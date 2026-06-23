@@ -1,4 +1,6 @@
+import React, { useState } from 'react';
 import type { Athlete } from '../types';
+import { AddAthleteModal } from './AddAthleteModal';
 
 interface AthleteListProps {
     athletes: Athlete[] | undefined;
@@ -9,9 +11,34 @@ interface AthleteListProps {
 }
 
 export const AthleteList = ({ athletes, isLoading, error, selectedAthleteId, onSelectAthlete }: AthleteListProps) => {
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     return (
         <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
-            <h2 style={{ marginBottom: '20px' }}>Sporcularım</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0 }}>Sporcularım</h2>
+                <button 
+                    onClick={() => setIsModalOpen(true)}
+                    style={{
+                        background: 'var(--primary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '32px',
+                        height: '32px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        fontSize: '20px',
+                        cursor: 'pointer',
+                        padding: 0,
+                        lineHeight: '1'
+                    }}
+                    title="Yeni Sporcu Ekle"
+                >
+                    +
+                </button>
+            </div>
             
             {isLoading && <p>Yükleniyor...</p>}
             {error && <p style={{ color: 'var(--danger)' }}>Sporcular alınamadı.</p>}
@@ -33,6 +60,12 @@ export const AthleteList = ({ athletes, isLoading, error, selectedAthleteId, onS
                     </button>
                 ))}
             </div>
+
+            {/* Yeni Sporcu Ekleme Modalı */}
+            <AddAthleteModal 
+                isOpen={isModalOpen} 
+                onClose={() => setIsModalOpen(false)} 
+            />
         </div>
     );
 };
