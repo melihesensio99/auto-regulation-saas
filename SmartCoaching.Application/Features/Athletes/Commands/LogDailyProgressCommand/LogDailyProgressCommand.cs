@@ -11,5 +11,6 @@ public record LogDailyProgressCommand(
     decimal ConsumedCalories,
     int TakenSteps,
     double? WeightKg,
+    bool IsWorkoutCompleted,
     string Notes
 ) : IRequest<Result>;

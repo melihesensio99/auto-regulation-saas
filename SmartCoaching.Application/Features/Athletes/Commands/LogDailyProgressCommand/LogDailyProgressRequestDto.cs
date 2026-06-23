@@ -7,5 +7,6 @@ public record LogDailyProgressRequestDto(
     decimal ConsumedCalories,
     int TakenSteps,
     double? WeightKg,
+    bool IsWorkoutCompleted,
     string Notes
 );

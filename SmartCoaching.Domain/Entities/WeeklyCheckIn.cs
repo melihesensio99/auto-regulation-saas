@@ -19,6 +19,9 @@ public class WeeklyCheckIn : BaseEntity
     // Antrenör pazar günü bu check-in'i incelerse buraya yorum yazabilir.
     public string? CoachFeedback { get; private set; }
 
+    // Mistral AI tarafından haftalık olarak oluşturulan rapor
+    public string? AiAnalysis { get; private set; }
+
     private WeeklyCheckIn() { } // EF Core için
 
     public WeeklyCheckIn(Guid athleteId, DateTime date, decimal weightKg, string? frontPhotoUrl, string? backPhotoUrl, string? sidePhotoUrl)
@@ -34,6 +37,12 @@ public class WeeklyCheckIn : BaseEntity
     public void AddCoachFeedback(string feedback)
     {
         CoachFeedback = feedback;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAiAnalysis(string analysis)
+    {
+        AiAnalysis = analysis;
         UpdatedAt = DateTime.UtcNow;
     }
 }

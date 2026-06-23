@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Common;
 using SmartCoaching.Domain.Entities;
+using MassTransit;
+using SmartCoaching.Application.Common.Events;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,10 +14,12 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.SubmitWeeklyCheck
 public class SubmitWeeklyCheckInCommandHandler : IRequestHandler<SubmitWeeklyCheckInCommand, Result>
 {
     private readonly IApplicationDbContext _dbContext;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public SubmitWeeklyCheckInCommandHandler(IApplicationDbContext dbContext)
+    public SubmitWeeklyCheckInCommandHandler(IApplicationDbContext dbContext, IPublishEndpoint publishEndpoint)
     {
         _dbContext = dbContext;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result> Handle(SubmitWeeklyCheckInCommand request, CancellationToken cancellationToken)
@@ -44,6 +48,9 @@ public class SubmitWeeklyCheckInCommandHandler : IRequestHandler<SubmitWeeklyChe
 
         athlete.AddWeeklyCheckIn(checkIn);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // Publish integration event to trigger AI Analysis
+        await _publishEndpoint.Publish(new WeeklyCheckInSubmittedEvent(checkIn.Id, athlete.Id), cancellationToken);
 
         return Result.Success();
     }

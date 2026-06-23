@@ -35,7 +35,7 @@ public class LogDailyProgressCommandHandler : IRequestHandler<LogDailyProgressCo
 
         if (existingProgress != null)
         {
-            existingProgress.UpdateMetrics(request.ConsumedCalories, request.TakenSteps, request.WeightKg, request.Notes);
+            existingProgress.UpdateMetrics(request.ConsumedCalories, request.TakenSteps, request.WeightKg, request.IsWorkoutCompleted, request.Notes);
         }
         else
         {
@@ -45,6 +45,7 @@ public class LogDailyProgressCommandHandler : IRequestHandler<LogDailyProgressCo
                 request.ConsumedCalories,
                 request.TakenSteps,
                 request.WeightKg,
+                request.IsWorkoutCompleted,
                 request.Notes
             );
             athlete.AddDailyProgress(newProgress);

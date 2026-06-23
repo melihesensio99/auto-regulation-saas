@@ -6,7 +6,10 @@ using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
+using SmartCoaching.Application.Features.Athletes.Queries.GetAthleteCheckIns;
+using SmartCoaching.Application.Features.Athletes.Commands.AddCoachFeedback;
 using SmartCoaching.Domain.Constants;
+using System;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;
@@ -41,7 +44,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     [Authorize(Roles = Roles.Athlete)]
     public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogDailyProgressRequestDto dto)
     {
-        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.WeightKg, dto.Notes);
+        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.WeightKg, dto.IsWorkoutCompleted, dto.Notes);
         return HandleResult(await sender.Send(command));
     }
 
@@ -50,6 +53,22 @@ public class AthletesController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> SubmitCheckIn(Guid id, [FromBody] SubmitWeeklyCheckInRequestDto dto)
     {
         var command = new SubmitWeeklyCheckInCommand(id, dto.Date, dto.WeightKg, dto.FrontPhotoUrl, dto.BackPhotoUrl, dto.SidePhotoUrl);
+        return HandleResult(await sender.Send(command));
+    }
+
+    [HttpGet("{id}/check-ins")]
+    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
+    public async Task<IActionResult> GetCheckIns(Guid id)
+    {
+        var query = new GetAthleteCheckInsQuery(id);
+        return HandleResult(await sender.Send(query));
+    }
+
+    [HttpPut("{id}/check-ins/{checkInId}/feedback")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<IActionResult> AddCoachFeedback(Guid id, Guid checkInId, [FromBody] AddCoachFeedbackRequestDto dto)
+    {
+        var command = new AddCoachFeedbackCommand(id, checkInId, dto.Feedback);
         return HandleResult(await sender.Send(command));
     }
 
