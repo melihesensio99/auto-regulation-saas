@@ -19,4 +19,7 @@ public class WorkoutExercise
     public required string Reps { get; set; } // Örn: "6-8 (RIR 2)"
     public int RestTimeInSeconds { get; set; }
     public string? Notes { get; set; }
+    
+    // Sıralama (Reordering) için indeks
+    public int OrderIndex { get; set; }
 }

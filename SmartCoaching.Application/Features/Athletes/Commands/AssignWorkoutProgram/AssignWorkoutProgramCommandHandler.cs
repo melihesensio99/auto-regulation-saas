@@ -22,14 +22,23 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
     public async Task<Result<Guid>> Handle(AssignWorkoutProgramCommand request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
-            .Include(a => a.WorkoutExercises)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)
             return Result.Failure<Guid>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        // Create new exercise list
-        var newExercises = request.Exercises.Select(e => new WorkoutExercise
+        // Veritabanındaki eski egzersizleri bul ve sil
+        var oldExercises = await _context.WorkoutExercises
+            .Where(e => e.AthleteId == request.AthleteId)
+            .ToListAsync(cancellationToken);
+
+        if (oldExercises.Any())
+        {
+            _context.WorkoutExercises.RemoveRange(oldExercises);
+        }
+
+        // Create new exercise list (Sıralamayı OrderIndex olarak kaydet)
+        var newExercises = request.Exercises.Select((e, index) => new WorkoutExercise
         {
             AthleteId = athlete.Id,
             Athlete = athlete,
@@ -38,17 +47,12 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             Sets = e.Sets,
             Reps = e.Reps,
             RestTimeInSeconds = e.RestTimeInSeconds,
-            Notes = e.Notes
+            Notes = e.Notes,
+            OrderIndex = index
         }).ToList();
 
-        // Mevcut egzersizleri veritabanından tamamen sil (Orphan kalmaması için)
-        if (athlete.WorkoutExercises.Any())
-        {
-            _context.WorkoutExercises.RemoveRange(athlete.WorkoutExercises);
-        }
-
-        // Athlete objesindeki listeyi yenile
-        athlete.SetWorkoutExercises(newExercises);
+        // Yeni egzersizleri veritabanına ekle
+        await _context.WorkoutExercises.AddRangeAsync(newExercises, cancellationToken);
 
         // Save changes
         await _context.SaveChangesAsync(cancellationToken);

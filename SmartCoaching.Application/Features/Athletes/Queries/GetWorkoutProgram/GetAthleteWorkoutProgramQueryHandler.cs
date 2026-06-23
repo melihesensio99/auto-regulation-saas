@@ -27,6 +27,7 @@ public class GetAthleteWorkoutProgramQueryHandler : IRequestHandler<GetAthleteWo
 
         var exercises = await _context.WorkoutExercises
             .Where(we => we.AthleteId == request.AthleteId)
+            .OrderBy(we => we.OrderIndex)
             .ToListAsync(cancellationToken);
 
         // Günlere göre grupla (Group By DayName)

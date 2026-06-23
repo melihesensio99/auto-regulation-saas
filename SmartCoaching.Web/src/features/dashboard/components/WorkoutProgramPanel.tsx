@@ -11,6 +11,8 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
     const { mutateAsync: assignWorkout, isPending } = useAssignWorkout();
 
     const [exercises, setExercises] = useState<WorkoutExercise[]>([]);
+    const [editIndex, setEditIndex] = useState<number | null>(null);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (program && program.days) {
@@ -31,29 +33,75 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
     }, [program]);
 
     const [dayName, setDayName] = useState('Pazartesi');
+    const [dayLabel, setDayLabel] = useState('');
     const [exerciseName, setExerciseName] = useState('');
     const [sets, setSets] = useState(3);
     const [reps, setReps] = useState('12');
     const [restTime, setRestTime] = useState(60);
 
-    const handleAddExercise = (e: React.FormEvent) => {
+    const resetForm = () => {
+        setExerciseName('');
+        setSets(3);
+        setReps('12');
+        setRestTime(60);
+        setDayLabel('');
+        setEditIndex(null);
+    };
+
+    const handleAddOrUpdateExercise = (e: React.FormEvent) => {
         e.preventDefault();
+        const combinedDay = dayLabel.trim() ? `${dayName} - ${dayLabel.trim()}` : dayName;
         const newExercise: WorkoutExercise = {
-            dayName,
+            dayName: combinedDay,
             exerciseName,
             sets,
             reps,
             restTimeInSeconds: restTime,
             notes: null
         };
-        setExercises([...exercises, newExercise]);
-        setExerciseName('');
+
+        if (editIndex !== null) {
+            const newEx = [...exercises];
+            newEx[editIndex] = newExercise;
+            setExercises(newEx);
+        } else {
+            setExercises([...exercises, newExercise]);
+        }
+        resetForm();
     };
+
+    const handleEditExercise = (flatIndex: number) => {
+        const ex = exercises[flatIndex];
+        // Parse "Pazartesi - Push Day" back into day + label
+        const dashIdx = ex.dayName.indexOf(' - ');
+        if (dashIdx !== -1) {
+            setDayName(ex.dayName.substring(0, dashIdx));
+            setDayLabel(ex.dayName.substring(dashIdx + 3));
+        } else {
+            setDayName(ex.dayName);
+            setDayLabel('');
+        }
+        setExerciseName(ex.exerciseName);
+        setSets(ex.sets);
+        setReps(ex.reps);
+        setRestTime(ex.restTimeInSeconds);
+        setEditIndex(flatIndex);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Sürükle-bırak (Drag & Drop) işlemleri satırın (div) üzerinde inline olarak yönetilmektedir.
 
     const handleRemoveExercise = (index: number) => {
         const newEx = [...exercises];
         newEx.splice(index, 1);
         setExercises(newEx);
+        // If deleting the currently edited exercise, reset form
+        if (editIndex === index) {
+            resetForm();
+        } else if (editIndex !== null && index < editIndex) {
+            // Adjust edit index if we deleted an item before it
+            setEditIndex(editIndex - 1);
+        }
     };
 
     const handleSaveProgram = async () => {
@@ -83,14 +131,22 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
             {/* EGZERSİZ EKLEME FORMU */}
-            <div className="glass-panel" style={{ padding: '20px' }}>
-                <h4 style={{ marginTop: 0, marginBottom: '16px', fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    ➕ Yeni Egzersiz Ekle
-                </h4>
-                <form onSubmit={handleAddExercise} style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div className="glass-panel" style={{ padding: '20px', border: editIndex !== null ? '1px solid var(--accent-primary)' : '1px solid var(--border-glass)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <h4 style={{ margin: 0, fontSize: '0.9rem', fontWeight: 700, color: editIndex !== null ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                        {editIndex !== null ? '✏️ Egzersizi Düzenle' : '➕ Yeni Egzersiz Ekle'}
+                    </h4>
+                    {editIndex !== null && (
+                        <button onClick={resetForm} style={{ background: 'transparent', color: 'var(--text-muted)', fontSize: '0.8rem', padding: '4px 8px' }}>
+                            İptal Et
+                        </button>
+                    )}
+                </div>
+                <form onSubmit={handleAddOrUpdateExercise} style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    {/* GÜN SELECT */}
                     <div className="form-group">
                         <label>Gün</label>
-                        <select value={dayName} onChange={e => setDayName(e.target.value)} className="form-control" style={{ minWidth: '120px' }}>
+                        <select value={dayName} onChange={e => setDayName(e.target.value)} className="form-control" style={{ minWidth: '130px' }}>
                             <option value="Pazartesi">Pazartesi</option>
                             <option value="Salı">Salı</option>
                             <option value="Çarşamba">Çarşamba</option>
@@ -99,6 +155,18 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                             <option value="Cumartesi">Cumartesi</option>
                             <option value="Pazar">Pazar</option>
                         </select>
+                    </div>
+
+                    {/* PROGRAM ETİKETİ (isteğe bağlı) */}
+                    <div className="form-group" style={{ width: '140px' }}>
+                        <label>Program Adı <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(isteğe bağlı)</span></label>
+                        <input
+                            type="text"
+                            value={dayLabel}
+                            onChange={e => setDayLabel(e.target.value)}
+                            className="form-control"
+                            placeholder="Push Day..."
+                        />
                     </div>
                     
                     <div className="form-group" style={{ flex: 1 }}>
@@ -123,12 +191,12 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
 
                     <button type="submit" style={{ 
                         padding: '10px 20px', 
-                        background: 'rgba(255,255,255,0.08)', 
-                        border: '1px solid var(--border-glass)',
-                        color: 'var(--text-primary)',
+                        background: editIndex !== null ? 'var(--accent-primary)' : 'rgba(255,255,255,0.08)', 
+                        border: editIndex !== null ? 'none' : '1px solid var(--border-glass)',
+                        color: 'white',
                         fontWeight: 600
                     }}>
-                        Ekle
+                        {editIndex !== null ? 'Güncelle' : 'Ekle'}
                     </button>
                 </form>
             </div>
@@ -142,8 +210,8 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                             <span className="badge badge-info">{exercises.length} egzersiz</span>
                         )}
                     </div>
-                    <button onClick={handleSaveProgram} disabled={isPending || exercises.length === 0} className="btn-save">
-                        {isPending ? '⏳ Kaydediliyor...' : '💾 Tüm Programı Kaydet'}
+                    <button onClick={handleSaveProgram} disabled={isPending} className="btn-save">
+                        {isPending ? '⏳ Kaydediliyor...' : '💾 Değişiklikleri Kaydet'}
                     </button>
                 </div>
 
@@ -157,18 +225,43 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                     Object.entries(groupedExercises).map(([day, dayExercises], idx) => (
                         <div key={day} className="day-card animate-fade-in" style={{ animationDelay: `${idx * 0.08}s` }}>
                             <h4>{day}</h4>
-                            {dayExercises.map((ex, i) => (
-                                <div key={i} className="exercise-row">
+                            {dayExercises.map((ex, i) => {
+                                const flatIndex = exercises.findIndex(e => e.dayName === ex.dayName && e.exerciseName === ex.exerciseName);
+                                return (
+                                <div 
+                                    key={i} 
+                                    className="exercise-row"
+                                    draggable
+                                    onDragStart={(e) => {
+                                        setDraggedIndex(flatIndex);
+                                        e.dataTransfer.setData('text/plain', flatIndex.toString());
+                                    }}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.dataTransfer.dropEffect = 'move';
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        if (draggedIndex === null || draggedIndex === flatIndex) return;
+
+                                        const newEx = [...exercises];
+                                        const draggedItem = {...newEx[draggedIndex]};
+                                        draggedItem.dayName = ex.dayName; // Günü değiştiyse güncelle
+
+                                        newEx.splice(draggedIndex, 1);
+                                        newEx.splice(flatIndex, 0, draggedItem);
+                                        
+                                        setExercises(newEx);
+                                        setDraggedIndex(null);
+                                    }}
+                                    onDragEnd={() => setDraggedIndex(null)}
+                                    style={{ 
+                                        opacity: draggedIndex === flatIndex ? 0.4 : 1,
+                                        cursor: 'grab',
+                                        border: draggedIndex === flatIndex ? '1px dashed var(--accent-primary)' : ''
+                                    }}
+                                >
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <span style={{ 
-                                            width: '28px', height: '28px', borderRadius: '8px', 
-                                            background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: '0.7rem', fontWeight: 700, color: 'var(--accent-primary)',
-                                            flexShrink: 0
-                                        }}>
-                                            {i + 1}
-                                        </span>
                                         <div>
                                             <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{ex.exerciseName}</span>
                                             <div style={{ display: 'flex', gap: '8px', marginTop: '3px' }}>
@@ -178,17 +271,27 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                                             </div>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => {
-                                            const flatIndex = exercises.findIndex(e => e.dayName === ex.dayName && e.exerciseName === ex.exerciseName);
-                                            handleRemoveExercise(flatIndex);
-                                        }}
-                                        className="btn-delete"
-                                    >
-                                        ✕ Sil
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button 
+                                            onClick={() => handleEditExercise(flatIndex)}
+                                            className="btn-delete"
+                                            style={{ color: 'var(--text-primary)', borderColor: 'var(--border-glass)', padding: '6px 8px', fontSize: '1.1rem' }}
+                                            title="Düzenle"
+                                        >
+                                            ✏️
+                                        </button>
+                                        <button 
+                                            onClick={() => handleRemoveExercise(flatIndex)}
+                                            className="btn-delete"
+                                            style={{ padding: '6px 8px', fontSize: '1.1rem' }}
+                                            title="Sil"
+                                        >
+                                            🗑️
+                                        </button>
+                                    </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ))
                 )}
