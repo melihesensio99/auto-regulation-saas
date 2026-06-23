@@ -24,6 +24,19 @@ public class SubmitWeeklyCheckInCommandHandler : IRequestHandler<SubmitWeeklyChe
 
     public async Task<Result> Handle(SubmitWeeklyCheckInCommand request, CancellationToken cancellationToken)
     {
+        // Kural: Haftalık kontrol yalnızca Pazar günü yapılabilir
+        if (request.Date.DayOfWeek != DayOfWeek.Sunday)
+        {
+            return Result.Failure(new Error("WeeklyCheckIn.InvalidDay", "Haftalık kontrol (Check-in) verileri yalnızca Pazar günleri girilebilir."));
+        }
+
+        // Kural: Sadece o günkü tarihe giriş yapılabilir (Türkiye saati ile UTC+3)
+        var todayInTurkey = DateTime.UtcNow.AddHours(3).Date;
+        if (request.Date.Date != todayInTurkey)
+        {
+            return Result.Failure(new Error("WeeklyCheckIn.InvalidDate", $"Sadece bugünün tarihine ait kontrol verisi girebilirsiniz. Geçmiş veya gelecek günlere veri girilemez. (Sistem Tarihi: {todayInTurkey:yyyy-MM-dd})"));
+        }
+
         var athlete = await _dbContext.Athletes
             .Include(a => a.WeeklyCheckIns)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
@@ -47,6 +60,7 @@ public class SubmitWeeklyCheckInCommandHandler : IRequestHandler<SubmitWeeklyChe
         );
 
         athlete.AddWeeklyCheckIn(checkIn);
+        _dbContext.WeeklyCheckIns.Add(checkIn); // ZORUNLU EKLENDİ: EF Core'un Id dolu diye Modified sanmasını engellemek için!
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         // Publish integration event to trigger AI Analysis

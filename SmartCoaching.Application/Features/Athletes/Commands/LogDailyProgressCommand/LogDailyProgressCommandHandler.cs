@@ -20,6 +20,13 @@ public class LogDailyProgressCommandHandler : IRequestHandler<LogDailyProgressCo
 
     public async Task<Result> Handle(LogDailyProgressCommand request, CancellationToken cancellationToken)
     {
+        // Tarih Kontrolü: Yalnızca "bugün" için giriş yapılabilir (Türkiye saati ile UTC+3)
+        var todayInTurkey = DateTime.UtcNow.AddHours(3).Date;
+        if (request.Date.Date != todayInTurkey)
+        {
+            return Result.Failure(new Error("DailyProgress.InvalidDate", $"Sadece bugünün tarihine ait günlük giriş yapabilirsiniz. Geçmiş veya gelecek günlere veri girilemez. (Sistem Tarihi: {todayInTurkey:yyyy-MM-dd})"));
+        }
+
         // Global Query Filter devrede! Başkasının sporcusuna veri girilemez.
         var athlete = await _context.Athletes
             .Include(a => a.DailyProgresses)
@@ -49,9 +56,21 @@ public class LogDailyProgressCommandHandler : IRequestHandler<LogDailyProgressCo
                 request.Notes
             );
             athlete.AddDailyProgress(newProgress);
+            _context.DailyProgresses.Add(newProgress); // ZORUNLU EKLENDİ: EF Core'un Id dolu diye Modified sanmasını engellemek için!
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex)
+        {
+            var entry = ex.Entries.FirstOrDefault();
+            var entityName = entry?.Entity.GetType().Name;
+            var state = entry?.State.ToString();
+            var id = (entry?.Entity as SmartCoaching.Domain.Common.BaseEntity)?.Id;
+            return Result.Failure(new Error("Concurrency.Debug", $"Hata detayı -> Entity: {entityName}, State: {state}, Id: {id}. Lütfen bu hatayı bana gönderin!"));
+        }
 
         return Result.Success();
     }

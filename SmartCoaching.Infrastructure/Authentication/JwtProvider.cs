@@ -53,8 +53,8 @@ public sealed class JwtProvider : IJwtProvider
             new Claim(JwtRegisteredClaimNames.Sub, athlete.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, athlete.Email),
             new Claim(ClaimTypes.Role, Roles.Athlete),
-            // Sporcu da kendi koçunun TenantId'sine aittir.
-            new Claim("tenantId", athlete.CoachId.ToString()) 
+            // Sporcunun tenantId'si KENDİ ID'si olmalıdır, çünkü Global Query Filter'lar buna göre yazılmış.
+            new Claim("tenantId", athlete.Id.ToString()) 
         };
 
         var signingCredentials = new SigningCredentials(

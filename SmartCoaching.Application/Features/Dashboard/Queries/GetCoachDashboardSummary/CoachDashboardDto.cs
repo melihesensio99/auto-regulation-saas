@@ -6,7 +6,6 @@ namespace SmartCoaching.Application.Features.Dashboard.Queries.GetCoachDashboard
 public record CoachDashboardDto(
     int TotalAthletes,
     int DailyActiveAthletes,
-    double WeeklyComplianceRatePercentage,
     string AiInsight,
     List<AthletePerformanceDto> AthletePerformances
 );

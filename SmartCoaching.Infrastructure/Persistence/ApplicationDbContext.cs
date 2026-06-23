@@ -60,30 +60,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         // MULTI-TENANCY: Global Query Filters
-        // If there's a logged-in coach, filter by their CoachId. If athlete, filter by their AthleteId.
+        // Athlete entity has the master CoachId check.
         modelBuilder.Entity<Athlete>().HasQueryFilter(a => 
             _currentUserService.TenantId == Guid.Empty || 
             (_currentUserService.Role == Roles.Coach && a.CoachId == _currentUserService.TenantId) || 
             (_currentUserService.Role == Roles.Athlete && a.Id == _currentUserService.TenantId));
             
-        modelBuilder.Entity<DailyProgress>().HasQueryFilter(dp => 
-            _currentUserService.TenantId == Guid.Empty || 
-            (_currentUserService.Role == Roles.Coach && dp.Athlete.CoachId == _currentUserService.TenantId) || 
-            (_currentUserService.Role == Roles.Athlete && dp.AthleteId == _currentUserService.TenantId));
-            
-        modelBuilder.Entity<WeeklyCheckIn>().HasQueryFilter(w => 
-            _currentUserService.TenantId == Guid.Empty || 
-            (_currentUserService.Role == Roles.Coach && w.Athlete.CoachId == _currentUserService.TenantId) || 
-            (_currentUserService.Role == Roles.Athlete && w.AthleteId == _currentUserService.TenantId));
-
-        modelBuilder.Entity<WorkoutExercise>().HasQueryFilter(we => 
-            _currentUserService.TenantId == Guid.Empty || 
-            (_currentUserService.Role == Roles.Coach && we.Athlete.CoachId == _currentUserService.TenantId) || 
-            (_currentUserService.Role == Roles.Athlete && we.AthleteId == _currentUserService.TenantId));
-
-        modelBuilder.Entity<DietMeal>().HasQueryFilter(d => 
-            _currentUserService.TenantId == Guid.Empty || 
-            (_currentUserService.Role == Roles.Coach && d.Athlete.CoachId == _currentUserService.TenantId) || 
-            (_currentUserService.Role == Roles.Athlete && d.AthleteId == _currentUserService.TenantId));
+        // Removed child entity query filters completely to prevent Npgsql UPDATE bugs.
+        // Handlers already protect access by checking the Athlete first.
     }
 }

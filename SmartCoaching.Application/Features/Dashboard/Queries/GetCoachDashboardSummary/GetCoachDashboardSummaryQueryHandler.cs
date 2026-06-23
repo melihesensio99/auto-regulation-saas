@@ -47,6 +47,7 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
             
             int daysElapsed = (int)(today - startOfWeek).TotalDays + 1;
             int athleteComplianceDays = 0;
+            int athleteStepComplianceDays = 0;
             
             var progressDict = athlete.DailyProgresses.ToDictionary(dp => dp.Date.Date);
             
@@ -55,55 +56,90 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
                 if (progressDict.TryGetValue(d, out var dp))
                 {
                     if (dp.ConsumedCalories > 0 && dp.ConsumedCalories <= athlete.TargetCalories)
-                    {
                         athleteComplianceDays++;
-                    }
+                    
+                    if (dp.TakenSteps > 0 && dp.TakenSteps >= athlete.TargetSteps)
+                        athleteStepComplianceDays++;
                 }
             }
 
-            totalExpectedDays += daysElapsed;
-            totalComplianceDays += athleteComplianceDays;
-
             decimal weeklyTargetCalories = athlete.TargetCalories * 7;
             decimal weeklyConsumedCalories = athlete.DailyProgresses.Sum(dp => dp.ConsumedCalories);
+            int weeklyTargetSteps = athlete.TargetSteps * 7;
+            int weeklyTakenSteps = athlete.DailyProgresses.Sum(dp => dp.TakenSteps);
             
             bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
+            bool isMetStepTarget = daysElapsed > 0 && athleteStepComplianceDays == daysElapsed;
             bool isSlacking = progressDict.Count < (daysElapsed / 2.0); // Veri girişi yarıdan azsa tembeldir
+            bool isActiveToday = progressDict.ContainsKey(today);
+            double athleteComplianceRate = daysElapsed == 0 ? 0 : Math.Round((double)athleteComplianceDays / daysElapsed * 100, 2);
 
             int remainingSubscriptionDays = (athlete.SubscriptionEndDate - DateTime.UtcNow.Date).Days;
             if (remainingSubscriptionDays < 0) remainingSubscriptionDays = 0;
 
-            performances.Add(new AthletePerformanceDto(
-                athlete.Id,
-                $"{athlete.FirstName} {athlete.LastName}",
-                athlete.HeightCm,
-                weeklyTargetCalories,
-                weeklyConsumedCalories,
-                isMetCalorieTarget,
-                latestCheckIn?.WeightKg ?? 0,
-                latestCheckIn?.FrontPhotoUrl,
-                isSlacking,
-                remainingSubscriptionDays
-            ));
+            performances.Add(new AthletePerformanceDto
+            {
+                AthleteId = athlete.Id,
+                FullName = $"{athlete.FirstName} {athlete.LastName}",
+                HeightCm = athlete.HeightCm,
+                WeeklyTargetCalories = weeklyTargetCalories,
+                WeeklyConsumedCalories = weeklyConsumedCalories,
+                IsMetCalorieTarget = isMetCalorieTarget,
+                WeeklyTargetSteps = weeklyTargetSteps,
+                WeeklyTakenSteps = weeklyTakenSteps,
+                IsMetStepTarget = isMetStepTarget,
+                LatestWeightKg = latestCheckIn?.WeightKg ?? 0,
+                LatestFrontPhotoUrl = latestCheckIn?.FrontPhotoUrl,
+                IsSlacking = isSlacking,
+                RemainingSubscriptionDays = remainingSubscriptionDays,
+                IsActiveToday = isActiveToday,
+                WeeklyComplianceRatePercentage = athleteComplianceRate
+            });
         }
 
-        double complianceRate = totalExpectedDays == 0 ? 0 : Math.Round((double)totalComplianceDays / totalExpectedDays * 100, 2);
+        // 3. Yapay Zeka Analizi (Tekil İnceleme)
+        var teamDataJson = System.Text.Json.JsonSerializer.Serialize(performances.Select(p => new {
+            p.AthleteId,
+            p.FullName,
+            p.WeeklyTargetCalories,
+            p.WeeklyConsumedCalories,
+            p.WeeklyTargetSteps,
+            p.WeeklyTakenSteps,
+            p.IsSlacking
+        }));
 
-        // 3. Yapay Zeka Analizi
-        var teamDataJson = System.Text.Json.JsonSerializer.Serialize(new
+        string aiInsightJson = await _aiService.GenerateInsightAsync(teamDataJson, cancellationToken);
+        
+        try 
         {
-            TotalAthletes = totalAthletes,
-            WeeklyComplianceRate = complianceRate,
-            Performances = performances
-        });
+            // Remove markdown code blocks if AI added them
+            string cleanJson = aiInsightJson.Trim();
+            if (cleanJson.StartsWith("```json")) cleanJson = cleanJson.Substring(7);
+            if (cleanJson.StartsWith("```")) cleanJson = cleanJson.Substring(3);
+            if (cleanJson.EndsWith("```")) cleanJson = cleanJson.Substring(0, cleanJson.Length - 3);
+            cleanJson = cleanJson.Trim();
 
-        string aiInsight = await _aiService.GenerateInsightAsync(teamDataJson, cancellationToken);
+            var insights = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<Guid, string>>(cleanJson);
+            if (insights != null)
+            {
+                foreach (var perf in performances)
+                {
+                    if (insights.TryGetValue(perf.AthleteId, out var insightText))
+                    {
+                        perf.AiInsight = insightText;
+                    }
+                }
+            }
+        }
+        catch 
+        {
+            // AI JSON formatında dönmezse global olarak hata mesajı gösterebiliriz veya boş bırakabiliriz
+        }
 
         var dto = new CoachDashboardDto(
             totalAthletes,
             dailyActiveAthletes,
-            complianceRate,
-            aiInsight,
+            "Takımın yapay zeka analizleri tekil bazda listelenmiştir.",
             performances
         );
 

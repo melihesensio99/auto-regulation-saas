@@ -7,5 +7,9 @@ public record DailyProgressDto(
     DateTime Date,
     decimal ConsumedCalories,
     int TakenSteps,
+    decimal TargetCalories,
+    int TargetSteps,
+    bool IsCalorieTargetMet,
+    bool IsStepTargetMet,
     string? Notes
 );
