@@ -1,74 +1,61 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { CheckInList } from './CheckInList';
 import { WorkoutProgramPanel } from './WorkoutProgramPanel';
 
 interface AthleteDetailsTabsProps {
     athleteId: string | null;
+    athleteName: string | null;
 }
 
-export const AthleteDetailsTabs = ({ athleteId }: AthleteDetailsTabsProps) => {
-    const [activeTab, setActiveTab] = useState<'checkins' | 'workout' | 'diet' | 'targets'>('checkins');
+const tabs = [
+    { key: 'checkins', label: '📊  Haftalık Raporlar', enabled: true },
+    { key: 'workout', label: '🏋️  Antrenman', enabled: true },
+    { key: 'diet', label: '🥗  Beslenme', enabled: false },
+    { key: 'targets', label: '🎯  Hedefler', enabled: false },
+] as const;
+
+type TabKey = typeof tabs[number]['key'];
+
+export const AthleteDetailsTabs = ({ athleteId, athleteName }: AthleteDetailsTabsProps) => {
+    const [activeTab, setActiveTab] = useState<TabKey>('checkins');
 
     if (!athleteId) {
         return (
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--text-secondary)' }}>
-                Detayları görmek için sol taraftan bir sporcu seçin.
+            <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+                <div className="empty-state">
+                    <span className="empty-state-icon">👈</span>
+                    <p style={{ fontSize: '1rem' }}>Detayları görmek için sol taraftan bir sporcu seçin.</p>
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            {/* Sekme Butonları (Tabs Header) */}
-            <div style={{ display: 'flex', gap: '10px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
-                <button 
-                    onClick={() => setActiveTab('checkins')}
-                    style={{ 
-                        background: activeTab === 'checkins' ? 'var(--primary)' : 'transparent',
-                        color: activeTab === 'checkins' ? '#000' : '#fff',
-                        border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'checkins' ? 'bold' : 'normal'
-                    }}
-                >
-                    Haftalık Raporlar
-                </button>
-                <button 
-                    onClick={() => setActiveTab('workout')}
-                    style={{ 
-                        background: activeTab === 'workout' ? 'var(--primary)' : 'transparent',
-                        color: activeTab === 'workout' ? '#000' : '#fff',
-                        border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'workout' ? 'bold' : 'normal'
-                    }}
-                >
-                    Antrenman Programı
-                </button>
-                <button 
-                    disabled
-                    onClick={() => setActiveTab('diet')}
-                    style={{ 
-                        background: activeTab === 'diet' ? 'var(--primary)' : 'transparent',
-                        color: activeTab === 'diet' ? '#000' : 'rgba(255,255,255,0.3)',
-                        border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'not-allowed', transition: 'all 0.2s'
-                    }}
-                    title="Çok Yakında"
-                >
-                    Beslenme (Yakında)
-                </button>
-                <button 
-                    disabled
-                    onClick={() => setActiveTab('targets')}
-                    style={{ 
-                        background: activeTab === 'targets' ? 'var(--primary)' : 'transparent',
-                        color: activeTab === 'targets' ? '#000' : 'rgba(255,255,255,0.3)',
-                        border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'not-allowed', transition: 'all 0.2s'
-                    }}
-                    title="Çok Yakında"
-                >
-                    Hedefler (Yakında)
-                </button>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden' }}>
+            {/* Sporcu Adı + Sekmeler */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                {athleteName && (
+                    <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+                        {athleteName}
+                    </h2>
+                )}
+                <div className="tab-bar">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.key}
+                            onClick={() => tab.enabled && setActiveTab(tab.key)}
+                            disabled={!tab.enabled}
+                            className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+                            title={!tab.enabled ? 'Çok Yakında' : undefined}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
             </div>
 
-            {/* Seçili Sekmenin İçeriği (Tab Content) */}
-            <div style={{ flex: 1, overflow: 'hidden' }}>
+            {/* Seçili Sekmenin İçeriği */}
+            <div style={{ flex: 1, overflow: 'hidden' }} className="animate-fade-in" key={activeTab}>
                 {activeTab === 'checkins' && <CheckInList athleteId={athleteId} />}
                 {activeTab === 'workout' && <WorkoutProgramPanel athleteId={athleteId} />}
             </div>

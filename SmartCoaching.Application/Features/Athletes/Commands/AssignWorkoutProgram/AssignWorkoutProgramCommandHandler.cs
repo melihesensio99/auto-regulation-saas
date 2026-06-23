@@ -41,6 +41,12 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             Notes = e.Notes
         }).ToList();
 
+        // Mevcut egzersizleri veritabanından tamamen sil (Orphan kalmaması için)
+        if (athlete.WorkoutExercises.Any())
+        {
+            _context.WorkoutExercises.RemoveRange(athlete.WorkoutExercises);
+        }
+
         // Athlete objesindeki listeyi yenile
         athlete.SetWorkoutExercises(newExercises);
 

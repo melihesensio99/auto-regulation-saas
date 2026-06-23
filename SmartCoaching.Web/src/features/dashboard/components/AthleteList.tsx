@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Athlete } from '../types';
 import { AddAthleteModal } from './AddAthleteModal';
 
@@ -14,49 +14,45 @@ export const AthleteList = ({ athletes, isLoading, error, selectedAthleteId, onS
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
-        <div className="glass-panel" style={{ width: '300px', display: 'flex', flexDirection: 'column' }}>
+        <div className="glass-panel" style={{ width: '280px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h2 style={{ margin: 0 }}>Sporcularım</h2>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', letterSpacing: '-0.01em' }}>Sporcularım</h3>
                 <button 
                     onClick={() => setIsModalOpen(true)}
-                    style={{
-                        background: 'var(--primary)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: '32px',
-                        height: '32px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        fontSize: '20px',
-                        cursor: 'pointer',
-                        padding: 0,
-                        lineHeight: '1'
-                    }}
+                    className="btn-add"
                     title="Yeni Sporcu Ekle"
                 >
                     +
                 </button>
             </div>
             
-            {isLoading && <p>Yükleniyor...</p>}
-            {error && <p style={{ color: 'var(--danger)' }}>Sporcular alınamadı.</p>}
+            {isLoading && (
+                <div className="empty-state">
+                    <span>Yükleniyor...</span>
+                </div>
+            )}
+
+            {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>Sporcular alınamadı.</p>}
             
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {athletes?.map(athlete => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', overflowY: 'auto', flex: 1, paddingRight: '4px' }}>
+                {athletes?.map((athlete, index) => (
                     <button 
                         key={athlete.id}
                         onClick={() => onSelectAthlete(athlete.id)}
-                        style={{ 
-                            padding: '15px', 
-                            textAlign: 'left',
-                            backgroundColor: selectedAthleteId === athlete.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                            color: selectedAthleteId === athlete.id ? '#000' : '#fff',
-                            transition: 'all 0.2s'
-                        }}
+                        className={`athlete-item animate-slide-in ${selectedAthleteId === athlete.id ? 'selected' : ''}`}
+                        style={{ animationDelay: `${index * 0.05}s` }}
                     >
-                        {athlete.firstName} {athlete.lastName}
+                        <div className="athlete-avatar">
+                            {athlete.firstName[0]}{athlete.lastName[0]}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>
+                                {athlete.firstName} {athlete.lastName}
+                            </span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                {athlete.email || 'Sporcu'}
+                            </span>
+                        </div>
                     </button>
                 ))}
             </div>
