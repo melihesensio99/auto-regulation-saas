@@ -29,3 +29,35 @@ export interface CreateAthleteRequest {
     startingWeightKg: number;
     subscriptionEndDate: string;
 }
+
+export interface WorkoutExercise {
+    dayName: string;
+    exerciseName: string;
+    sets: number;
+    reps: string;
+    restTimeInSeconds: number;
+    notes: string | null;
+}
+
+export interface AssignWorkoutProgramRequest {
+    exercises: WorkoutExercise[];
+}
+
+export interface WorkoutExerciseResponse {
+    id: string;
+    exerciseName: string;
+    sets: number;
+    reps: string;
+    restTimeInSeconds: number;
+    notes: string | null;
+}
+
+export interface WorkoutDay {
+    dayName: string;
+    exercises: WorkoutExerciseResponse[];
+}
+
+export interface AthleteWorkoutProgram {
+    athleteId: string;
+    days: WorkoutDay[];
+}

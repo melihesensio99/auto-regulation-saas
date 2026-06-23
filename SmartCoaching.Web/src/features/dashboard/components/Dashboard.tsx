@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAthletes } from '../hooks/useDashboard';
 import { AthleteList } from './AthleteList';
-import { CheckInList } from './CheckInList';
+import { AthleteDetailsTabs } from './AthleteDetailsTabs';
 
 export const Dashboard = () => {
     // Tüm Dashboard'u ilgilendiren tek lokal state: "Hangi sporcu seçili?"
@@ -22,8 +22,8 @@ export const Dashboard = () => {
                 onSelectAthlete={setSelectedAthleteId} 
             />
 
-            {/* SAĞ PANEL (Lego Parçası 2) */}
-            <CheckInList athleteId={selectedAthleteId} />
+            {/* SAĞ PANEL (Lego Parçası 2 - Sekmeli Yapı) */}
+            <AthleteDetailsTabs athleteId={selectedAthleteId} />
             
         </div>
     );

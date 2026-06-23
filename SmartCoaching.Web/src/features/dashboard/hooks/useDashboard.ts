@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboard.service';
+import type { AssignWorkoutProgramRequest } from '../types';
 
 // 1. Sporcuları Getiren Hook (Read)
 export const useAthletes = () => {
@@ -41,6 +42,29 @@ export const useCreateAthlete = () => {
         onSuccess: () => {
             // Başarılı olduğunda sporcular listesini yeniden çek
             queryClient.invalidateQueries({ queryKey: ['athletes'] });
+        }
+    });
+};
+
+// 5. Antrenman Programı Getiren Hook
+export const useWorkoutProgram = (athleteId: string | null) => {
+    return useQuery({
+        queryKey: ['workoutProgram', athleteId],
+        queryFn: () => dashboardService.getWorkoutProgram(athleteId!),
+        enabled: !!athleteId,
+        retry: false, // 404 (Program yok) dönebilir, tekrar denemesine gerek yok
+    });
+};
+
+// 6. Antrenman Programı Atayan Hook
+export const useAssignWorkout = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ athleteId, data }: { athleteId: string, data: AssignWorkoutProgramRequest }) => 
+            dashboardService.assignWorkoutProgram(athleteId, data),
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ['workoutProgram', variables.athleteId] });
         }
     });
 };

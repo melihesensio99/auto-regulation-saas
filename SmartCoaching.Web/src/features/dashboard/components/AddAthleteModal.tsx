@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useCreateAthlete } from '../hooks/useDashboard';
 
 interface AddAthleteModalProps {
@@ -50,7 +51,7 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
         }
     };
 
-    return (
+    const modalContent = (
         <div style={{
             position: 'fixed',
             top: 0, left: 0, right: 0, bottom: 0,
@@ -58,7 +59,7 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            zIndex: 1000,
+            zIndex: 9999,
             backdropFilter: 'blur(5px)'
         }}>
             <div className="glass-panel" style={{ width: '450px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -132,4 +133,6 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };
