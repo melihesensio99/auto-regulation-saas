@@ -14,6 +14,13 @@ export const AthleteDashboard = () => {
     const [weight, setWeight] = useState('');
     const [notes, setNotes] = useState('');
     const [workoutCompleted, setWorkoutCompleted] = useState(false);
+    
+    // Photo states
+    const [frontPhotoUrl, setFrontPhotoUrl] = useState('');
+    const [backPhotoUrl, setBackPhotoUrl] = useState('');
+    const [sidePhotoUrl, setSidePhotoUrl] = useState('');
+
+    const isSunday = new Date().getDay() === 0;
 
     if (isProfileLoading) {
         return <div style={{ color: 'white', padding: '20px' }}>Yükleniyor...</div>;
@@ -28,9 +35,9 @@ export const AthleteDashboard = () => {
             weightKg: weight ? parseFloat(weight) : null,
             notes,
             isWorkoutCompleted: workoutCompleted,
-            frontPhotoUrl: null,
-            backPhotoUrl: null,
-            sidePhotoUrl: null
+            frontPhotoUrl: frontPhotoUrl || null,
+            backPhotoUrl: backPhotoUrl || null,
+            sidePhotoUrl: sidePhotoUrl || null
         }, {
             onSuccess: () => {
                 alert('Günlük gelişim kaydedildi!');
@@ -39,6 +46,9 @@ export const AthleteDashboard = () => {
                 setWeight('');
                 setNotes('');
                 setWorkoutCompleted(false);
+                setFrontPhotoUrl('');
+                setBackPhotoUrl('');
+                setSidePhotoUrl('');
             }
         });
     };
@@ -81,6 +91,20 @@ export const AthleteDashboard = () => {
                             <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>Günün Notu (Opsiyonel)</label>
                             <textarea value={notes} onChange={e => setNotes(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '10px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', minHeight: '80px' }} />
                         </div>
+
+                        {isSunday && (
+                            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '15px', borderRadius: '10px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                <h4 style={{ margin: '0 0 10px 0', color: 'var(--accent-primary)' }}>📸 Haftalık Form Kontrolü (Pazar)</h4>
+                                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '15px' }}>
+                                    Lütfen haftalık değerlendirme için güncel form fotoğraflarınızı (URL) ekleyin.
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <input type="url" placeholder="Ön Fotoğraf URL" value={frontPhotoUrl} onChange={e => setFrontPhotoUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                                    <input type="url" placeholder="Arka Fotoğraf URL" value={backPhotoUrl} onChange={e => setBackPhotoUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                                    <input type="url" placeholder="Yan Fotoğraf URL" value={sidePhotoUrl} onChange={e => setSidePhotoUrl(e.target.value)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
+                                </div>
+                            </div>
+                        )}
 
                         <button type="submit" disabled={isLogging} style={{ padding: '15px', background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
                             {isLogging ? 'Kaydediliyor...' : 'Günlük Veriyi Kaydet'}
