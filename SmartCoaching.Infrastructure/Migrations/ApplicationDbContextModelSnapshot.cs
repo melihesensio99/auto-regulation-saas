@@ -34,8 +34,11 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DateOfBirth")
+                    b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DietaryPreferences")
+                        .HasColumnType("text");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -45,18 +48,37 @@ namespace SmartCoaching.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("HeightCm")
+                    b.Property<string>("GeneralDietNotes")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Goals")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("HeightCm")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("InjuryHistory")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsOnboardingCompleted")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastProgramNotificationSentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Lifestyle")
                         .HasColumnType("text");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("StartingWeightKg")
+                    b.Property<double?>("StartingWeightKg")
                         .HasColumnType("double precision");
 
                     b.Property<DateTime>("SubscriptionEndDate")
@@ -64,6 +86,9 @@ namespace SmartCoaching.Infrastructure.Migrations
 
                     b.Property<DateTime>("SubscriptionStartDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SupplementUsage")
+                        .HasColumnType("text");
 
                     b.Property<decimal>("TargetCalories")
                         .HasColumnType("numeric");
@@ -117,46 +142,6 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.ToTable("Coaches");
                 });
 
-            modelBuilder.Entity("SmartCoaching.Domain.Entities.DailyProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AthleteId")
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("ConsumedCalories")
-                        .HasColumnType("numeric");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsWorkoutCompleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("text");
-
-                    b.Property<int>("TakenSteps")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<double?>("WeightKg")
-                        .HasColumnType("double precision");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AthleteId");
-
-                    b.ToTable("DailyProgresses");
-                });
-
             modelBuilder.Entity("SmartCoaching.Domain.Entities.DietMeal", b =>
                 {
                     b.Property<Guid>("Id")
@@ -166,8 +151,17 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<Guid>("AthleteId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("Calories")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Carbs")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Fats")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Foods")
                         .IsRequired()
@@ -181,6 +175,12 @@ namespace SmartCoaching.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Protein")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -191,7 +191,7 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.ToTable("DietMeals");
                 });
 
-            modelBuilder.Entity("SmartCoaching.Domain.Entities.WeeklyCheckIn", b =>
+            modelBuilder.Entity("SmartCoaching.Domain.Entities.ProgressLog", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -209,6 +209,9 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<string>("CoachFeedback")
                         .HasColumnType("text");
 
+                    b.Property<decimal>("ConsumedCalories")
+                        .HasColumnType("numeric");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -218,20 +221,29 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<string>("FrontPhotoUrl")
                         .HasColumnType("text");
 
+                    b.Property<bool>("IsWorkoutCompleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
+
                     b.Property<string>("SidePhotoUrl")
                         .HasColumnType("text");
+
+                    b.Property<int>("TakenSteps")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("WeightKg")
-                        .HasColumnType("numeric");
+                    b.Property<double?>("WeightKg")
+                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AthleteId");
 
-                    b.ToTable("WeeklyCheckIns");
+                    b.ToTable("ProgressLogs");
                 });
 
             modelBuilder.Entity("SmartCoaching.Domain.Entities.WorkoutExercise", b =>
@@ -285,17 +297,6 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Navigation("Coach");
                 });
 
-            modelBuilder.Entity("SmartCoaching.Domain.Entities.DailyProgress", b =>
-                {
-                    b.HasOne("SmartCoaching.Domain.Entities.Athlete", "Athlete")
-                        .WithMany("DailyProgresses")
-                        .HasForeignKey("AthleteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Athlete");
-                });
-
             modelBuilder.Entity("SmartCoaching.Domain.Entities.DietMeal", b =>
                 {
                     b.HasOne("SmartCoaching.Domain.Entities.Athlete", "Athlete")
@@ -307,10 +308,10 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Navigation("Athlete");
                 });
 
-            modelBuilder.Entity("SmartCoaching.Domain.Entities.WeeklyCheckIn", b =>
+            modelBuilder.Entity("SmartCoaching.Domain.Entities.ProgressLog", b =>
                 {
                     b.HasOne("SmartCoaching.Domain.Entities.Athlete", "Athlete")
-                        .WithMany("WeeklyCheckIns")
+                        .WithMany("ProgressLogs")
                         .HasForeignKey("AthleteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -331,11 +332,9 @@ namespace SmartCoaching.Infrastructure.Migrations
 
             modelBuilder.Entity("SmartCoaching.Domain.Entities.Athlete", b =>
                 {
-                    b.Navigation("DailyProgresses");
-
                     b.Navigation("DietMeals");
 
-                    b.Navigation("WeeklyCheckIns");
+                    b.Navigation("ProgressLogs");
 
                     b.Navigation("WorkoutExercises");
                 });

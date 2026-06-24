@@ -19,14 +19,11 @@ public class AssignWorkoutProgramCommandValidator : AbstractValidator<AssignWork
 
 public class WorkoutExerciseDtoValidator : AbstractValidator<WorkoutExerciseDto>
 {
-    private readonly string[] _validDays = { "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar" };
-
     public WorkoutExerciseDtoValidator()
     {
         RuleFor(v => v.DayName)
             .NotEmpty().WithMessage("Gün adı boş olamaz.")
-            .Must(day => _validDays.Contains(day))
-            .WithMessage("Geçerli bir gün adı giriniz (Örn: Pazartesi, Salı, Çarşamba...).");
+            .MaximumLength(100).WithMessage("Gün adı en fazla 100 karakter olabilir.");
 
         RuleFor(v => v.ExerciseName)
             .NotEmpty().WithMessage("Egzersiz adı boş olamaz.")

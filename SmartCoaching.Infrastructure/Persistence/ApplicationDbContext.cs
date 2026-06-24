@@ -17,8 +17,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
     public DbSet<Coach> Coaches => Set<Coach>();
     public DbSet<Athlete> Athletes => Set<Athlete>();
-    public DbSet<DailyProgress> DailyProgresses { get; set; }
-    public DbSet<WeeklyCheckIn> WeeklyCheckIns { get; set; }
+    public DbSet<ProgressLog> ProgressLogs { get; set; }
     public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
     public DbSet<DietMeal> DietMeals { get; set; }
 
@@ -38,18 +37,11 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasIndex(c => c.Email)
             .IsUnique();
 
-        // Athlete - DailyProgress İlişkisi (1'e Çok)
+        // Athlete - ProgressLog İlişkisi (1'e Çok)
         modelBuilder.Entity<Athlete>()
-            .HasMany(a => a.DailyProgresses)
-            .WithOne(dp => dp.Athlete)
-            .HasForeignKey(dp => dp.AthleteId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        // Athlete - WeeklyCheckIn İlişkisi (1'e Çok)
-        modelBuilder.Entity<Athlete>()
-            .HasMany(a => a.WeeklyCheckIns)
-            .WithOne(w => w.Athlete)
-            .HasForeignKey(w => w.AthleteId)
+            .HasMany(a => a.ProgressLogs)
+            .WithOne(pl => pl.Athlete)
+            .HasForeignKey(pl => pl.AthleteId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Athlete - WorkoutExercise İlişkisi (1'e Çok)

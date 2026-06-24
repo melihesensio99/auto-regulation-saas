@@ -17,11 +17,6 @@ public class CreateAthleteCommandValidator : AbstractValidator<CreateAthleteComm
             .MaximumLength(50).WithMessage("Sporcu soyadı 50 karakteri geçemez.");
 
 
-        // Doğum tarihi bugünden eski bir tarih olmalı (Gelecekte doğmuş olamaz)
-        RuleFor(x => x.DateOfBirth)
-            .NotEmpty().WithMessage("Doğum tarihi boş olamaz.")
-            .LessThan(DateTime.UtcNow).WithMessage("Doğum tarihi bugünden küçük olmalıdır.");
-
         // Abonelik bitiş tarihi bugünden ileri bir tarih olmalı
         RuleFor(x => x.SubscriptionEndDate)
             .NotEmpty().WithMessage("Üyelik bitiş tarihi boş olamaz.")

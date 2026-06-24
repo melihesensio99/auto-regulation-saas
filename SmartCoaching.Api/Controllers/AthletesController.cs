@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
+using SmartCoaching.Application.Features.Athletes.Commands.SubmitOnboardingForm;
 using SmartCoaching.Application.Features.Athletes.Queries.GetWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
-using SmartCoaching.Application.Features.Athletes.Queries.GetAthleteCheckIns;
+using SmartCoaching.Application.Features.Athletes.Commands.LogProgressCommand;
+using SmartCoaching.Application.Features.Athletes.Queries.GetAthleteProgressLogs;
 using SmartCoaching.Application.Features.Athletes.Commands.AddCoachFeedback;
 using SmartCoaching.Domain.Constants;
 using System;
@@ -42,41 +44,55 @@ public class AthletesController(ISender sender) : ApiControllerBase
 
     [HttpPost("{id}/progress")]
     [Authorize(Roles = Roles.Athlete)]
-    public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogDailyProgressRequestDto dto)
+    public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogProgressRequestDto dto)
     {
-        var command = new LogDailyProgressCommand(id, dto.Date, dto.ConsumedCalories, dto.TakenSteps, dto.WeightKg, dto.IsWorkoutCompleted, dto.Notes);
+        var command = new LogProgressCommand(
+            id, 
+            dto.Date, 
+            dto.ConsumedCalories, 
+            dto.TakenSteps, 
+            dto.IsWorkoutCompleted, 
+            dto.WeightKg, 
+            dto.Notes, 
+            dto.FrontPhotoUrl, 
+            dto.BackPhotoUrl, 
+            dto.SidePhotoUrl);
         return HandleResult(await sender.Send(command));
     }
 
-    [HttpPost("{id}/check-in")]
+    [HttpPost("{id}/onboarding")]
     [Authorize(Roles = Roles.Athlete)]
-    public async Task<IActionResult> SubmitCheckIn(Guid id, [FromBody] SubmitWeeklyCheckInRequestDto dto)
+    public async Task<IActionResult> SubmitOnboardingForm(Guid id, [FromBody] SubmitOnboardingFormRequestDto dto)
     {
-        var command = new SubmitWeeklyCheckInCommand(id, dto.Date, dto.WeightKg, dto.FrontPhotoUrl, dto.BackPhotoUrl, dto.SidePhotoUrl);
+        var command = new SubmitOnboardingFormCommand(
+            id, 
+            dto.DateOfBirth, 
+            dto.HeightCm, 
+            dto.StartingWeightKg, 
+            dto.InjuryHistory, 
+            dto.Goals, 
+            dto.Lifestyle, 
+            dto.SupplementUsage, 
+            dto.DietaryPreferences
+        );
         return HandleResult(await sender.Send(command));
     }
 
-    [HttpGet("{id}/check-ins")]
-    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
-    public async Task<IActionResult> GetCheckIns(Guid id)
-    {
-        var query = new GetAthleteCheckInsQuery(id);
-        return HandleResult(await sender.Send(query));
-    }
 
-    [HttpPut("{id}/check-ins/{checkInId}/feedback")]
+
+    [HttpPut("{id}/progress/{progressLogId}/feedback")]
     [Authorize(Roles = Roles.Coach)]
-    public async Task<IActionResult> AddCoachFeedback(Guid id, Guid checkInId, [FromBody] AddCoachFeedbackRequestDto dto)
+    public async Task<IActionResult> AddCoachFeedback(Guid id, Guid progressLogId, [FromBody] AddCoachFeedbackRequestDto dto)
     {
-        var command = new AddCoachFeedbackCommand(id, checkInId, dto.Feedback);
+        var command = new AddCoachFeedbackCommand(id, progressLogId, dto.Feedback);
         return HandleResult(await sender.Send(command));
     }
 
     [HttpGet("{id}/progress")]
     [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
-    public async Task<IActionResult> GetProgress(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
+    public async Task<IActionResult> GetProgressLogs(Guid id, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate)
     {
-        var query = new GetAthleteProgressQuery(id, startDate, endDate);
+        var query = new GetAthleteProgressLogsQuery(id, startDate, endDate);
         return HandleResult(await sender.Send(query));
     }
 
@@ -100,7 +116,7 @@ public class AthletesController(ISender sender) : ApiControllerBase
     [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> AssignDietProgram(Guid id, [FromBody] AssignDietProgramRequestDto dto)
     {
-        var command = new AssignDietProgramCommand { AthleteId = id, Meals = dto.Meals };
+        var command = new AssignDietProgramCommand { AthleteId = id, GeneralDietNotes = dto.GeneralDietNotes, Meals = dto.Meals };
         return HandleResult(await sender.Send(command));
     }
 

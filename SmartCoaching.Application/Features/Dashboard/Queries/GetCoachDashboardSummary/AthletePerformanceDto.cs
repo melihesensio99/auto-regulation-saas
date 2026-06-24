@@ -19,5 +19,5 @@ public class AthletePerformanceDto
     public int RemainingSubscriptionDays { get; set; }
     public bool IsActiveToday { get; set; }
     public double WeeklyComplianceRatePercentage { get; set; }
-    public string? AiInsight { get; set; }
+    public decimal StartingWeightKg { get; set; }
 }

@@ -9,8 +9,7 @@ public interface IApplicationDbContext
 {
     DbSet<Coach> Coaches { get; }
     DbSet<Athlete> Athletes { get; }
-    DbSet<DailyProgress> DailyProgresses { get; }
-    DbSet<WeeklyCheckIn> WeeklyCheckIns { get; }
+    DbSet<ProgressLog> ProgressLogs { get; }
     DbSet<WorkoutExercise> WorkoutExercises { get; }
     DbSet<DietMeal> DietMeals { get; }
 

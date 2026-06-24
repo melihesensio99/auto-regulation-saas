@@ -14,9 +14,6 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
-    const [dateOfBirth, setDateOfBirth] = useState('');
-    const [heightCm, setHeightCm] = useState('');
-    const [startingWeightKg, setStartingWeightKg] = useState('');
     const [subscriptionEndDate, setSubscriptionEndDate] = useState(() => {
         // Default to 1 month from today
         const date = new Date();
@@ -33,18 +30,12 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
                 firstName,
                 lastName,
                 email,
-                dateOfBirth: new Date(dateOfBirth).toISOString(),
-                heightCm: parseFloat(heightCm),
-                startingWeightKg: parseFloat(startingWeightKg),
                 subscriptionEndDate: new Date(subscriptionEndDate).toISOString()
             });
             // Success! Reset form and close
             setFirstName('');
             setLastName('');
             setEmail('');
-            setDateOfBirth('');
-            setHeightCm('');
-            setStartingWeightKg('');
             onClose();
         } catch (err) {
             console.error('Sporcu eklenirken hata oluştu:', err);
@@ -95,30 +86,10 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
                             style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Doğum Tarihi</label>
-                            <input type="date" required value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Abonelik Bitiş</label>
-                            <input type="date" required value={subscriptionEndDate} onChange={e => setSubscriptionEndDate(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Boy (cm)</label>
-                            <input type="number" required value={heightCm} onChange={e => setHeightCm(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Başlangıç Kilo (kg)</label>
-                            <input type="number" step="0.1" required value={startingWeightKg} onChange={e => setStartingWeightKg(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Abonelik Bitiş</label>
+                        <input type="date" required value={subscriptionEndDate} onChange={e => setSubscriptionEndDate(e.target.value)}
+                            style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>

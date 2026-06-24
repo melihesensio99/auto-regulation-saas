@@ -6,6 +6,6 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.AddCoachFeedback;
 
 public record AddCoachFeedbackCommand(
     Guid AthleteId,
-    Guid CheckInId,
+    Guid ProgressLogId,
     string Feedback
 ) : IRequest<Result>;

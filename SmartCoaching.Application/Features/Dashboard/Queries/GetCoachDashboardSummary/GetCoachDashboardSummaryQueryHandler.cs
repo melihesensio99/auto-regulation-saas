@@ -12,12 +12,9 @@ namespace SmartCoaching.Application.Features.Dashboard.Queries.GetCoachDashboard
 public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDashboardSummaryQuery, Result<CoachDashboardDto>>
 {
     private readonly IApplicationDbContext _dbContext;
-    private readonly IAiService _aiService;
-
-    public GetCoachDashboardSummaryQueryHandler(IApplicationDbContext dbContext, IAiService aiService)
+    public GetCoachDashboardSummaryQueryHandler(IApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
-        _aiService = aiService;
     }
 
     public async Task<Result<CoachDashboardDto>> Handle(GetCoachDashboardSummaryQuery request, CancellationToken cancellationToken)
@@ -30,12 +27,11 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
         // 2. Global Query Filter sayesinde sadece bu antrenörün sporcuları gelir.
         var athletes = await _dbContext.Athletes
-            .Include(a => a.DailyProgresses.Where(dp => dp.Date >= startOfWeek && dp.Date <= endOfWeek))
-            .Include(a => a.WeeklyCheckIns.Where(w => w.Date >= startOfWeek && w.Date <= endOfWeek).OrderByDescending(w => w.Date).Take(1))
+            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= startOfWeek && pl.Date <= endOfWeek))
             .ToListAsync(cancellationToken);
 
         int totalAthletes = athletes.Count;
-        int dailyActiveAthletes = athletes.Count(a => a.DailyProgresses.Any(dp => dp.Date.Date == today));
+        int dailyActiveAthletes = athletes.Count(a => a.ProgressLogs.Any(pl => pl.Date.Date == today));
 
         var performances = new System.Collections.Generic.List<AthletePerformanceDto>();
         int totalComplianceDays = 0;
@@ -43,13 +39,13 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
         foreach (var athlete in athletes)
         {
-            var latestCheckIn = athlete.WeeklyCheckIns.FirstOrDefault();
+            var latestCheckIn = athlete.ProgressLogs.Where(p => p.HasPhotos()).OrderByDescending(p => p.Date).FirstOrDefault();
             
             int daysElapsed = (int)(today - startOfWeek).TotalDays + 1;
             int athleteComplianceDays = 0;
             int athleteStepComplianceDays = 0;
             
-            var progressDict = athlete.DailyProgresses.ToDictionary(dp => dp.Date.Date);
+            var progressDict = athlete.ProgressLogs.ToDictionary(pl => pl.Date.Date);
             
             for (var d = startOfWeek; d <= today; d = d.AddDays(1))
             {
@@ -64,9 +60,9 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
             }
 
             decimal weeklyTargetCalories = athlete.TargetCalories * 7;
-            decimal weeklyConsumedCalories = athlete.DailyProgresses.Sum(dp => dp.ConsumedCalories);
+            decimal weeklyConsumedCalories = athlete.ProgressLogs.Sum(pl => pl.ConsumedCalories);
             int weeklyTargetSteps = athlete.TargetSteps * 7;
-            int weeklyTakenSteps = athlete.DailyProgresses.Sum(dp => dp.TakenSteps);
+            int weeklyTakenSteps = athlete.ProgressLogs.Sum(pl => pl.TakenSteps);
             
             bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
             bool isMetStepTarget = daysElapsed > 0 && athleteStepComplianceDays == daysElapsed;
@@ -81,60 +77,23 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
             {
                 AthleteId = athlete.Id,
                 FullName = $"{athlete.FirstName} {athlete.LastName}",
-                HeightCm = athlete.HeightCm,
+                HeightCm = athlete.HeightCm ?? 0,
                 WeeklyTargetCalories = weeklyTargetCalories,
                 WeeklyConsumedCalories = weeklyConsumedCalories,
                 IsMetCalorieTarget = isMetCalorieTarget,
                 WeeklyTargetSteps = weeklyTargetSteps,
                 WeeklyTakenSteps = weeklyTakenSteps,
                 IsMetStepTarget = isMetStepTarget,
-                LatestWeightKg = latestCheckIn?.WeightKg ?? 0,
+                LatestWeightKg = (decimal)(latestCheckIn?.WeightKg ?? 0),
                 LatestFrontPhotoUrl = latestCheckIn?.FrontPhotoUrl,
                 IsSlacking = isSlacking,
                 RemainingSubscriptionDays = remainingSubscriptionDays,
                 IsActiveToday = isActiveToday,
-                WeeklyComplianceRatePercentage = athleteComplianceRate
+                WeeklyComplianceRatePercentage = athleteComplianceRate,
+                StartingWeightKg = (decimal)(athlete.StartingWeightKg ?? 0)
             });
         }
 
-        // 3. Yapay Zeka Analizi (Tekil İnceleme)
-        var teamDataJson = System.Text.Json.JsonSerializer.Serialize(performances.Select(p => new {
-            p.AthleteId,
-            p.FullName,
-            p.WeeklyTargetCalories,
-            p.WeeklyConsumedCalories,
-            p.WeeklyTargetSteps,
-            p.WeeklyTakenSteps,
-            p.IsSlacking
-        }));
-
-        string aiInsightJson = await _aiService.GenerateInsightAsync(teamDataJson, cancellationToken);
-        
-        try 
-        {
-            // Remove markdown code blocks if AI added them
-            string cleanJson = aiInsightJson.Trim();
-            if (cleanJson.StartsWith("```json")) cleanJson = cleanJson.Substring(7);
-            if (cleanJson.StartsWith("```")) cleanJson = cleanJson.Substring(3);
-            if (cleanJson.EndsWith("```")) cleanJson = cleanJson.Substring(0, cleanJson.Length - 3);
-            cleanJson = cleanJson.Trim();
-
-            var insights = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<Guid, string>>(cleanJson);
-            if (insights != null)
-            {
-                foreach (var perf in performances)
-                {
-                    if (insights.TryGetValue(perf.AthleteId, out var insightText))
-                    {
-                        perf.AiInsight = insightText;
-                    }
-                }
-            }
-        }
-        catch 
-        {
-            // AI JSON formatında dönmezse global olarak hata mesajı gösterebiliriz veya boş bırakabiliriz
-        }
 
         var dto = new CoachDashboardDto(
             totalAthletes,

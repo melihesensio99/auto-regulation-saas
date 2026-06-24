@@ -8,8 +8,5 @@ public record CreateAthleteCommand(
     string FirstName,
     string LastName,
     string Email,
-    DateTime DateOfBirth,
-    double HeightCm,
-    double StartingWeightKg,
     DateTime SubscriptionEndDate) : IRequest<Result<Guid>>;
 

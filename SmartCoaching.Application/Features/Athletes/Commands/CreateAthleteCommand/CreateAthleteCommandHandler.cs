@@ -40,7 +40,7 @@ public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand,
         // 2. Güvenlikten geçtik, yeni sporcuyu (Entity) yarat ve rastgele şifresini hashle
         string temporaryPassword = "Smart" + Guid.NewGuid().ToString().Substring(0, 6) + "!";
         var passwordHash = _passwordHasher.Hash(temporaryPassword);
-        var athlete = Athlete.Create(request.FirstName, request.LastName, request.Email, passwordHash, request.DateOfBirth, request.HeightCm, request.StartingWeightKg, coachId, request.SubscriptionEndDate);
+        var athlete = Athlete.Create(request.FirstName, request.LastName, request.Email, passwordHash, coachId, request.SubscriptionEndDate);
 
         // 3. Veritabanına ekle ve kaydet
         _context.Athletes.Add(athlete);

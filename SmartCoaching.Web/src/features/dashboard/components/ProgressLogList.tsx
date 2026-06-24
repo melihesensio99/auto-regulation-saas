@@ -1,22 +1,27 @@
 import { useState } from 'react';
-import { useCheckIns, useAddFeedback } from '../hooks/useDashboard';
-import type { CheckIn } from '../types';
+import { useProgressLogs, useAddFeedback } from '../hooks/useDashboard';
+import type { ProgressLog } from '../types';
 
-interface CheckInListProps {
+interface ProgressLogListProps {
     athleteId: string | null;
 }
 
-export const CheckInList = ({ athleteId }: CheckInListProps) => {
+export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
     const [feedbackText, setFeedbackText] = useState('');
     
-    const { data: checkIns, isLoading } = useCheckIns(athleteId);
+    // Geçmiş 30 günü getiriyoruz varsayalım (veya daha dinamik yapılabilir)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+    const endDate = new Date();
+
+    const { data: progressLogs, isLoading } = useProgressLogs(athleteId, startDate.toISOString(), endDate.toISOString());
     const addFeedbackMutation = useAddFeedback();
 
-    const handleFeedbackSubmit = (checkInId: string) => {
+    const handleFeedbackSubmit = (progressLogId: string) => {
         if (!athleteId || !feedbackText.trim()) return;
         
         addFeedbackMutation.mutate(
-            { athleteId, checkInId, feedback: feedbackText },
+            { athleteId, progressLogId, feedback: feedbackText },
             {
                 onSuccess: () => {
                     setFeedbackText('');
@@ -40,25 +45,25 @@ export const CheckInList = ({ athleteId }: CheckInListProps) => {
     if (isLoading) {
         return (
             <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <p>Check-In raporları yükleniyor...</p>
+                <p>Gelişim kayıtları yükleniyor...</p>
             </div>
         );
     }
 
     return (
         <div className="glass-panel" style={{ flex: 1, overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>📊 Haftalık Raporlar</h3>
+            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>📊 Gelişim Günlüğü (Fotoğraflı Kayıtlar)</h3>
             
-            {checkIns?.length === 0 ? (
+            {progressLogs?.filter(p => p.frontPhotoUrl || p.backPhotoUrl || p.sidePhotoUrl).length === 0 ? (
                 <div className="empty-state">
                     <span className="empty-state-icon">📭</span>
-                    <p>Bu sporcu henüz hiç rapor göndermemiş.</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sporcu haftalık check-in gönderdiğinde burada listelenecek.</p>
+                    <p>Bu sporcu henüz hiç fotoğraflı gelişim kaydı (Check-In) göndermemiş.</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sporcu fotoğraf eklediğinde kayıtlar burada listelenecek.</p>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {checkIns?.map((checkIn: CheckIn, index: number) => (
-                        <div key={checkIn.id} className="animate-fade-in" style={{ 
+                    {progressLogs?.filter(p => p.frontPhotoUrl || p.backPhotoUrl || p.sidePhotoUrl).map((log: ProgressLog, index: number) => (
+                        <div key={log.id} className="animate-fade-in" style={{ 
                             animationDelay: `${index * 0.08}s`,
                             background: 'rgba(0,0,0,0.25)', 
                             padding: '20px', 
@@ -69,34 +74,41 @@ export const CheckInList = ({ athleteId }: CheckInListProps) => {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <span style={{ fontSize: '1.1rem' }}>📅</span>
                                     <h4 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '0.9rem' }}>
-                                        {new Date(checkIn.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        {new Date(log.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                                     </h4>
                                 </div>
                                 <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>
-                                    ⚖️ {checkIn.weightKg} KG
+                                    ⚖️ {log.weightKg || '-'} KG
                                 </span>
                             </div>
 
+                            {/* Fotoğraflar Eklenebilir */}
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                                {log.frontPhotoUrl && <img src={log.frontPhotoUrl} alt="Front" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
+                                {log.backPhotoUrl && <img src={log.backPhotoUrl} alt="Back" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
+                                {log.sidePhotoUrl && <img src={log.sidePhotoUrl} alt="Side" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
+                            </div>
+
                             {/* AI ANALİZ KARTI */}
-                            {checkIn.aiAnalysis && (
+                            {log.aiAnalysis && (
                                 <div style={{
                                     padding: '16px 20px', marginBottom: '16px', borderRadius: '12px',
                                     background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)',
                                     border: '1px solid rgba(139, 92, 246, 0.25)'
                                 }}>
                                     <h5 style={{ color: '#a78bfa', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 700 }}>✨ Mistral AI Analizi</h5>
-                                    <p style={{ color: '#d1d5db', lineHeight: '1.65', fontSize: '0.85rem', margin: 0 }}>{checkIn.aiAnalysis}</p>
+                                    <p style={{ color: '#d1d5db', lineHeight: '1.65', fontSize: '0.85rem', margin: 0 }}>{log.aiAnalysis}</p>
                                 </div>
                             )}
 
                             {/* KOÇ GERİ BİLDİRİMİ */}
-                            {checkIn.coachFeedback ? (
+                            {log.coachFeedback ? (
                                 <div style={{ 
                                     background: 'rgba(16, 185, 129, 0.08)', padding: '14px 18px', borderRadius: '10px', 
                                     border: '1px solid rgba(16, 185, 129, 0.2)' 
                                 }}>
                                     <h5 style={{ color: 'var(--success)', marginBottom: '6px', fontSize: '0.8rem', fontWeight: 700 }}>✅ Sizin Geri Bildiriminiz</h5>
-                                    <p style={{ margin: 0, fontSize: '0.85rem' }}>{checkIn.coachFeedback}</p>
+                                    <p style={{ margin: 0, fontSize: '0.85rem' }}>{log.coachFeedback}</p>
                                 </div>
                             ) : (
                                 <div style={{ marginTop: '12px' }}>
@@ -108,7 +120,7 @@ export const CheckInList = ({ athleteId }: CheckInListProps) => {
                                         style={{ width: '100%', minHeight: '70px', resize: 'vertical', marginBottom: '10px' }}
                                     />
                                     <button 
-                                        onClick={() => handleFeedbackSubmit(checkIn.id)}
+                                        onClick={() => handleFeedbackSubmit(log.id)}
                                         disabled={addFeedbackMutation.isPending}
                                         className="btn-save"
                                     >

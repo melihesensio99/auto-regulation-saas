@@ -102,4 +102,44 @@ public class MistralAiService : IAiService
 
         return messageContent?.Trim() ?? "No analysis generated.";
     }
+
+    public async Task<string> CalculateMacrosAsync(string jsonPayload, CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration["Mistral:ApiKey"];
+        var model = _configuration["Mistral:Model"] ?? "mistral-small-latest";
+
+        if (string.IsNullOrEmpty(apiKey))
+            return "{}";
+
+        var requestBody = new
+        {
+            model = model,
+            response_format = new { type = "json_object" },
+            messages = new[]
+            {
+                new { role = "system", content = "Sen profesyonel bir diyetisyen yapay zekasın. Sana verilen öğünlerdeki yiyecek metinlerini analiz et ve Protein, Karbonhidrat (Carbs), Yağ (Fats) ve Kalori (Calories) değerlerini tahmin et. Dönüşün SADECE aşağıdaki gibi JSON formatında olmalıdır. Anahtarlar öğünün Id'si olmalıdır. Örneğin: {\"b097b6a1-0000-0000-0000-000000000000\": {\"Protein\": 30, \"Carbs\": 50, \"Fats\": 10, \"Calories\": 410}}" },
+                new { role = "user", content = jsonPayload }
+            }
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.mistral.ai/v1/chat/completions");
+        request.Headers.Add("Authorization", $"Bearer {apiKey}");
+        request.Content = JsonContent.Create(requestBody);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            return "{}";
+
+        using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var jsonDoc = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+        
+        var messageContent = jsonDoc.RootElement
+            .GetProperty("choices")[0]
+            .GetProperty("message")
+            .GetProperty("content")
+            .GetString();
+
+        return messageContent?.Trim() ?? "{}";
+    }
 }

@@ -1,8 +1,11 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
+using SmartCoaching.Application.Features.Athletes.Services;
 using SmartCoaching.Domain.Common;
 using SmartCoaching.Domain.Entities;
+using MassTransit;
+using SmartCoaching.Application.Common.Events;
 using System;
 using System.Linq;
 using System.Threading;
@@ -13,10 +16,12 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram
 public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgramCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public AssignDietProgramCommandHandler(IApplicationDbContext context)
+    public AssignDietProgramCommandHandler(IApplicationDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(AssignDietProgramCommand request, CancellationToken cancellationToken)
@@ -35,12 +40,26 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             Athlete = athlete,
             MealName = m.MealName,
             Foods = m.Foods,
-            Notes = m.Notes
+            Notes = m.Notes,
+            Order = m.Order,
+            Protein = m.Protein,
+            Carbs = m.Carbs,
+            Fats = m.Fats,
+            Calories = m.Calories
         }).ToList();
 
-        athlete.SetDietMeals(newMeals);
+        athlete.SetDietMeals(newMeals, request.GeneralDietNotes);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Publish event for AI macro calculation
+        await _publishEndpoint.Publish(new DietPlanAssignedEvent(athlete.Id), cancellationToken);
+
+        // Auto Notification Logic (Refactored to Helper)
+        if (newMeals.Any())
+        {
+            await ProgramNotificationHelper.CheckAndSendProgramPublishedEventAsync(athlete, _context, _publishEndpoint, cancellationToken);
+        }
 
         return Result.Success(athlete.Id);
     }

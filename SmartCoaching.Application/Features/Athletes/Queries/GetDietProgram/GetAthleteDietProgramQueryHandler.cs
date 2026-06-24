@@ -19,23 +19,31 @@ public class GetAthleteDietProgramQueryHandler : IRequestHandler<GetAthleteDietP
 
     public async Task<Result<DietProgramResponseDto>> Handle(GetAthleteDietProgramQuery request, CancellationToken cancellationToken)
     {
-        var athleteExists = await _context.Athletes.AnyAsync(a => a.Id == request.AthleteId, cancellationToken);
+        var athlete = await _context.Athletes
+            .Include(a => a.DietMeals)
+            .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
         
-        if (!athleteExists)
+        if (athlete == null)
             return Result.Failure<DietProgramResponseDto>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        var meals = await _context.DietMeals
-            .Where(m => m.AthleteId == request.AthleteId)
+        var meals = athlete.DietMeals
+            .OrderBy(m => m.Order)
             .Select(m => new DietMealResponseDto(
                 m.Id,
+                m.Order,
                 m.MealName,
                 m.Foods,
-                m.Notes
+                m.Notes,
+                m.Protein,
+                m.Carbs,
+                m.Fats,
+                m.Calories
             ))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var response = new DietProgramResponseDto(
-            request.AthleteId,
+            athlete.Id,
+            athlete.GeneralDietNotes,
             meals
         );
 

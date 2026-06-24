@@ -22,8 +22,24 @@ export const useAuth = () => {
             // Başarılı ise token'ı kaydet
             localStorage.setItem('token', response.token);
             
-            // Dashboard'a yönlendir
-            navigate('/dashboard');
+            // Token'ı decode et ve yönlendirmeye karar ver
+            try {
+                const payloadStr = atob(response.token.split('.')[1]);
+                const payload = JSON.parse(payloadStr);
+                const role = payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+                const isOnboardingCompleted = payload['isOnboardingCompleted'];
+
+                if (role === 'Athlete' && isOnboardingCompleted === 'False') {
+                    navigate('/onboarding');
+                } else if (role === 'Athlete') {
+                    navigate('/athlete/dashboard');
+                } else {
+                    navigate('/dashboard');
+                }
+            } catch (e) {
+                // Eğer parse edilemezse default olarak dashboard'a git
+                navigate('/dashboard');
+            }
             
         } catch (err: any) {
             // Hata mesajını yakala ve state'e ata

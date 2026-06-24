@@ -6,7 +6,7 @@ public record AthleteDto(
     Guid Id,
     string FirstName,
     string LastName,
-    DateTime DateOfBirth,
+    DateTime? DateOfBirth,
     decimal TargetCalories,
     int TargetSteps,
     DateTime CreatedAt,

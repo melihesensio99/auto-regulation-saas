@@ -26,7 +26,9 @@ public static class DependencyInjection
         services.AddMassTransit(x =>
         {
             x.AddConsumer<AthleteCreatedEventConsumer>();
-            x.AddConsumer<WeeklyCheckInSubmittedEventConsumer>();
+            x.AddConsumer<DietPlanAssignedEventConsumer>();
+            x.AddConsumer<OnboardingCompletedEventConsumer>();
+            x.AddConsumer<ProgramPublishedEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

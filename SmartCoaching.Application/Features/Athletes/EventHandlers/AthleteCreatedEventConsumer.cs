@@ -29,7 +29,8 @@ public class AthleteCreatedEventConsumer : IConsumer<AthleteCreatedEvent>
                     <li><b>E-posta:</b> {message.Email}</li>
                     <li><b>Geçici Şifre:</b> {message.TemporaryPassword}</li>
                 </ul>
-                <p>Güvenliğiniz için uygulamaya giriş yaptıktan sonra profil ayarlarınızdan şifrenizi değiştirmenizi öneririz.</p>
+                <p>Güvenliğiniz için uygulamaya giriş yaptıktan sonra profil ayarlarınızdan şifrenizi değiştirebilirsiniz.</p>
+                <p style=""color: #d97706; font-weight: bold;"">ÖNEMLİ: Sisteme ilk girişinizde karşınıza çıkacak olan Kayıt ve Tanışma Formunu doldurmanız gerekmektedir (Boy, kilo, hedefleriniz, sakatlık durumunuz vb.). Koçunuz, formunuzu doldurduktan sonra programınızı hazırlayacaktır.</p>
                 <br>
                 <p>Sağlıklı günler dileriz,<br>SmartCoaching Ekibi</p>
             </body>

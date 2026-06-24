@@ -20,17 +20,17 @@ public class AddCoachFeedbackCommandHandler : IRequestHandler<AddCoachFeedbackCo
     public async Task<Result> Handle(AddCoachFeedbackCommand request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
-            .Include(a => a.WeeklyCheckIns)
+            .Include(a => a.ProgressLogs)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)
             return Result.Failure(new Error("Athlete.NotFound", "Sporcu bulunamadı veya yetkiniz yok."));
 
-        var checkIn = athlete.WeeklyCheckIns.FirstOrDefault(w => w.Id == request.CheckInId);
-        if (checkIn == null)
-            return Result.Failure(new Error("WeeklyCheckIn.NotFound", "İlgili haftalık tartı kaydı bulunamadı."));
+        var progressLog = athlete.ProgressLogs.FirstOrDefault(w => w.Id == request.ProgressLogId);
+        if (progressLog == null)
+            return Result.Failure(new Error("ProgressLog.NotFound", "İlgili gelişim kaydı bulunamadı."));
 
-        checkIn.AddCoachFeedback(request.Feedback);
+        progressLog.AddCoachFeedback(request.Feedback);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

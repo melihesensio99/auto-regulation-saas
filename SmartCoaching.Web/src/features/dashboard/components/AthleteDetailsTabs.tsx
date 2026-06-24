@@ -1,45 +1,41 @@
 import { useState } from 'react';
-import { CheckInList } from './CheckInList';
+import { ProgressLogList } from './ProgressLogList';
 import { WorkoutProgramPanel } from './WorkoutProgramPanel';
+import { TeamOverviewPanel } from './TeamOverviewPanel';
+import { DietProgramPanel } from './DietProgramPanel';
 
 interface AthleteDetailsTabsProps {
     athleteId: string | null;
-    athleteName: string | null;
 }
 
 const tabs = [
-    { key: 'checkins', label: '📊  Haftalık Raporlar', enabled: true },
+    { key: 'progresslogs', label: '📊  Gelişim', enabled: true },
     { key: 'workout', label: '🏋️  Antrenman', enabled: true },
-    { key: 'diet', label: '🥗  Beslenme', enabled: false },
+    { key: 'diet', label: '🥗  Beslenme', enabled: true },
     { key: 'targets', label: '🎯  Hedefler', enabled: false },
 ] as const;
 
 type TabKey = typeof tabs[number]['key'];
 
-export const AthleteDetailsTabs = ({ athleteId, athleteName }: AthleteDetailsTabsProps) => {
-    const [activeTab, setActiveTab] = useState<TabKey>('checkins');
+export const AthleteDetailsTabs = ({ athleteId }: AthleteDetailsTabsProps) => {
+    const [activeTab, setActiveTab] = useState<TabKey>('progresslogs');
 
     if (!athleteId) {
-        return (
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
-                <div className="empty-state">
-                    <span className="empty-state-icon">👈</span>
-                    <p style={{ fontSize: '1rem' }}>Detayları görmek için sol taraftan bir sporcu seçin.</p>
-                </div>
-            </div>
-        );
+        return <TeamOverviewPanel />;
     }
 
     return (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden' }}>
-            {/* Sporcu Adı + Sekmeler */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                {athleteName && (
-                    <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                        {athleteName}
-                    </h2>
-                )}
-                <div className="tab-bar">
+            {/* Sekmeler */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+                <div className="tab-bar" style={{ 
+                    background: 'rgba(255,255,255,0.03)', 
+                    padding: '6px', 
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'inline-flex',
+                    gap: '4px'
+                }}>
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
@@ -47,6 +43,11 @@ export const AthleteDetailsTabs = ({ athleteId, athleteName }: AthleteDetailsTab
                             disabled={!tab.enabled}
                             className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
                             title={!tab.enabled ? 'Çok Yakında' : undefined}
+                            style={{
+                                padding: '10px 20px',
+                                fontSize: '0.9rem',
+                                borderRadius: '8px',
+                            }}
                         >
                             {tab.label}
                         </button>
@@ -56,8 +57,9 @@ export const AthleteDetailsTabs = ({ athleteId, athleteName }: AthleteDetailsTab
 
             {/* Seçili Sekmenin İçeriği */}
             <div style={{ flex: 1, overflow: 'hidden' }} className="animate-fade-in" key={activeTab}>
-                {activeTab === 'checkins' && <CheckInList athleteId={athleteId} />}
+                {activeTab === 'progresslogs' && <ProgressLogList athleteId={athleteId} />}
                 {activeTab === 'workout' && <WorkoutProgramPanel athleteId={athleteId} />}
+                {activeTab === 'diet' && <DietProgramPanel athleteId={athleteId} />}
             </div>
         </div>
     );
