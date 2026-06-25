@@ -36,13 +36,21 @@ public class SubmitOnboardingFormCommandHandler : IRequestHandler<SubmitOnboardi
 
         athlete.CompleteOnboarding(
             request.DateOfBirth,
+            request.PhoneNumber,
+            request.Occupation,
+            request.MainReason,
+            request.ShortTermGoal,
+            request.LongTermGoal,
+            request.Expectations,
             request.HeightCm,
             request.StartingWeightKg,
-            request.InjuryHistory,
-            request.Goals,
-            request.Lifestyle,
-            request.SupplementUsage,
-            request.DietaryPreferences
+            request.TrainingHistory,
+            request.CurrentTrainingRoutine,
+            request.OutsidePhysicalActivity,
+            request.HasTrackedMacros,
+            request.HasWorkedWithCoach,
+            request.HearAboutUs,
+            request.AdditionalNotes
         );
 
         await _context.SaveChangesAsync(cancellationToken);

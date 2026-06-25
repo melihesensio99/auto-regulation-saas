@@ -67,13 +67,21 @@ public class AthletesController(ISender sender) : ApiControllerBase
         var command = new SubmitOnboardingFormCommand(
             id, 
             dto.DateOfBirth, 
+            dto.PhoneNumber,
+            dto.Occupation,
+            dto.MainReason,
+            dto.ShortTermGoal,
+            dto.LongTermGoal,
+            dto.Expectations,
             dto.HeightCm, 
             dto.StartingWeightKg, 
-            dto.InjuryHistory, 
-            dto.Goals, 
-            dto.Lifestyle, 
-            dto.SupplementUsage, 
-            dto.DietaryPreferences
+            dto.TrainingHistory,
+            dto.CurrentTrainingRoutine,
+            dto.OutsidePhysicalActivity,
+            dto.HasTrackedMacros,
+            dto.HasWorkedWithCoach,
+            dto.HearAboutUs,
+            dto.AdditionalNotes
         );
         return HandleResult(await sender.Send(command));
     }

@@ -2,6 +2,25 @@ export interface Athlete {
     id: string;
     firstName: string;
     lastName: string;
+    dateOfBirth?: string;
+    targetCalories?: number;
+    targetSteps?: number;
+    isOnboardingCompleted?: boolean;
+    phoneNumber?: string;
+    occupation?: string;
+    mainReason?: string;
+    shortTermGoal?: string;
+    longTermGoal?: string;
+    expectations?: string;
+    heightCm?: number;
+    startingWeightKg?: number;
+    trainingHistory?: string;
+    currentTrainingRoutine?: string;
+    outsidePhysicalActivity?: string;
+    hasTrackedMacros?: string;
+    hasWorkedWithCoach?: string;
+    hearAboutUs?: string;
+    additionalNotes?: string;
 }
 
 export interface AthletePerformanceDto {
@@ -126,11 +145,19 @@ export interface AthleteDietProgram {
 
 export interface SubmitOnboardingFormRequest {
     dateOfBirth: string;
+    phoneNumber: string;
+    occupation: string;
+    mainReason: string;
+    shortTermGoal: string;
+    longTermGoal: string;
+    expectations: string;
     heightCm: number;
     startingWeightKg: number;
-    injuryHistory: string;
-    goals: string;
-    lifestyle: string;
-    supplementUsage: string;
-    dietaryPreferences: string;
+    trainingHistory: string;
+    currentTrainingRoutine: string;
+    outsidePhysicalActivity: string;
+    hasTrackedMacros: string;
+    hasWorkedWithCoach: string;
+    hearAboutUs: string;
+    additionalNotes: string;
 }

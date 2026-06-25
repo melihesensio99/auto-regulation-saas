@@ -25,11 +25,19 @@ public class Athlete : BaseEntity
 
     // Onboarding Alanları
     public bool IsOnboardingCompleted { get; private set; }
-    public string? InjuryHistory { get; private set; }
-    public string? Goals { get; private set; }
-    public string? Lifestyle { get; private set; }
-    public string? SupplementUsage { get; private set; }
-    public string? DietaryPreferences { get; private set; }
+    public string? PhoneNumber { get; private set; }
+    public string? Occupation { get; private set; }
+    public string? MainReason { get; private set; }
+    public string? ShortTermGoal { get; private set; }
+    public string? LongTermGoal { get; private set; }
+    public string? Expectations { get; private set; }
+    public string? TrainingHistory { get; private set; }
+    public string? CurrentTrainingRoutine { get; private set; }
+    public string? OutsidePhysicalActivity { get; private set; }
+    public string? HasTrackedMacros { get; private set; }
+    public string? HasWorkedWithCoach { get; private set; }
+    public string? HearAboutUs { get; private set; }
+    public string? AdditionalNotes { get; private set; }
 
     // Spam koruması
     public DateTime? LastProgramNotificationSentAt { get; private set; }
@@ -70,16 +78,41 @@ public class Athlete : BaseEntity
         return new Athlete(Guid.NewGuid(), firstName, lastName, email, passwordHash, coachId, DateTime.UtcNow, subscriptionEndDate);
     }
 
-    public void CompleteOnboarding(DateTime dateOfBirth, double heightCm, double startingWeightKg, string injuryHistory, string goals, string lifestyle, string supplementUsage, string dietaryPreferences)
+    public void CompleteOnboarding(
+        DateTime dateOfBirth, 
+        string phoneNumber,
+        string occupation,
+        string mainReason,
+        string shortTermGoal,
+        string longTermGoal,
+        string expectations,
+        double heightCm, 
+        double startingWeightKg, 
+        string trainingHistory,
+        string currentTrainingRoutine,
+        string outsidePhysicalActivity,
+        string hasTrackedMacros,
+        string hasWorkedWithCoach,
+        string hearAboutUs,
+        string additionalNotes)
     {
         DateOfBirth = DateTime.SpecifyKind(dateOfBirth.Date, DateTimeKind.Utc);
+        PhoneNumber = phoneNumber;
+        Occupation = occupation;
+        MainReason = mainReason;
+        ShortTermGoal = shortTermGoal;
+        LongTermGoal = longTermGoal;
+        Expectations = expectations;
         HeightCm = heightCm;
         StartingWeightKg = startingWeightKg;
-        InjuryHistory = injuryHistory;
-        Goals = goals;
-        Lifestyle = lifestyle;
-        SupplementUsage = supplementUsage;
-        DietaryPreferences = dietaryPreferences;
+        TrainingHistory = trainingHistory;
+        CurrentTrainingRoutine = currentTrainingRoutine;
+        OutsidePhysicalActivity = outsidePhysicalActivity;
+        HasTrackedMacros = hasTrackedMacros;
+        HasWorkedWithCoach = hasWorkedWithCoach;
+        HearAboutUs = hearAboutUs;
+        AdditionalNotes = additionalNotes;
+        
         IsOnboardingCompleted = true;
         UpdatedAt = DateTime.UtcNow;
     }
