@@ -5,11 +5,6 @@ namespace SmartCoaching.Domain.Entities;
 public class WorkoutExercise
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    
-    // Hangi sporcuya ait
-    public Guid AthleteId { get; set; }
-    public required Athlete Athlete { get; set; }
-    
     // Hangi gün yapılacak (Örn: "1. Gün", "Push Day")
     public required string DayName { get; set; }
     

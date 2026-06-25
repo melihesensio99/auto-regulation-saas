@@ -32,21 +32,9 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
         if (athlete == null)
             return Result.Failure<Guid>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        // Veritabanındaki eski egzersizleri bul ve sil
-        var oldExercises = await _context.WorkoutExercises
-            .Where(e => e.AthleteId == request.AthleteId)
-            .ToListAsync(cancellationToken);
-
-        if (oldExercises.Any())
-        {
-            _context.WorkoutExercises.RemoveRange(oldExercises);
-        }
-
         // Create new exercise list (Sıralamayı OrderIndex olarak kaydet)
         var newExercises = request.Exercises.Select((e, index) => new WorkoutExercise
         {
-            AthleteId = athlete.Id,
-            Athlete = athlete,
             DayName = e.DayName,
             ExerciseName = e.ExerciseName,
             Sets = e.Sets,
@@ -56,8 +44,8 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             OrderIndex = index
         }).ToList();
 
-        // Yeni egzersizleri veritabanına ekle
-        await _context.WorkoutExercises.AddRangeAsync(newExercises, cancellationToken);
+        // JSON dizisi olarak sporcuya ata
+        athlete.SetWorkoutExercises(newExercises);
 
         // Save changes
         await _context.SaveChangesAsync(cancellationToken);

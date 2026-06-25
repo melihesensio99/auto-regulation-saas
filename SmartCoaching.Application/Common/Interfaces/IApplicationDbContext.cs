@@ -10,7 +10,6 @@ public interface IApplicationDbContext
     DbSet<Coach> Coaches { get; }
     DbSet<Athlete> Athletes { get; }
     DbSet<ProgressLog> ProgressLogs { get; }
-    DbSet<WorkoutExercise> WorkoutExercises { get; }
     DbSet<DietMeal> DietMeals { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);

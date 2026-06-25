@@ -20,15 +20,15 @@ public class GetAthleteWorkoutProgramQueryHandler : IRequestHandler<GetAthleteWo
 
     public async Task<Result<AthleteWorkoutProgramDto>> Handle(GetAthleteWorkoutProgramQuery request, CancellationToken cancellationToken)
     {
-        var athleteExists = await _context.Athletes.AnyAsync(a => a.Id == request.AthleteId, cancellationToken);
+        var athlete = await _context.Athletes
+            .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
         
-        if (!athleteExists)
+        if (athlete == null)
             return Result.Failure<AthleteWorkoutProgramDto>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        var exercises = await _context.WorkoutExercises
-            .Where(we => we.AthleteId == request.AthleteId)
+        var exercises = athlete.WorkoutExercises
             .OrderBy(we => we.OrderIndex)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         // Günlere göre grupla (Group By DayName)
         var groupedDays = exercises

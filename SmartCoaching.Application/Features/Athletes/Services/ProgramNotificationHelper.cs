@@ -17,7 +17,7 @@ public static class ProgramNotificationHelper
         IPublishEndpoint publishEndpoint,
         CancellationToken cancellationToken)
     {
-        var hasWorkoutProgram = await context.WorkoutExercises.AnyAsync(m => m.AthleteId == athlete.Id, cancellationToken);
+        var hasWorkoutProgram = athlete.WorkoutExercises != null && athlete.WorkoutExercises.Any();
         var hasDietProgram = await context.DietMeals.AnyAsync(m => m.AthleteId == athlete.Id, cancellationToken);
 
         bool cooldownPassed = !athlete.LastProgramNotificationSentAt.HasValue || 
