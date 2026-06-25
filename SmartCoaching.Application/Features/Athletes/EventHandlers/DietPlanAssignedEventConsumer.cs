@@ -77,11 +77,3 @@ public class DietPlanAssignedEventConsumer : IConsumer<DietPlanAssignedEvent>
         }
     }
 }
-
-public class MacroDto
-{
-    public int Protein { get; set; }
-    public int Carbs { get; set; }
-    public int Fats { get; set; }
-    public int Calories { get; set; }
-}

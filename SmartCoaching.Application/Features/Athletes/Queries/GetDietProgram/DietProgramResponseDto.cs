@@ -9,14 +9,3 @@ public record DietProgramResponseDto(
     List<DietMealResponseDto> Meals
 );
 
-public record DietMealResponseDto(
-    Guid Id,
-    int Order,
-    string MealName,
-    string Foods,
-    string Notes,
-    int Protein,
-    int Carbs,
-    int Fats,
-    int Calories
-);

@@ -34,30 +34,16 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
         int dailyActiveAthletes = athletes.Count(a => a.ProgressLogs.Any(pl => pl.Date.Date == today));
 
         var performances = new System.Collections.Generic.List<AthletePerformanceDto>();
-        int totalComplianceDays = 0;
-        int totalExpectedDays = 0;
 
         foreach (var athlete in athletes)
         {
-            var latestCheckIn = athlete.ProgressLogs.Where(p => p.HasPhotos()).OrderByDescending(p => p.Date).FirstOrDefault();
+            var latestWeightLog = athlete.ProgressLogs.Where(p => p.WeightKg.HasValue).OrderByDescending(p => p.Date).FirstOrDefault();
+            var latestPhotoLog = athlete.ProgressLogs.Where(p => p.HasPhotos()).OrderByDescending(p => p.Date).FirstOrDefault();
             
             int daysElapsed = (int)(today - startOfWeek).TotalDays + 1;
-            int athleteComplianceDays = 0;
-            int athleteStepComplianceDays = 0;
             
-            var progressDict = athlete.ProgressLogs.ToDictionary(pl => pl.Date.Date);
-            
-            for (var d = startOfWeek; d <= today; d = d.AddDays(1))
-            {
-                if (progressDict.TryGetValue(d, out var dp))
-                {
-                    if (dp.ConsumedCalories > 0 && dp.ConsumedCalories <= athlete.TargetCalories)
-                        athleteComplianceDays++;
-                    
-                    if (dp.TakenSteps > 0 && dp.TakenSteps >= athlete.TargetSteps)
-                        athleteStepComplianceDays++;
-                }
-            }
+            int athleteComplianceDays = athlete.ProgressLogs.Count(dp => dp.Date >= startOfWeek && dp.Date <= today && dp.ConsumedCalories > 0 && dp.ConsumedCalories <= athlete.TargetCalories);
+            int athleteStepComplianceDays = athlete.ProgressLogs.Count(dp => dp.Date >= startOfWeek && dp.Date <= today && dp.TakenSteps > 0 && dp.TakenSteps >= athlete.TargetSteps);
 
             decimal weeklyTargetCalories = athlete.TargetCalories * 7;
             decimal weeklyConsumedCalories = athlete.ProgressLogs.Sum(pl => pl.ConsumedCalories);
@@ -66,8 +52,10 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
             
             bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
             bool isMetStepTarget = daysElapsed > 0 && athleteStepComplianceDays == daysElapsed;
-            bool isSlacking = progressDict.Count < (daysElapsed / 2.0); // Veri girişi yarıdan azsa tembeldir
-            bool isActiveToday = progressDict.ContainsKey(today);
+            
+            int logsThisWeek = athlete.ProgressLogs.Count(pl => pl.Date >= startOfWeek && pl.Date <= today);
+            bool isSlacking = logsThisWeek < (daysElapsed / 2.0);
+            bool isActiveToday = athlete.ProgressLogs.Any(pl => pl.Date.Date == today);
             double athleteComplianceRate = daysElapsed == 0 ? 0 : Math.Round((double)athleteComplianceDays / daysElapsed * 100, 2);
 
             int remainingSubscriptionDays = (athlete.SubscriptionEndDate - DateTime.UtcNow.Date).Days;
@@ -84,8 +72,8 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
                 WeeklyTargetSteps = weeklyTargetSteps,
                 WeeklyTakenSteps = weeklyTakenSteps,
                 IsMetStepTarget = isMetStepTarget,
-                LatestWeightKg = (decimal)(latestCheckIn?.WeightKg ?? 0),
-                LatestFrontPhotoUrl = latestCheckIn?.FrontPhotoUrl,
+                LatestWeightKg = (decimal)(latestWeightLog?.WeightKg ?? 0),
+                LatestFrontPhotoUrl = latestPhotoLog?.FrontPhotoUrl,
                 IsSlacking = isSlacking,
                 RemainingSubscriptionDays = remainingSubscriptionDays,
                 IsActiveToday = isActiveToday,

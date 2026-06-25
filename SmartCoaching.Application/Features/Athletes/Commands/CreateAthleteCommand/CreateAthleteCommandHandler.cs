@@ -44,6 +44,7 @@ public class CreateAthleteCommandHandler : IRequestHandler<CreateAthleteCommand,
 
         // 3. Veritabanına ekle ve kaydet
         _context.Athletes.Add(athlete);
+        
         await _context.SaveChangesAsync(cancellationToken);
 
         // 4. E-posta atılması için RabbitMQ'ya mesaj fırlat (Asenkron - Fire and Forget)
