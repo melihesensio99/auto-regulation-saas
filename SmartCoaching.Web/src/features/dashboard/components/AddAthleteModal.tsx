@@ -53,7 +53,7 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
             zIndex: 9999,
             backdropFilter: 'blur(5px)'
         }}>
-            <div className="glass-panel" style={{ width: '450px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', margin: '0 20px', maxHeight: '90vh', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <h2 style={{ margin: 0 }}>Yeni Sporcu Ekle</h2>
                     <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>×</button>
@@ -71,25 +71,25 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Ad</label>
                             <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Soyad</label>
                             <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)}
-                                style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
+                                style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                         </div>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>E-Posta</label>
                         <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                            style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Abonelik Bitiş</label>
                         <input type="date" required value={subscriptionEndDate} onChange={e => setSubscriptionEndDate(e.target.value)}
-                            style={{ padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
+                            style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>

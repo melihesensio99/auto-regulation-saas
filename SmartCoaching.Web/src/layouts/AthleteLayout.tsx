@@ -22,8 +22,8 @@ export const AthleteLayout = () => {
                 backdropFilter: 'blur(10px)'
             }}>
                 <div className="brand-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/athlete/dashboard')}>
-                    <div className="brand-icon">⚡</div>
-                    <span className="brand-text">SmartCoaching</span>
+                    <div className="brand-icon">🏔️</div>
+                    <span className="brand-text">Apex Athletics</span>
                 </div>
                 
                 <nav style={{ display: 'flex', gap: '20px' }}>

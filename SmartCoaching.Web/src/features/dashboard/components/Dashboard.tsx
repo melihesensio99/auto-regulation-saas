@@ -25,8 +25,8 @@ export const Dashboard = () => {
             {/* NAVBAR */}
             <nav className="navbar">
                 <div className="navbar-brand">
-                    <span style={{ fontSize: '1.4rem' }}>⚡</span>
-                    SmartCoaching
+                    <span style={{ fontSize: '1.4rem' }}>🏔️</span>
+                    Apex Athletics
                 </div>
                 <div className="navbar-user">
                     <span>Koç Paneli</span>
@@ -114,7 +114,7 @@ export const Dashboard = () => {
                     )}
 
                     {/* Sekmeli Detay — tam genişlik */}
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                         <AthleteDetailsTabs
                             athleteId={selectedAthleteId}
                         />

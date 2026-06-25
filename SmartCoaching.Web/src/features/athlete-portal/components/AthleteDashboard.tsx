@@ -56,7 +56,7 @@ export const AthleteDashboard = () => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
             <div style={{ padding: '30px', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <h1 style={{ margin: '0 0 10px 0', color: 'white' }}>Hoş Geldin, {profile?.firstName}! ⚡</h1>
+                <h1 style={{ margin: '0 0 10px 0', color: 'white' }}>Hoş Geldin, {profile?.firstName}! 🏔️</h1>
                 <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Bugün hedeflerine ulaşmak için harika bir gün. Günlük verilerini girmeyi unutma!</p>
             </div>
 
