@@ -21,6 +21,7 @@ public class GetAthleteWorkoutProgramQueryHandler : IRequestHandler<GetAthleteWo
     public async Task<Result<AthleteWorkoutProgramDto>> Handle(GetAthleteWorkoutProgramQuery request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
+            .Include(a => a.WorkoutExercises)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
         
         if (athlete == null)

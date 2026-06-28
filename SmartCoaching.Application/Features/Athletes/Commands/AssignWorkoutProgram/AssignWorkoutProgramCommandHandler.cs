@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Events;
@@ -32,9 +32,50 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
         if (athlete == null)
             return Result.Failure<Guid>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        // Create new exercise list (Sıralamayı OrderIndex olarak kaydet)
+        var currentExercises = await _context.WorkoutExercises
+            .AsNoTracking()
+            .Where(x => x.AthleteId == athlete.Id)
+            .OrderBy(x => x.OrderIndex)
+            .Select(x => new
+            {
+                x.DayName,
+                x.ExerciseName,
+                x.Sets,
+                x.Reps,
+                x.RestTimeInSeconds,
+                Notes = x.Notes ?? string.Empty
+            })
+            .ToListAsync(cancellationToken);
+
+        var incomingExercises = request.Exercises
+            .Select((e, index) => new
+            {
+                e.DayName,
+                e.ExerciseName,
+                e.Sets,
+                e.Reps,
+                e.RestTimeInSeconds,
+                Notes = e.Notes ?? string.Empty,
+                OrderIndex = index
+            })
+            .ToList();
+
+        var isSameProgram =
+            currentExercises.Count == incomingExercises.Count &&
+            currentExercises.Zip(incomingExercises, (current, incoming) =>
+                current.DayName == incoming.DayName &&
+                current.ExerciseName == incoming.ExerciseName &&
+                current.Sets == incoming.Sets &&
+                current.Reps == incoming.Reps &&
+                current.RestTimeInSeconds == incoming.RestTimeInSeconds &&
+                current.Notes == incoming.Notes).All(x => x);
+
+        if (isSameProgram)
+            return Result<Guid>.Success(athlete.Id);
+
         var newExercises = request.Exercises.Select((e, index) => new WorkoutExercise
         {
+            AthleteId = athlete.Id,
             DayName = e.DayName,
             ExerciseName = e.ExerciseName,
             Sets = e.Sets,
@@ -44,13 +85,13 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             OrderIndex = index
         }).ToList();
 
-        // JSON dizisi olarak sporcuya ata
-        athlete.SetWorkoutExercises(newExercises);
+        await _context.WorkoutExercises
+            .Where(x => x.AthleteId == athlete.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        // Save changes
+        _context.WorkoutExercises.AddRange(newExercises);
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Auto Notification Logic (Refactored to Helper)
         if (newExercises.Any())
         {
             await ProgramNotificationHelper.CheckAndSendProgramPublishedEventAsync(athlete, _context, _publishEndpoint, cancellationToken);

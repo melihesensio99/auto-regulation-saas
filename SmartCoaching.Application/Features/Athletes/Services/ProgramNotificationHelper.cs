@@ -1,4 +1,4 @@
-using MassTransit;
+﻿using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Events;
 using SmartCoaching.Application.Common.Interfaces;
@@ -17,10 +17,10 @@ public static class ProgramNotificationHelper
         IPublishEndpoint publishEndpoint,
         CancellationToken cancellationToken)
     {
-        var hasWorkoutProgram = athlete.WorkoutExercises != null && athlete.WorkoutExercises.Any();
+        var hasWorkoutProgram = await context.WorkoutExercises.AnyAsync(w => w.AthleteId == athlete.Id, cancellationToken);
         var hasDietProgram = await context.DietMeals.AnyAsync(m => m.AthleteId == athlete.Id, cancellationToken);
 
-        bool cooldownPassed = !athlete.LastProgramNotificationSentAt.HasValue || 
+        bool cooldownPassed = !athlete.LastProgramNotificationSentAt.HasValue ||
                               (DateTime.UtcNow - athlete.LastProgramNotificationSentAt.Value).TotalHours > 12;
 
         if (hasWorkoutProgram && hasDietProgram && cooldownPassed)

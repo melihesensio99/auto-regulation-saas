@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useMemo, useState } from 'react';
 import { useProgressLogs, useAddFeedback } from '../hooks/useDashboard';
 import type { ProgressLog } from '../types';
 
@@ -8,24 +8,29 @@ interface ProgressLogListProps {
 
 export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
     const [feedbackText, setFeedbackText] = useState('');
-    
-    // Geçmiş 30 günü getiriyoruz varsayalım (veya daha dinamik yapılabilir)
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30);
-    const endDate = new Date();
 
-    const { data: progressLogs, isLoading } = useProgressLogs(athleteId, startDate.toISOString(), endDate.toISOString());
+    const dateRange = useMemo(() => {
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+
+        return {
+            startDate: startDate.toISOString(),
+            endDate: new Date().toISOString(),
+        };
+    }, []);
+
+    const { data: progressLogs, isLoading, isError } = useProgressLogs(athleteId, dateRange.startDate, dateRange.endDate);
     const addFeedbackMutation = useAddFeedback();
 
     const handleFeedbackSubmit = (progressLogId: string) => {
         if (!athleteId || !feedbackText.trim()) return;
-        
+
         addFeedbackMutation.mutate(
             { athleteId, progressLogId, feedback: feedbackText },
             {
                 onSuccess: () => {
                     setFeedbackText('');
-                    alert("✅ Feedback başarıyla gönderildi!");
+                    alert('✅ Feedback başarıyla gönderildi!');
                 }
             }
         );
@@ -50,24 +55,38 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
         );
     }
 
+    if (isError) {
+        return (
+            <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div className="empty-state">
+                    <span className="empty-state-icon">⚠️</span>
+                    <p>Gelişim kayıtları alınamadı.</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bu sporcuya erişim, tarih filtresi veya servis yanıtı kontrol edilmeli.</p>
+                </div>
+            </div>
+        );
+    }
+
+    const visibleLogs = progressLogs ?? [];
+
     return (
         <div className="glass-panel" style={{ flex: 1, overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>📊 Gelişim Günlüğü (Fotoğraflı Kayıtlar)</h3>
-            
-            {progressLogs?.filter(p => p.frontPhotoUrl || p.backPhotoUrl || p.sidePhotoUrl).length === 0 ? (
+            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>📊 Gelişim Günlüğü</h3>
+
+            {visibleLogs.length === 0 ? (
                 <div className="empty-state">
                     <span className="empty-state-icon">📭</span>
-                    <p>Bu sporcu henüz hiç fotoğraflı gelişim kaydı (Check-In) göndermemiş.</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Sporcu fotoğraf eklediğinde kayıtlar burada listelenecek.</p>
+                    <p>Bu sporcu henüz gelişim kaydı göndermemiş.</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Kalori, adım, kilo ve notlar kayıt altına alındığında burada listelenecek.</p>
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {progressLogs?.filter(p => p.frontPhotoUrl || p.backPhotoUrl || p.sidePhotoUrl).map((log: ProgressLog, index: number) => (
-                        <div key={log.id} className="animate-fade-in" style={{ 
+                    {visibleLogs.map((log: ProgressLog, index: number) => (
+                        <div key={log.id} className="animate-fade-in" style={{
                             animationDelay: `${index * 0.08}s`,
-                            background: 'rgba(0,0,0,0.25)', 
-                            padding: '20px', 
-                            borderRadius: '14px', 
+                            background: 'rgba(0,0,0,0.25)',
+                            padding: '20px',
+                            borderRadius: '14px',
                             border: '1px solid var(--border-glass)'
                         }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -82,14 +101,15 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
                                 </span>
                             </div>
 
-                            {/* Fotoğraflar Eklenebilir */}
                             <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
                                 {log.frontPhotoUrl && <img src={log.frontPhotoUrl} alt="Front" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
                                 {log.backPhotoUrl && <img src={log.backPhotoUrl} alt="Back" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
                                 {log.sidePhotoUrl && <img src={log.sidePhotoUrl} alt="Side" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
+                                {!log.frontPhotoUrl && !log.backPhotoUrl && !log.sidePhotoUrl && (
+                                    <span className="caption" style={{ color: 'var(--text-muted)' }}>Fotoğraf eklenmemiş</span>
+                                )}
                             </div>
 
-                            {/* AI ANALİZ KARTI */}
                             {log.aiAnalysis && (
                                 <div style={{
                                     padding: '16px 20px', marginBottom: '16px', borderRadius: '12px',
@@ -101,25 +121,24 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
                                 </div>
                             )}
 
-                            {/* KOÇ GERİ BİLDİRİMİ */}
                             {log.coachFeedback ? (
-                                <div style={{ 
-                                    background: 'rgba(16, 185, 129, 0.08)', padding: '14px 18px', borderRadius: '10px', 
-                                    border: '1px solid rgba(16, 185, 129, 0.2)' 
+                                <div style={{
+                                    background: 'rgba(16, 185, 129, 0.08)', padding: '14px 18px', borderRadius: '10px',
+                                    border: '1px solid rgba(16, 185, 129, 0.2)'
                                 }}>
                                     <h5 style={{ color: 'var(--success)', marginBottom: '6px', fontSize: '0.8rem', fontWeight: 700 }}>✅ Sizin Geri Bildiriminiz</h5>
                                     <p style={{ margin: 0, fontSize: '0.85rem' }}>{log.coachFeedback}</p>
                                 </div>
                             ) : (
                                 <div style={{ marginTop: '12px' }}>
-                                    <textarea 
+                                    <textarea
                                         placeholder="Sporcuya haftalık geri bildiriminizi yazın..."
                                         value={feedbackText}
                                         onChange={(e) => setFeedbackText(e.target.value)}
                                         className="form-control"
                                         style={{ width: '100%', minHeight: '70px', resize: 'vertical', marginBottom: '10px' }}
                                     />
-                                    <button 
+                                    <button
                                         onClick={() => handleFeedbackSubmit(log.id)}
                                         disabled={addFeedbackMutation.isPending}
                                         className="btn-save"

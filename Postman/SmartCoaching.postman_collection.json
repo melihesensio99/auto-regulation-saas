@@ -1,0 +1,603 @@
+{
+  "info": {
+    "name": "SmartCoaching API",
+    "_postman_id": "b7a0d6c8-7d1c-4f3b-9c6b-5df8d9ad9d1d",
+    "description": "SmartCoaching backend endpoints for auth, coaches, athletes, workout programs, diet programs, onboarding and progress tracking.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Coach Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"coach@local.dev\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Athlete Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/athlete-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "athlete-login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"athlete@example.com\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Auth",
+                "change-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"oldPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coaches",
+      "item": [
+        {
+          "name": "Create Coach",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Coaches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Coaches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Melih\",\n  \"lastName\": \"Esen\",\n  \"email\": \"coach@local.dev\",\n  \"password\": \"Password123!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Coach Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Coaches/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Coaches",
+                "dashboard"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Athletes",
+      "item": [
+        {
+          "name": "Create Athlete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Ayse\",\n  \"lastName\": \"Kaya\",\n  \"email\": \"athlete@example.com\",\n  \"subscriptionEndDate\": \"2026-12-31T00:00:00Z\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Athletes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Athlete Targets",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/targets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "targets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetCalories\": 2400,\n  \"targetSteps\": 10000\n}"
+            }
+          }
+        },
+        {
+          "name": "Log Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/progress",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "progress"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-06-28T00:00:00Z\",\n  \"consumedCalories\": 2250,\n  \"takenSteps\": 9800,\n  \"isWorkoutCompleted\": true,\n  \"weightKg\": 82.4,\n  \"notes\": \"Fena degil\",\n  \"frontPhotoUrl\": null,\n  \"backPhotoUrl\": null,\n  \"sidePhotoUrl\": null\n}"
+            }
+          }
+        },
+        {
+          "name": "Submit Onboarding Form",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/onboarding",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "onboarding"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateOfBirth\": \"1998-05-12T00:00:00Z\",\n  \"phoneNumber\": \"+905551112233\",\n  \"occupation\": \"Engineer\",\n  \"mainReason\": \"FAT LOSS\",\n  \"shortTermGoal\": \"3 ayda 5 kg vermek\",\n  \"longTermGoal\": \"Daha fit olmak\",\n  \"expectations\": \"Net ve uygulanabilir plan\",\n  \"heightCm\": 178,\n  \"startingWeightKg\": 84.5,\n  \"trainingHistory\": \"3 yil\",\n  \"currentTrainingRoutine\": \"Upper lower\",\n  \"outsidePhysicalActivity\": \"Medium\",\n  \"hasTrackedMacros\": \"Yes\",\n  \"hasWorkedWithCoach\": \"No\",\n  \"hearAboutUs\": \"Instagram\",\n  \"additionalNotes\": \"Sakatlik yok\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Coach Feedback",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/progress/{{progressLogId}}/feedback",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "progress",
+                "{{progressLogId}}",
+                "feedback"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"feedback\": \"Plan guzel gidiyor, aynen devam\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Progress Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/progress?startDate=2026-06-01T00:00:00Z&endDate=2026-06-30T23:59:59Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "progress"
+              ],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-06-01T00:00:00Z"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-06-30T23:59:59Z"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Workout Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/workout-programs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "workout-programs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"exercises\": [\n    {\n      \"dayName\": \"Push Day\",\n      \"exerciseName\": \"Bench Press\",\n      \"sets\": 4,\n      \"reps\": \"6-8\",\n      \"restTimeInSeconds\": 120,\n      \"notes\": \"RPE 8\"\n    },\n    {\n      \"dayName\": \"Push Day\",\n      \"exerciseName\": \"Incline Dumbbell Press\",\n      \"sets\": 3,\n      \"reps\": \"8-10\",\n      \"restTimeInSeconds\": 90,\n      \"notes\": null\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Workout Program",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/workout-programs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "workout-programs"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Diet Program",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/diet-programs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "diet-programs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"generalDietNotes\": \"Makrolar hedefe yakin\",\n  \"meals\": [\n    {\n      \"order\": 1,\n      \"mealName\": \"Breakfast\",\n      \"foods\": \"Yumurta, yulaf, muz\",\n      \"notes\": \"Antrenmandan once\",\n      \"protein\": 35,\n      \"carbs\": 60,\n      \"fats\": 15,\n      \"calories\": 520\n    },\n    {\n      \"order\": 2,\n      \"mealName\": \"Lunch\",\n      \"foods\": \"Tavuk, pirinc, sebze\",\n      \"notes\": \"Ana ogun\",\n      \"protein\": 45,\n      \"carbs\": 70,\n      \"fats\": 18,\n      \"calories\": 680\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Diet Program",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/Athletes/{{athleteId}}/diet-programs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Athletes",
+                "{{athleteId}}",
+                "diet-programs"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7009"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "athleteId",
+      "value": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "key": "progressLogId",
+      "value": "00000000-0000-0000-0000-000000000000"
+    }
+  ]
+}

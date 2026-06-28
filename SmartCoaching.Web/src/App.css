@@ -1,1 +1,8 @@
-/* Tüm özel CSS'lerimizi index.css içine yazdığımız için burayı boş bırakıyoruz veya siliyoruz. */
+.app-route {
+  min-height: 100vh;
+}
+
+.app-route--auth {
+  display: grid;
+  place-items: center;
+}

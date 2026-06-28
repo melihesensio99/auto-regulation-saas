@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<ProgressLog> ProgressLogs { get; set; }
     public DbSet<DietMeal> DietMeals { get; set; }
+    public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,12 +44,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasForeignKey(pl => pl.AthleteId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Athlete - WorkoutExercise İlişkisi (JSON Kolonu)
+        // Athlete - WorkoutExercise İlişkisi (1'e Çok)
         modelBuilder.Entity<Athlete>()
-            .OwnsMany(a => a.WorkoutExercises, builder =>
-            {
-                builder.ToJson();
-            });
+            .HasMany(a => a.WorkoutExercises)
+            .WithOne(w => w.Athlete)
+            .HasForeignKey(w => w.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<WorkoutExercise>()
+            .HasIndex(w => w.AthleteId);
 
         // MULTI-TENANCY: Global Query Filters
         // Athlete entity has the master CoachId check.

@@ -5,72 +5,112 @@ export const AthletePrograms = () => {
     const { data: dietProgram, isLoading: dietLoading } = useAthleteDietProgram();
 
     if (workoutLoading || dietLoading) {
-        return <div style={{ color: 'white', padding: '20px' }}>Programlarınız yükleniyor...</div>;
+        return (
+            <div className="empty-state">
+                <div className="loader" />
+                <p>Programların hazırlanıyor...</p>
+            </div>
+        );
     }
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-            <h1 style={{ color: 'white', margin: 0 }}>📋 Programlarım</h1>
-            
-            <div className="glass-panel" style={{ padding: '30px', borderRadius: '20px' }}>
-                <h2 style={{ color: 'var(--accent-primary)', marginTop: 0 }}>🏋️ Antrenman Programı</h2>
-                {!workoutProgram || workoutProgram.days.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)' }}>Koçunuz henüz bir antrenman programı atamamış.</p>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {workoutProgram.days.map((day, idx) => (
-                            <div key={idx} style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '15px' }}>
-                                <h4 style={{ color: 'white', margin: '0 0 15px 0' }}>{day.dayName}</h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                    {day.exercises.map(ex => (
-                                        <div key={ex.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                                            <div style={{ color: 'white' }}>
-                                                <div style={{ fontWeight: 'bold' }}>{ex.exerciseName}</div>
-                                                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{ex.notes || '-'}</div>
-                                            </div>
-                                            <div style={{ color: 'var(--accent-secondary)', textAlign: 'right' }}>
-                                                <div>{ex.sets} Set x {ex.reps} Tekrar</div>
-                                                <div style={{ fontSize: '12px' }}>{ex.restTimeInSeconds}s Dinlenme</div>
+        <div className="card-stack" style={{ gap: 24 }}>
+            <section className="hero-panel surface">
+                <span className="eyebrow">Your plan</span>
+                <h1 className="page-title" style={{ fontSize: '2.8rem', marginTop: 10 }}>
+                    Programlarım
+                </h1>
+                <p className="page-subtitle" style={{ marginTop: 12 }}>
+                    Haftalık antrenman ve beslenme düzenini tek bakışta gör.
+                </p>
+            </section>
+
+            <div className="program-grid">
+                <section className="program-card surface" style={{ padding: 24 }}>
+                    <div className="card-stack">
+                        <div>
+                            <span className="section-label">Antrenman</span>
+                            <h2 style={{ marginTop: 8, color: 'var(--text-primary)' }}>Antrenman Programı</h2>
+                        </div>
+
+                        {!workoutProgram || workoutProgram.days.length === 0 ? (
+                            <div className="empty-state">
+                                <p>Koçun henüz bir antrenman programı atamamış.</p>
+                            </div>
+                        ) : (
+                            <div className="card-stack">
+                                {workoutProgram.days.map((day, idx) => (
+                                    <article key={idx} className="surface" style={{ padding: 0, overflow: 'hidden' }}>
+                                        <div className="day-card-header">
+                                            <div className="day-badge">{idx + 1}</div>
+                                            <div>
+                                                <h3 style={{ fontSize: '1.05rem' }}>{day.dayName}</h3>
+                                                <p className="caption">Günün odak çalışması</p>
                                             </div>
                                         </div>
+
+                                        <div>
+                                            {day.exercises.map(ex => (
+                                                <div key={ex.id} className="exercise-row">
+                                                    <div>
+                                                        <div style={{ fontWeight: 700 }}>{ex.exerciseName}</div>
+                                                        <div className="caption" style={{ marginTop: 4 }}>{ex.notes || 'Not eklenmemiş'}</div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontWeight: 700 }}>{ex.sets} x {ex.reps}</div>
+                                                        <div className="caption">{ex.restTimeInSeconds}s dinlenme</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                <section className="program-card surface" style={{ padding: 24 }}>
+                    <div className="card-stack">
+                        <div>
+                            <span className="section-label">Beslenme</span>
+                            <h2 style={{ marginTop: 8, color: 'var(--text-primary)' }}>Beslenme Programı</h2>
+                        </div>
+
+                        {!dietProgram || dietProgram.meals.length === 0 ? (
+                            <div className="empty-state">
+                                <p>Koçun henüz bir beslenme programı atamamış.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="timeline-card" style={{ padding: 18 }}>
+                                    <span className="section-label">Genel not</span>
+                                    <p style={{ marginTop: 8 }}>{dietProgram.generalDietNotes || 'Belirtilmemiş.'}</p>
+                                </div>
+
+                                <div className="summary-grid">
+                                    {dietProgram.meals.map(meal => (
+                                        <article key={meal.id} className="surface" style={{ padding: 18 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start' }}>
+                                                <div>
+                                                    <div style={{ fontWeight: 700 }}>{meal.order}. {meal.mealName}</div>
+                                                    <p className="caption" style={{ marginTop: 8 }}>{meal.foods}</p>
+                                                </div>
+                                                <span className="badge badge-info">{meal.calories} kcal</span>
+                                            </div>
+
+                                            <div className="pill-group" style={{ marginTop: 16 }}>
+                                                <span className="chip">P: {meal.protein}g</span>
+                                                <span className="chip">K: {meal.carbs}g</span>
+                                                <span className="chip">Y: {meal.fats}g</span>
+                                            </div>
+                                        </article>
                                     ))}
                                 </div>
-                            </div>
-                        ))}
+                            </>
+                        )}
                     </div>
-                )}
-            </div>
-
-            <div className="glass-panel" style={{ padding: '30px', borderRadius: '20px' }}>
-                <h2 style={{ color: 'var(--success)', marginTop: 0 }}>🥗 Beslenme Programı</h2>
-                {!dietProgram || dietProgram.meals.length === 0 ? (
-                    <p style={{ color: 'var(--text-secondary)' }}>Koçunuz henüz bir beslenme programı atamamış.</p>
-                ) : (
-                    <div>
-                        <div style={{ padding: '15px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '10px', color: 'white', marginBottom: '20px' }}>
-                            <h4 style={{ margin: '0 0 5px 0', color: 'var(--success)' }}>Genel Notlar</h4>
-                            <p style={{ margin: 0, fontSize: '14px' }}>{dietProgram.generalDietNotes || 'Belirtilmemiş.'}</p>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-                            {dietProgram.meals.map(meal => (
-                                <div key={meal.id} style={{ background: 'rgba(0,0,0,0.3)', padding: '20px', borderRadius: '15px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                        <h4 style={{ color: 'white', margin: 0 }}>{meal.order}. {meal.mealName}</h4>
-                                        <span className="badge badge-info">{meal.calories} kcal</span>
-                                    </div>
-                                    <div style={{ color: 'white', marginBottom: '15px', fontSize: '14px' }}>
-                                        {meal.foods}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', fontSize: '12px' }}>
-                                        <span style={{ color: 'var(--accent-primary)' }}>P: {meal.protein}g</span>
-                                        <span style={{ color: 'var(--accent-secondary)' }}>K: {meal.carbs}g</span>
-                                        <span style={{ color: 'var(--warning)' }}>Y: {meal.fats}g</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                </section>
             </div>
         </div>
     );

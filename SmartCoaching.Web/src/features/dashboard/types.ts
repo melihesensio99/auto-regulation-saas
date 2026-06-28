@@ -1,4 +1,4 @@
-export interface Athlete {
+﻿export interface Athlete {
     id: string;
     firstName: string;
     lastName: string;
@@ -26,27 +26,18 @@ export interface Athlete {
 export interface AthletePerformanceDto {
     athleteId: string;
     fullName: string;
-    heightCm: number;
-    weeklyTargetCalories: number;
-    weeklyConsumedCalories: number;
-    isMetCalorieTarget: boolean;
-    weeklyTargetSteps: number;
-    weeklyTakenSteps: number;
-    isMetStepTarget: boolean;
-    latestWeightKg: number;
-    latestFrontPhotoUrl: string | null;
-    isSlacking: boolean;
-    remainingSubscriptionDays: number;
     isActiveToday: boolean;
-    weeklyComplianceRatePercentage: number;
-    aiInsight: string | null;
-    startingWeightKg: number;
+    lastLogDate: string | null;
+    hasWorkoutProgram: boolean;
+    hasDietProgram: boolean;
+    needsAttention: boolean;
+    attentionReason: string | null;
 }
 
 export interface CoachDashboardDto {
     totalAthletes: number;
     dailyActiveAthletes: number;
-    aiInsight: string;
+    needsAttentionCount: number;
     athletePerformances: AthletePerformanceDto[];
 }
 
@@ -141,6 +132,11 @@ export interface AthleteDietProgram {
     athleteId: string;
     generalDietNotes: string;
     meals: DietMealResponseDto[];
+}
+
+export interface UpdateAthleteTargetsRequest {
+    targetCalories: number;
+    targetSteps: number;
 }
 
 export interface SubmitOnboardingFormRequest {

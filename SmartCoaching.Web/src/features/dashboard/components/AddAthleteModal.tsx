@@ -10,12 +10,10 @@ interface AddAthleteModalProps {
 export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
     const { mutateAsync: createAthlete, isPending, error } = useCreateAthlete();
 
-    // Form State
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [subscriptionEndDate, setSubscriptionEndDate] = useState(() => {
-        // Default to 1 month from today
         const date = new Date();
         date.setMonth(date.getMonth() + 1);
         return date.toISOString().split('T')[0];
@@ -32,7 +30,6 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
                 email,
                 subscriptionEndDate: new Date(subscriptionEndDate).toISOString()
             });
-            // Success! Reset form and close
             setFirstName('');
             setLastName('');
             setEmail('');
@@ -42,68 +39,58 @@ export const AddAthleteModal = ({ isOpen, onClose }: AddAthleteModalProps) => {
         }
     };
 
-    const modalContent = (
-        <div style={{
-            position: 'fixed',
-            top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 9999,
-            backdropFilter: 'blur(5px)'
-        }}>
-            <div className="glass-panel" style={{ width: '100%', maxWidth: '450px', margin: '0 20px', maxHeight: '90vh', overflowY: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0 }}>Yeni Sporcu Ekle</h2>
-                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '20px', cursor: 'pointer' }}>×</button>
+    return createPortal(
+        <div className="modal-overlay">
+            <div className="modal-card">
+                <div className="card-stack">
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+                        <div>
+                            <span className="eyebrow">New athlete</span>
+                            <h2 style={{ marginTop: 10 }}>Yeni sporcu ekle</h2>
+                        </div>
+                        <button type="button" className="btn btn-secondary" onClick={onClose}>Kapat</button>
+                    </div>
+
+                    {error && (
+                        <div className="chip chip--danger" style={{ width: '100%', justifyContent: 'flex-start' }}>
+                            Sporcu eklenirken bir hata oluştu.
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="card-stack">
+                        <div className="split-grid">
+                            <div className="field">
+                                <label className="field-label">Ad</label>
+                                <input className="field-input" type="text" required value={firstName} onChange={e => setFirstName(e.target.value)} />
+                            </div>
+                            <div className="field">
+                                <label className="field-label">Soyad</label>
+                                <input className="field-input" type="text" required value={lastName} onChange={e => setLastName(e.target.value)} />
+                            </div>
+                        </div>
+
+                        <div className="field">
+                            <label className="field-label">E-posta</label>
+                            <input className="field-input" type="email" required value={email} onChange={e => setEmail(e.target.value)} />
+                        </div>
+
+                        <div className="field">
+                            <label className="field-label">Abonelik bitiş tarihi</label>
+                            <input className="field-input" type="date" required value={subscriptionEndDate} onChange={e => setSubscriptionEndDate(e.target.value)} />
+                        </div>
+
+                        <div className="form-actions">
+                            <button type="button" className="btn btn-secondary" onClick={onClose}>
+                                İptal
+                            </button>
+                            <button type="submit" className="btn btn-primary" disabled={isPending}>
+                                {isPending ? 'Ekleniyor...' : 'Kaydet'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                {error && (
-                    <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
-                        Sporcu eklenirken bir hata oluştu. Lütfen bilgileri kontrol edin.
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Ad</label>
-                            <input type="text" required value={firstName} onChange={e => setFirstName(e.target.value)}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Soyad</label>
-                            <input type="text" required value={lastName} onChange={e => setLastName(e.target.value)}
-                                style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>E-Posta</label>
-                        <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Abonelik Bitiş</label>
-                        <input type="date" required value={subscriptionEndDate} onChange={e => setSubscriptionEndDate(e.target.value)}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }} />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
-                        <button type="button" onClick={onClose} style={{ background: 'transparent', border: '1px solid var(--text-secondary)', padding: '10px 20px', borderRadius: '8px', color: '#fff', cursor: 'pointer' }}>
-                            İptal
-                        </button>
-                        <button type="submit" disabled={isPending} style={{ opacity: isPending ? 0.7 : 1 }}>
-                            {isPending ? 'Ekleniyor...' : 'Kaydet'}
-                        </button>
-                    </div>
-                </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
-
-    return createPortal(modalContent, document.body);
 };

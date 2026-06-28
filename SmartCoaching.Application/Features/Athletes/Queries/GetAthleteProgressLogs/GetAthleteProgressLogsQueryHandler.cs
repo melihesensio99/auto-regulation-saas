@@ -1,4 +1,4 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Common;
@@ -20,8 +20,11 @@ public class GetAthleteProgressLogsQueryHandler : IRequestHandler<GetAthleteProg
 
     public async Task<Result<List<ProgressLogDto>>> Handle(GetAthleteProgressLogsQuery request, CancellationToken cancellationToken)
     {
+        var startDate = request.StartDate.Date;
+        var endExclusive = request.EndDate.Date.AddDays(1);
+
         var athlete = await _context.Athletes
-            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= request.StartDate.Date && pl.Date <= request.EndDate.Date))
+            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= startDate && pl.Date < endExclusive))
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)

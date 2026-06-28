@@ -1,103 +1,147 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
+const featureItems = [
+    {
+        title: 'Günlük koç görünümü',
+        description: 'Sporcuların, programların ve haftalık trendlerin tek ekranda.'
+    },
+    {
+        title: 'Kaynaklı kararlar',
+        description: 'Program ve öneriler, veri + spor bilimi temelli ilerler.'
+    },
+    {
+        title: 'Hızlı aksiyon',
+        description: 'Yeni sporcu, onboarding ve progress kayıtlarına tek akıştan ulaş.'
+    }
+];
+
 export const Login = () => {
-    // 1. Local State (Sadece bu formu ilgilendiren input değerleri)
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState<'coach' | 'athlete'>('coach');
-
-    // 2. Custom Hook'tan gelen iş mantığı fonksiyonları ve stateler (Sorumluluk Ayrımı)
     const { login, isLoading, error } = useAuth();
 
-    // 3. Form gönderildiğinde tetiklenecek fonksiyon
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault(); // Sayfanın yenilenmesini engeller
+        e.preventDefault();
         await login({ email, password, role });
     };
 
-    // 4. Saf Sunum (Presentational) Kısmı (HTML/JSX)
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <div className="glass-panel" style={{ width: '400px' }}>
-                <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: 'bold' }}>Apex Athletics</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Sisteme Giriş Yapın</p>
-                </div>
-
-                {/* Role Toggle */}
-                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '4px', marginBottom: '24px' }}>
-                    <button 
-                        type="button"
-                        onClick={() => setRole('coach')}
-                        style={{ 
-                            flex: 1, 
-                            padding: '10px', 
-                            background: role === 'coach' ? 'var(--primary-color)' : 'transparent',
-                            color: role === 'coach' ? '#fff' : 'var(--text-secondary)',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontWeight: role === 'coach' ? 'bold' : 'normal',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        👨‍🏫 Koç Girişi
-                    </button>
-                    <button 
-                        type="button"
-                        onClick={() => setRole('athlete')}
-                        style={{ 
-                            flex: 1, 
-                            padding: '10px', 
-                            background: role === 'athlete' ? 'var(--primary-color)' : 'transparent',
-                            color: role === 'athlete' ? '#fff' : 'var(--text-secondary)',
-                            border: 'none',
-                            borderRadius: '6px',
-                            fontWeight: role === 'athlete' ? 'bold' : 'normal',
-                            transition: 'all 0.2s'
-                        }}
-                    >
-                        🏃‍♂️ Sporcu Girişi
-                    </button>
-                </div>
-
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    
-                    {/* Hata Mesajı Bölümü */}
-                    {error && (
-                        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--danger)', padding: '12px', borderRadius: '8px', border: '1px solid var(--danger)', fontSize: '14px' }}>
-                            {error}
+        <div className="auth-shell page-shell">
+            <div className="auth-grid" style={{ width: 'min(1240px, 100%)' }}>
+                <section className="auth-visual surface">
+                    <div className="card-stack">
+                        <span className="kicker">SmartCoaching OS</span>
+                        <div>
+                            <h1 className="hero-title">Sporcu takibini tek akışa toplayan çalışma alanı.</h1>
+                            <p className="hero-copy" style={{ marginTop: 16 }}>
+                                Koç ve sporcu tarafında aynı dili konuşan, veri odaklı ve temiz bir deneyim.
+                            </p>
                         </div>
-                    )}
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>E-Posta Adresi</label>
-                        <input 
-                            type="email" 
-                            required 
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }}
-                            placeholder="ornek@mail.com"
-                        />
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <label style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Şifre</label>
-                        <input 
-                            type="password" 
-                            required 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-glass)', color: 'white' }}
-                            placeholder="••••••••"
-                        />
+                    <div className="auth-metrics" style={{ marginTop: 24 }}>
+                        <div className="metric-card">
+                            <span className="metric-card__label">Takım takibi</span>
+                            <span className="metric-card__value">Live</span>
+                            <div className="metric-card__hint">Günlük aktif sporcu görünümü</div>
+                        </div>
+                        <div className="metric-card">
+                            <span className="metric-card__label">Planlar</span>
+                            <span className="metric-card__value">RAG</span>
+                            <div className="metric-card__hint">Kaynaklı bilgi akışı için hazır</div>
+                        </div>
+                        <div className="metric-card">
+                            <span className="metric-card__label">Odak</span>
+                            <span className="metric-card__value">Daily</span>
+                            <div className="metric-card__hint">Günlük takip ve karar destek</div>
+                        </div>
                     </div>
 
-                    <button type="submit" disabled={isLoading} style={{ marginTop: '16px', opacity: isLoading ? 0.7 : 1 }}>
-                        {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
-                    </button>
-                </form>
+                    <div className="card-stack" style={{ marginTop: 8 }}>
+                        {featureItems.map(item => (
+                            <article key={item.title} className="auth-feature">
+                                <h4>{item.title}</h4>
+                                <p>{item.description}</p>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="auth-panel surface">
+                    <div className="card-stack">
+                        <div>
+                            <span className="eyebrow">Welcome back</span>
+                            <h2 style={{ marginTop: 12, fontSize: '2rem' }}>Hesabına giriş yap</h2>
+                            <p style={{ marginTop: 8 }}>
+                                Koç ya da sporcu olarak devam et. Sistem seni doğru alana yönlendirecek.
+                            </p>
+                        </div>
+
+                        <div className="tab-bar" role="tablist" aria-label="Giriş tipi">
+                            <button
+                                type="button"
+                                className={`tab-btn ${role === 'coach' ? 'active' : ''}`}
+                                onClick={() => setRole('coach')}
+                            >
+                                Koç
+                            </button>
+                            <button
+                                type="button"
+                                className={`tab-btn ${role === 'athlete' ? 'active' : ''}`}
+                                onClick={() => setRole('athlete')}
+                            >
+                                Sporcu
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="card-stack">
+                            {error && (
+                                <div className="chip chip--danger" style={{ width: '100%', justifyContent: 'flex-start' }}>
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="field">
+                                <label className="field-label">E-posta adresi</label>
+                                <input
+                                    className="field-input"
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    placeholder="ornek@mail.com"
+                                />
+                            </div>
+
+                            <div className="field">
+                                <label className="field-label">Şifre</label>
+                                <input
+                                    className="field-input"
+                                    type="password"
+                                    required
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                />
+                            </div>
+
+                            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+                                {isLoading ? 'Giriş hazırlanıyor...' : 'Giriş yap'}
+                            </button>
+                        </form>
+
+                        <div className="soft-divider" />
+
+                        <div className="card-stack" style={{ gap: 8 }}>
+                            <div className="caption">Örnek akış</div>
+                            <p>
+                                Koç hesabı ile takım paneline, sporcu hesabı ile kişisel takip alanına geçersin.
+                            </p>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
     );

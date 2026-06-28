@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace SmartCoaching.Application.Features.Athletes.Commands.LogProgressCommand;
 
@@ -21,8 +21,9 @@ public class LogProgressCommandValidator : AbstractValidator<LogProgressCommand>
         RuleFor(x => x.WeightKg)
             .GreaterThan(20).When(x => x.WeightKg.HasValue).WithMessage("Kilo 20'den büyük olmalıdır.")
             .LessThan(300).When(x => x.WeightKg.HasValue).WithMessage("Kilo 300'den küçük olmalıdır.");
-            
+
         RuleFor(x => x.Notes)
+            .Must(value => value is null || !string.IsNullOrWhiteSpace(value)).WithMessage("Notlar sadece boşluk olamaz.")
             .MaximumLength(500).WithMessage("Notlar en fazla 500 karakter olabilir.");
     }
 }

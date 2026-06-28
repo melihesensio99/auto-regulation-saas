@@ -11,6 +11,7 @@ public interface IApplicationDbContext
     DbSet<Athlete> Athletes { get; }
     DbSet<ProgressLog> ProgressLogs { get; }
     DbSet<DietMeal> DietMeals { get; }
+    DbSet<WorkoutExercise> WorkoutExercises { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

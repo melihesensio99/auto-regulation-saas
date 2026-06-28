@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Common;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ namespace SmartCoaching.Application.Features.Dashboard.Queries.GetCoachDashboard
 public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDashboardSummaryQuery, Result<CoachDashboardDto>>
 {
     private readonly IApplicationDbContext _dbContext;
+
     public GetCoachDashboardSummaryQueryHandler(IApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
@@ -19,77 +21,80 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
     public async Task<Result<CoachDashboardDto>> Handle(GetCoachDashboardSummaryQuery request, CancellationToken cancellationToken)
     {
-        // 1. O haftanın Pazartesi gününü bul
         var today = DateTime.UtcNow.Date;
-        int diff = (7 + (today.DayOfWeek - DayOfWeek.Monday)) % 7;
-        var startOfWeek = today.AddDays(-1 * diff).Date; // O haftanın Pazartesisi
-        var endOfWeek = startOfWeek.AddDays(6).Date;     // O haftanın Pazarı
+        var startOfWeek = GetStartOfWeek(today);
+        var endExclusive = startOfWeek.AddDays(7);
+        var todayExclusive = today.AddDays(1);
 
-        // 2. Global Query Filter sayesinde sadece bu antrenörün sporcuları gelir.
         var athletes = await _dbContext.Athletes
-            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= startOfWeek && pl.Date <= endOfWeek))
+            .AsNoTracking()
+            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= startOfWeek && pl.Date < endExclusive))
+            .Include(a => a.WorkoutExercises)
+            .Include(a => a.DietMeals)
             .ToListAsync(cancellationToken);
 
-        int totalAthletes = athletes.Count;
-        int dailyActiveAthletes = athletes.Count(a => a.ProgressLogs.Any(pl => pl.Date.Date == today));
-
-        var performances = new System.Collections.Generic.List<AthletePerformanceDto>();
-
-        foreach (var athlete in athletes)
-        {
-            var latestWeightLog = athlete.ProgressLogs.Where(p => p.WeightKg.HasValue).OrderByDescending(p => p.Date).FirstOrDefault();
-            var latestPhotoLog = athlete.ProgressLogs.Where(p => p.HasPhotos()).OrderByDescending(p => p.Date).FirstOrDefault();
-            
-            int daysElapsed = (int)(today - startOfWeek).TotalDays + 1;
-            
-            int athleteComplianceDays = athlete.ProgressLogs.Count(dp => dp.Date >= startOfWeek && dp.Date <= today && dp.ConsumedCalories > 0 && dp.ConsumedCalories <= athlete.TargetCalories);
-            int athleteStepComplianceDays = athlete.ProgressLogs.Count(dp => dp.Date >= startOfWeek && dp.Date <= today && dp.TakenSteps > 0 && dp.TakenSteps >= athlete.TargetSteps);
-
-            decimal weeklyTargetCalories = athlete.TargetCalories * 7;
-            decimal weeklyConsumedCalories = athlete.ProgressLogs.Sum(pl => pl.ConsumedCalories);
-            int weeklyTargetSteps = athlete.TargetSteps * 7;
-            int weeklyTakenSteps = athlete.ProgressLogs.Sum(pl => pl.TakenSteps);
-            
-            bool isMetCalorieTarget = daysElapsed > 0 && athleteComplianceDays == daysElapsed;
-            bool isMetStepTarget = daysElapsed > 0 && athleteStepComplianceDays == daysElapsed;
-            
-            int logsThisWeek = athlete.ProgressLogs.Count(pl => pl.Date >= startOfWeek && pl.Date <= today);
-            bool isSlacking = logsThisWeek < (daysElapsed / 2.0);
-            bool isActiveToday = athlete.ProgressLogs.Any(pl => pl.Date.Date == today);
-            double athleteComplianceRate = daysElapsed == 0 ? 0 : Math.Round((double)athleteComplianceDays / daysElapsed * 100, 2);
-
-            int remainingSubscriptionDays = (athlete.SubscriptionEndDate - DateTime.UtcNow.Date).Days;
-            if (remainingSubscriptionDays < 0) remainingSubscriptionDays = 0;
-
-            performances.Add(new AthletePerformanceDto
-            {
-                AthleteId = athlete.Id,
-                FullName = $"{athlete.FirstName} {athlete.LastName}",
-                HeightCm = athlete.HeightCm ?? 0,
-                WeeklyTargetCalories = weeklyTargetCalories,
-                WeeklyConsumedCalories = weeklyConsumedCalories,
-                IsMetCalorieTarget = isMetCalorieTarget,
-                WeeklyTargetSteps = weeklyTargetSteps,
-                WeeklyTakenSteps = weeklyTakenSteps,
-                IsMetStepTarget = isMetStepTarget,
-                LatestWeightKg = (decimal)(latestWeightLog?.WeightKg ?? 0),
-                LatestFrontPhotoUrl = latestPhotoLog?.FrontPhotoUrl,
-                IsSlacking = isSlacking,
-                RemainingSubscriptionDays = remainingSubscriptionDays,
-                IsActiveToday = isActiveToday,
-                WeeklyComplianceRatePercentage = athleteComplianceRate,
-                StartingWeightKg = (decimal)(athlete.StartingWeightKg ?? 0)
-            });
-        }
-
+        var athleteCards = athletes
+            .Select(a => BuildAthleteCard(a, today, todayExclusive, startOfWeek))
+            .ToList();
 
         var dto = new CoachDashboardDto(
-            totalAthletes,
-            dailyActiveAthletes,
-            "Takımın yapay zeka analizleri tekil bazda listelenmiştir.",
-            performances
+            athletes.Count,
+            athleteCards.Count(x => x.IsActiveToday),
+            athleteCards.Count(x => x.NeedsAttention),
+            athleteCards
         );
 
         return Result<CoachDashboardDto>.Success(dto);
+    }
+
+    private static AthletePerformanceDto BuildAthleteCard(
+        SmartCoaching.Domain.Entities.Athlete athlete,
+        DateTime today,
+        DateTime todayExclusive,
+        DateTime startOfWeek)
+    {
+        var weekLogs = athlete.ProgressLogs
+            .Where(pl => pl.Date >= startOfWeek && pl.Date < todayExclusive)
+            .OrderBy(pl => pl.Date)
+            .ToList();
+
+        var lastLogDate = weekLogs.LastOrDefault()?.Date;
+        var hasWorkoutProgram = athlete.WorkoutExercises.Any();
+        var hasDietProgram = athlete.DietMeals.Any();
+        var isActiveToday = weekLogs.Any(pl => pl.Date.Date == today);
+
+        var reasons = new List<string>();
+        if (!isActiveToday)
+        {
+            reasons.Add("Bugün kayıt yok");
+        }
+
+        if (!hasWorkoutProgram)
+        {
+            reasons.Add("Antrenman programı eksik");
+        }
+
+        if (!hasDietProgram)
+        {
+            reasons.Add("Beslenme programı eksik");
+        }
+
+        return new AthletePerformanceDto
+        {
+            AthleteId = athlete.Id,
+            FullName = $"{athlete.FirstName} {athlete.LastName}",
+            IsActiveToday = isActiveToday,
+            LastLogDate = lastLogDate,
+            HasWorkoutProgram = hasWorkoutProgram,
+            HasDietProgram = hasDietProgram,
+            NeedsAttention = reasons.Count > 0,
+            AttentionReason = reasons.Count == 0 ? null : string.Join(" · ", reasons)
+        };
+    }
+
+    private static DateTime GetStartOfWeek(DateTime date)
+    {
+        var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return date.AddDays(-diff);
     }
 }

@@ -1,16 +1,13 @@
-import React from 'react';
-import { useAthletes } from '../hooks/useDashboard';
+﻿import { useAthlete } from '../hooks/useDashboard';
 
 interface AthleteProfilePanelProps {
     athleteId: string;
 }
 
 export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => {
-    const { data: athletes } = useAthletes();
-    
-    const athlete = athletes?.find(a => a.id === athleteId);
+    const { data: athlete, isLoading } = useAthlete(athleteId);
 
-    if (!athlete) return <div>Yükleniyor...</div>;
+    if (isLoading || !athlete) return <div>Yükleniyor...</div>;
 
     if (!athlete.isOnboardingCompleted) {
         return (
@@ -25,7 +22,7 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
     const calculateAge = (dob: string | undefined) => {
         if (!dob) return '-';
         const diff = Date.now() - new Date(dob).getTime();
-        const age = new Date(diff); 
+        const age = new Date(diff);
         return Math.abs(age.getUTCFullYear() - 1970);
     };
 
@@ -49,11 +46,11 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
     );
 
     const LongAnswerBox = ({ label, value, icon, highlightColor = '#6366f1' }: { label: string, value: string | undefined, icon: string, highlightColor?: string }) => (
-        <div style={{ 
-            background: `rgba(255,255,255,0.02)`, 
-            border: `1px solid rgba(255,255,255,0.05)`, 
+        <div style={{
+            background: `rgba(255,255,255,0.02)`,
+            border: `1px solid rgba(255,255,255,0.05)`,
             borderLeft: `4px solid ${highlightColor}`,
-            padding: '20px', 
+            padding: '20px',
             borderRadius: '12px',
             marginBottom: '16px'
         }}>
@@ -66,9 +63,11 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
         </div>
     );
 
+    const targetCalories = athlete.targetCalories && athlete.targetCalories > 0 ? `${athlete.targetCalories} kcal` : '-';
+    const targetSteps = athlete.targetSteps && athlete.targetSteps > 0 ? `${athlete.targetSteps} adım` : '-';
+
     return (
         <div style={{ padding: '20px', color: '#fff', maxWidth: '1000px', margin: '0 auto' }}>
-            
             <div style={{
                 background: 'linear-gradient(145deg, rgba(99, 102, 241, 0.05), rgba(16, 185, 129, 0.02))',
                 borderRadius: '20px',
@@ -78,7 +77,6 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                 flexDirection: 'column',
                 gap: '30px'
             }}>
-                {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.8rem', fontWeight: 700 }}>
@@ -92,7 +90,6 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                     </div>
                 </div>
 
-                {/* Temel Bilgiler */}
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)' }}>Temel Fiziksel Bilgiler</h3>
                 <div style={{
                     display: 'grid',
@@ -105,8 +102,11 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                     <InfoBox icon="🥗" label="Makro Takibi" value={athlete.hasTrackedMacros} />
                 </div>
 
-                {/* Hedefler ve Beklentiler */}
                 <h3 style={{ margin: '10px 0 0 0', fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)' }}>Hedefler & Beklentiler</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+                    <InfoBox icon="🔥" label="Hedef Kalori" value={targetCalories} />
+                    <InfoBox icon="👟" label="Hedef Adım" value={targetSteps} />
+                </div>
                 <div>
                     <LongAnswerBox icon="🎯" label="Koçluk almak istemenin ana sebebi" value={athlete.mainReason} highlightColor="#8b5cf6" />
                     <LongAnswerBox icon="⚡" label="Kısa Vadeli Hedef" value={athlete.shortTermGoal} highlightColor="#3b82f6" />
@@ -114,7 +114,6 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                     <LongAnswerBox icon="🤝" label="Koçluktan Beklentiler" value={athlete.expectations} highlightColor="#f59e0b" />
                 </div>
 
-                {/* Antrenman ve Fiziksel Aktivite */}
                 <h3 style={{ margin: '10px 0 0 0', fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)' }}>Antrenman & Aktivite</h3>
                 <div>
                     <LongAnswerBox icon="🏋️" label="Antrenman Geçmişi" value={athlete.trainingHistory} highlightColor="#ef4444" />
@@ -122,7 +121,6 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                     <LongAnswerBox icon="🏃" label="Antrenman Dışı Fiziksel Aktivite" value={athlete.outsidePhysicalActivity} highlightColor="#14b8a6" />
                 </div>
 
-                {/* Diğer */}
                 <h3 style={{ margin: '10px 0 0 0', fontSize: '1.2rem', color: 'rgba(255,255,255,0.9)' }}>Diğer Bilgiler</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px' }}>
@@ -145,7 +143,6 @@ export const AthleteProfilePanel = ({ athleteId }: AthleteProfilePanelProps) => 
                         </p>
                     </div>
                 )}
-
             </div>
         </div>
     );

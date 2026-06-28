@@ -1,8 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { dashboardService } from '../services/dashboard.service';
-import type { AssignWorkoutProgramRequest } from '../types';
+import type { AssignWorkoutProgramRequest, UpdateAthleteTargetsRequest } from '../types';
 
-// 0. Coach Dashboard Özetini Getiren Hook
 export const useCoachDashboard = () => {
     return useQuery({
         queryKey: ['coachDashboard'],
@@ -10,7 +9,6 @@ export const useCoachDashboard = () => {
     });
 };
 
-// 1. Sporcuları Getiren Hook (Read)
 export const useAthletes = () => {
     return useQuery({
         queryKey: ['athletes'],
@@ -18,58 +16,59 @@ export const useAthletes = () => {
     });
 };
 
-// 2. Seçili Sporcunun Raporlarını Getiren Hook (Read)
+export const useAthlete = (athleteId: string | null) => {
+    return useQuery({
+        queryKey: ['athlete', athleteId],
+        queryFn: () => dashboardService.getAthleteById(athleteId!),
+        enabled: !!athleteId,
+    });
+};
+
 export const useProgressLogs = (athleteId: string | null, startDate: string, endDate: string) => {
     return useQuery({
         queryKey: ['progressLogs', athleteId, startDate, endDate],
         queryFn: () => dashboardService.getProgressLogs(athleteId!, startDate, endDate),
-        enabled: !!athleteId, // Sadece athleteId varsa bu isteği at (Hata önleyici)
+        enabled: !!athleteId,
     });
 };
 
-// 3. Koçun Feedback Göndermesini Sağlayan Hook (Write/Update)
 export const useAddFeedback = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ athleteId, progressLogId, feedback }: { athleteId: string, progressLogId: string, feedback: string }) => 
+        mutationFn: ({ athleteId, progressLogId, feedback }: { athleteId: string, progressLogId: string, feedback: string }) =>
             dashboardService.addFeedback(athleteId, progressLogId, { feedback }),
         onSuccess: (_, variables) => {
-            // Feedback başarıyla gidince, ekrandaki eski veriyi sil ve güncelini backend'den otomatik çek (Re-fetch)
             queryClient.invalidateQueries({ queryKey: ['progressLogs', variables.athleteId] });
         }
     });
 };
 
-// 4. Yeni Sporcu Ekleme Hook'u
 export const useCreateAthlete = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: dashboardService.createAthlete,
         onSuccess: () => {
-            // Başarılı olduğunda sporcular listesini yeniden çek
             queryClient.invalidateQueries({ queryKey: ['athletes'] });
         }
     });
 };
 
-// 5. Antrenman Programı Getiren Hook
 export const useWorkoutProgram = (athleteId: string | null) => {
     return useQuery({
         queryKey: ['workoutProgram', athleteId],
         queryFn: () => dashboardService.getWorkoutProgram(athleteId!),
         enabled: !!athleteId,
-        retry: false, // 404 (Program yok) dönebilir, tekrar denemesine gerek yok
+        retry: false,
     });
 };
 
-// 6. Antrenman Programı Atayan Hook
 export const useAssignWorkout = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ athleteId, data }: { athleteId: string, data: AssignWorkoutProgramRequest }) => 
+        mutationFn: ({ athleteId, data }: { athleteId: string, data: AssignWorkoutProgramRequest }) =>
             dashboardService.assignWorkoutProgram(athleteId, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['workoutProgram', variables.athleteId] });
@@ -77,25 +76,37 @@ export const useAssignWorkout = () => {
     });
 };
 
-// 7. Diyet Programı Getiren Hook
 export const useDietProgram = (athleteId: string | null) => {
     return useQuery({
         queryKey: ['dietProgram', athleteId],
         queryFn: () => dashboardService.getDietProgram(athleteId!),
         enabled: !!athleteId,
-        retry: false, // 404 dönebilir
+        retry: false,
     });
 };
 
-// 8. Diyet Programı Atayan Hook
 export const useAssignDietProgram = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ athleteId, data }: { athleteId: string, data: any }) => 
+        mutationFn: ({ athleteId, data }: { athleteId: string, data: any }) =>
             dashboardService.assignDietProgram(athleteId, data),
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ['dietProgram', variables.athleteId] });
+        }
+    });
+};
+
+export const useUpdateAthleteTargets = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ athleteId, data }: { athleteId: string, data: UpdateAthleteTargetsRequest }) =>
+            dashboardService.updateAthleteTargets(athleteId, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['athletes'] });
+            queryClient.invalidateQueries({ queryKey: ['coachDashboard'] });
+            queryClient.invalidateQueries({ queryKey: ['athlete'] });
         }
     });
 };

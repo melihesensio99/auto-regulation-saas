@@ -1,5 +1,5 @@
-import api from '@/shared/services/api';
-import type { Athlete, ProgressLog, AddFeedbackRequest, CreateAthleteRequest, AthleteWorkoutProgram, AssignWorkoutProgramRequest, CoachDashboardDto, AthleteDietProgram, AssignDietProgramRequest, SubmitOnboardingFormRequest } from '../types';
+﻿import api from '@/shared/services/api';
+import type { Athlete, ProgressLog, AddFeedbackRequest, CreateAthleteRequest, AthleteWorkoutProgram, AssignWorkoutProgramRequest, CoachDashboardDto, AthleteDietProgram, AssignDietProgramRequest, SubmitOnboardingFormRequest, UpdateAthleteTargetsRequest } from '../types';
 
 export const dashboardService = {
     getDashboard: async (): Promise<CoachDashboardDto> => {
@@ -9,6 +9,11 @@ export const dashboardService = {
 
     getAthletes: async (): Promise<Athlete[]> => {
         const response = await api.get<Athlete[]>('/Athletes');
+        return response.data;
+    },
+
+    getAthleteById: async (athleteId: string): Promise<Athlete> => {
+        const response = await api.get<Athlete>(`/Athletes/${athleteId}`);
         return response.data;
     },
 
@@ -25,7 +30,7 @@ export const dashboardService = {
 
     createAthlete: async (data: CreateAthleteRequest): Promise<string> => {
         const response = await api.post<{ value: string }>('/athletes', data);
-        return typeof response.data === 'string' ? response.data : response.data.value; // GUID of new athlete
+        return typeof response.data === 'string' ? response.data : response.data.value;
     },
 
     getWorkoutProgram: async (athleteId: string): Promise<AthleteWorkoutProgram> => {
@@ -44,6 +49,10 @@ export const dashboardService = {
 
     assignDietProgram: async (athleteId: string, data: AssignDietProgramRequest): Promise<void> => {
         await api.post(`/athletes/${athleteId}/diet-programs`, data);
+    },
+
+    updateAthleteTargets: async (athleteId: string, data: UpdateAthleteTargetsRequest): Promise<void> => {
+        await api.put(`/athletes/${athleteId}/targets`, data);
     },
 
     submitOnboardingForm: async (athleteId: string, data: SubmitOnboardingFormRequest): Promise<void> => {

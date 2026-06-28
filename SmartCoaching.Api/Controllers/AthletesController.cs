@@ -1,6 +1,6 @@
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SmartCoaching.Application.Features.Athletes.Commands.CreateAthlete;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Commands.SubmitOnboardingForm;
@@ -10,13 +10,14 @@ using SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
 using SmartCoaching.Application.Features.Athletes.Commands.LogProgressCommand;
 using SmartCoaching.Application.Features.Athletes.Queries.GetAthleteProgressLogs;
 using SmartCoaching.Application.Features.Athletes.Commands.AddCoachFeedback;
+using SmartCoaching.Application.Features.Athletes.Queries.GetAthletes;
+using SmartCoaching.Application.Features.Athletes.Queries.GetAthleteById;
 using SmartCoaching.Domain.Constants;
 using System;
 using System.Threading.Tasks;
 
 namespace SmartCoaching.Api.Controllers;
 
-// C# 12 Primary Constructor (ISender sender) burada kullanılıyor!
 [Authorize]
 public class AthletesController(ISender sender) : ApiControllerBase
 {
@@ -34,6 +35,13 @@ public class AthletesController(ISender sender) : ApiControllerBase
         return HandleResult(await sender.Send(new GetAthletesQuery()));
     }
 
+    [HttpGet("{id}")]
+    [Authorize(Roles = Roles.Coach + "," + Roles.Athlete)]
+    public async Task<IActionResult> GetAthleteById(Guid id)
+    {
+        return HandleResult(await sender.Send(new GetAthleteByIdQuery(id)));
+    }
+
     [HttpPut("{id}/targets")]
     [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> UpdateTargets(Guid id, [FromBody] UpdateAthleteTargetsRequestDto dto)
@@ -47,15 +55,15 @@ public class AthletesController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> LogProgress(Guid id, [FromBody] LogProgressRequestDto dto)
     {
         var command = new LogProgressCommand(
-            id, 
-            dto.Date, 
-            dto.ConsumedCalories, 
-            dto.TakenSteps, 
-            dto.IsWorkoutCompleted, 
-            dto.WeightKg, 
-            dto.Notes, 
-            dto.FrontPhotoUrl, 
-            dto.BackPhotoUrl, 
+            id,
+            dto.Date,
+            dto.ConsumedCalories,
+            dto.TakenSteps,
+            dto.IsWorkoutCompleted,
+            dto.WeightKg,
+            dto.Notes,
+            dto.FrontPhotoUrl,
+            dto.BackPhotoUrl,
             dto.SidePhotoUrl);
         return HandleResult(await sender.Send(command));
     }
@@ -65,16 +73,16 @@ public class AthletesController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> SubmitOnboardingForm(Guid id, [FromBody] SubmitOnboardingFormRequestDto dto)
     {
         var command = new SubmitOnboardingFormCommand(
-            id, 
-            dto.DateOfBirth, 
+            id,
+            dto.DateOfBirth,
             dto.PhoneNumber,
             dto.Occupation,
             dto.MainReason,
             dto.ShortTermGoal,
             dto.LongTermGoal,
             dto.Expectations,
-            dto.HeightCm, 
-            dto.StartingWeightKg, 
+            dto.HeightCm,
+            dto.StartingWeightKg,
             dto.TrainingHistory,
             dto.CurrentTrainingRoutine,
             dto.OutsidePhysicalActivity,
@@ -85,8 +93,6 @@ public class AthletesController(ISender sender) : ApiControllerBase
         );
         return HandleResult(await sender.Send(command));
     }
-
-
 
     [HttpPut("{id}/progress/{progressLogId}/feedback")]
     [Authorize(Roles = Roles.Coach)]
@@ -134,13 +140,5 @@ public class AthletesController(ISender sender) : ApiControllerBase
     {
         var query = new GetAthleteDietProgramQuery(id);
         return HandleResult(await sender.Send(query));
-    }
-
-    [HttpGet("crash")]
-    [Microsoft.AspNetCore.Authorization.AllowAnonymous]
-    public IActionResult CrashSystem()
-    {
-        // Bu uç nokta KASITLI olarak sistemi çökertecektir (Kalkanı test etmek için)
-        throw new System.Exception("BOMBA PATLADI! Sunucu veritabanına bağlanırken kritik bir çökme yaşadı.");
     }
 }

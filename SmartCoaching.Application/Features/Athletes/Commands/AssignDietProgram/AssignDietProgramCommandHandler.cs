@@ -1,11 +1,11 @@
+﻿using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SmartCoaching.Application.Common.Events;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Application.Features.Athletes.Services;
 using SmartCoaching.Domain.Common;
 using SmartCoaching.Domain.Entities;
-using MassTransit;
-using SmartCoaching.Application.Common.Events;
 using System;
 using System.Linq;
 using System.Threading;
@@ -27,17 +27,64 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
     public async Task<Result<Guid>> Handle(AssignDietProgramCommand request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
-            .Include(a => a.DietMeals)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)
             return Result.Failure<Guid>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
-        // Create new diet meal list
+        var incomingGeneralNotes = request.GeneralDietNotes?.Trim() ?? string.Empty;
+        var incomingMeals = request.Meals
+            .OrderBy(m => m.Order)
+            .Select(m => new
+            {
+                m.Order,
+                MealName = m.MealName.Trim(),
+                Foods = m.Foods.Trim(),
+                Notes = m.Notes.Trim(),
+                m.Protein,
+                m.Carbs,
+                m.Fats,
+                m.Calories
+            })
+            .ToList();
+
+        var currentGeneralNotes = athlete.GeneralDietNotes?.Trim() ?? string.Empty;
+        var currentMeals = await _context.DietMeals
+            .AsNoTracking()
+            .Where(m => m.AthleteId == athlete.Id)
+            .OrderBy(m => m.Order)
+            .Select(m => new
+            {
+                m.Order,
+                MealName = m.MealName.Trim(),
+                Foods = m.Foods.Trim(),
+                Notes = m.Notes.Trim(),
+                m.Protein,
+                m.Carbs,
+                m.Fats,
+                m.Calories
+            })
+            .ToListAsync(cancellationToken);
+
+        var isSameProgram =
+            string.Equals(currentGeneralNotes, incomingGeneralNotes, StringComparison.Ordinal) &&
+            currentMeals.Count == incomingMeals.Count &&
+            currentMeals.Zip(incomingMeals, (current, incoming) =>
+                current.Order == incoming.Order &&
+                current.MealName == incoming.MealName &&
+                current.Foods == incoming.Foods &&
+                current.Notes == incoming.Notes &&
+                current.Protein == incoming.Protein &&
+                current.Carbs == incoming.Carbs &&
+                current.Fats == incoming.Fats &&
+                current.Calories == incoming.Calories).All(x => x);
+
+        if (isSameProgram)
+            return Result.Success(athlete.Id);
+
         var newMeals = request.Meals.Select(m => new DietMeal
         {
             AthleteId = athlete.Id,
-            Athlete = athlete,
             MealName = m.MealName,
             Foods = m.Foods,
             Notes = m.Notes,
@@ -48,14 +95,17 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             Calories = m.Calories
         }).ToList();
 
-        athlete.SetDietMeals(newMeals, request.GeneralDietNotes);
+        await _context.DietMeals
+            .Where(m => m.AthleteId == athlete.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        athlete.SetDietMeals(newMeals, incomingGeneralNotes);
+        _context.DietMeals.AddRange(newMeals);
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Publish event for AI macro calculation
         await _publishEndpoint.Publish(new DietPlanAssignedEvent(athlete.Id), cancellationToken);
 
-        // Auto Notification Logic (Refactored to Helper)
         if (newMeals.Any())
         {
             await ProgramNotificationHelper.CheckAndSendProgramPublishedEventAsync(athlete, _context, _publishEndpoint, cancellationToken);
