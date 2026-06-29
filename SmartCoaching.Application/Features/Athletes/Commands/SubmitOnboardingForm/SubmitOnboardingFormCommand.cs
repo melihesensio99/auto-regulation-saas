@@ -22,4 +22,4 @@ public record SubmitOnboardingFormCommand(
     string HasWorkedWithCoach,
     string HearAboutUs,
     string AdditionalNotes
-) : IRequest<Result<Unit>>;
+) : IRequest<Result<string>>;

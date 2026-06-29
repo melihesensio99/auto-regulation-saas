@@ -26,19 +26,48 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
         var endExclusive = startOfWeek.AddDays(7);
         var todayExclusive = today.AddDays(1);
 
-        var athletes = await _dbContext.Athletes
+        var athleteBasics = await _dbContext.Athletes
             .AsNoTracking()
-            .Include(a => a.ProgressLogs.Where(pl => pl.Date >= startOfWeek && pl.Date < endExclusive))
-            .Include(a => a.WorkoutExercises)
-            .Include(a => a.DietMeals)
+            .Select(a => new AthleteDashboardRow(
+                a.Id,
+                a.FirstName,
+                a.LastName))
             .ToListAsync(cancellationToken);
 
-        var athleteCards = athletes
-            .Select(a => BuildAthleteCard(a, today, todayExclusive, startOfWeek))
+        var athleteIds = athleteBasics.Select(a => a.AthleteId).ToList();
+
+        var weekProgressLogs = await _dbContext.ProgressLogs
+            .AsNoTracking()
+            .Where(pl => athleteIds.Contains(pl.AthleteId) && pl.Date >= startOfWeek && pl.Date < endExclusive)
+            .Select(pl => new ProgressLogRow(pl.AthleteId, pl.Date))
+            .ToListAsync(cancellationToken);
+
+        var workoutAthleteIds = await _dbContext.WorkoutExercises
+            .AsNoTracking()
+            .Where(w => athleteIds.Contains(w.AthleteId))
+            .Select(w => w.AthleteId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var dietAthleteIds = await _dbContext.DietMeals
+            .AsNoTracking()
+            .Where(d => athleteIds.Contains(d.AthleteId))
+            .Select(d => d.AthleteId)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var athleteCards = athleteBasics
+            .Select(a => BuildAthleteCard(
+                a,
+                weekProgressLogs.Where(pl => pl.AthleteId == a.AthleteId).ToList(),
+                workoutAthleteIds.Contains(a.AthleteId),
+                dietAthleteIds.Contains(a.AthleteId),
+                today,
+                todayExclusive))
             .ToList();
 
         var dto = new CoachDashboardDto(
-            athletes.Count,
+            athleteBasics.Count,
             athleteCards.Count(x => x.IsActiveToday),
             athleteCards.Count(x => x.NeedsAttention),
             athleteCards
@@ -48,19 +77,19 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
     }
 
     private static AthletePerformanceDto BuildAthleteCard(
-        SmartCoaching.Domain.Entities.Athlete athlete,
+        AthleteDashboardRow athlete,
+        List<ProgressLogRow> weekLogs,
+        bool hasWorkoutProgram,
+        bool hasDietProgram,
         DateTime today,
-        DateTime todayExclusive,
-        DateTime startOfWeek)
+        DateTime todayExclusive)
     {
-        var weekLogs = athlete.ProgressLogs
-            .Where(pl => pl.Date >= startOfWeek && pl.Date < todayExclusive)
+        var orderedWeekLogs = weekLogs
+            .Where(pl => pl.Date < todayExclusive)
             .OrderBy(pl => pl.Date)
             .ToList();
 
-        var lastLogDate = weekLogs.LastOrDefault()?.Date;
-        var hasWorkoutProgram = athlete.WorkoutExercises.Any();
-        var hasDietProgram = athlete.DietMeals.Any();
+        var lastLogDate = orderedWeekLogs.LastOrDefault()?.Date;
         var isActiveToday = weekLogs.Any(pl => pl.Date.Date == today);
 
         var reasons = new List<string>();
@@ -81,7 +110,7 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
 
         return new AthletePerformanceDto
         {
-            AthleteId = athlete.Id,
+            AthleteId = athlete.AthleteId,
             FullName = $"{athlete.FirstName} {athlete.LastName}",
             IsActiveToday = isActiveToday,
             LastLogDate = lastLogDate,
@@ -97,4 +126,8 @@ public class GetCoachDashboardSummaryQueryHandler : IRequestHandler<GetCoachDash
         var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
         return date.AddDays(-diff);
     }
+
+    private sealed record AthleteDashboardRow(Guid AthleteId, string FirstName, string LastName);
+
+    private sealed record ProgressLogRow(Guid AthleteId, DateTime Date);
 }

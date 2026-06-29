@@ -12,6 +12,7 @@ public interface IApplicationDbContext
     DbSet<ProgressLog> ProgressLogs { get; }
     DbSet<DietMeal> DietMeals { get; }
     DbSet<WorkoutExercise> WorkoutExercises { get; }
+    DbSet<ExerciseLibrary> ExerciseLibraries { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

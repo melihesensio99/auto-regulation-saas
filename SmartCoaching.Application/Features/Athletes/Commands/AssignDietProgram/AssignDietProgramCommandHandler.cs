@@ -40,11 +40,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
                 m.Order,
                 MealName = m.MealName.Trim(),
                 Foods = m.Foods.Trim(),
-                Notes = m.Notes.Trim(),
-                m.Protein,
-                m.Carbs,
-                m.Fats,
-                m.Calories
+                Notes = m.Notes.Trim()
             })
             .ToList();
 
@@ -58,11 +54,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
                 m.Order,
                 MealName = m.MealName.Trim(),
                 Foods = m.Foods.Trim(),
-                Notes = m.Notes.Trim(),
-                m.Protein,
-                m.Carbs,
-                m.Fats,
-                m.Calories
+                Notes = m.Notes.Trim()
             })
             .ToListAsync(cancellationToken);
 
@@ -73,11 +65,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
                 current.Order == incoming.Order &&
                 current.MealName == incoming.MealName &&
                 current.Foods == incoming.Foods &&
-                current.Notes == incoming.Notes &&
-                current.Protein == incoming.Protein &&
-                current.Carbs == incoming.Carbs &&
-                current.Fats == incoming.Fats &&
-                current.Calories == incoming.Calories).All(x => x);
+                current.Notes == incoming.Notes).All(x => x);
 
         if (isSameProgram)
             return Result.Success(athlete.Id);
@@ -88,11 +76,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             MealName = m.MealName,
             Foods = m.Foods,
             Notes = m.Notes,
-            Order = m.Order,
-            Protein = m.Protein,
-            Carbs = m.Carbs,
-            Fats = m.Fats,
-            Calories = m.Calories
+            Order = m.Order
         }).ToList();
 
         await _context.DietMeals

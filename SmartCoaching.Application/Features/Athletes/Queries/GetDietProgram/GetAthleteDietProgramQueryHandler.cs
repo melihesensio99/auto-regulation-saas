@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Common;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,18 +32,18 @@ public class GetAthleteDietProgramQueryHandler : IRequestHandler<GetAthleteDietP
                 m.Order,
                 m.MealName,
                 m.Foods,
-                m.Notes,
-                m.Protein,
-                m.Carbs,
-                m.Fats,
-                m.Calories
+                m.Notes
             ))
             .ToList();
 
         var response = new DietProgramResponseDto(
             athlete.Id,
             athlete.GeneralDietNotes,
-            meals
+            meals,
+            athlete.DietPlanCalories,
+            athlete.DietPlanProtein,
+            athlete.DietPlanCarbs,
+            athlete.DietPlanFats
         );
 
         return Result<DietProgramResponseDto>.Success(response);

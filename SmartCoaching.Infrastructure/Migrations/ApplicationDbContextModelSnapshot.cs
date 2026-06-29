@@ -43,6 +43,21 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DietPlanCalculatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DietPlanCalories")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DietPlanCarbs")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DietPlanFats")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DietPlanProtein")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("text");
@@ -85,6 +100,9 @@ namespace SmartCoaching.Infrastructure.Migrations
 
                     b.Property<string>("MainReason")
                         .HasColumnType("text");
+
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Occupation")
                         .HasColumnType("text");
@@ -175,17 +193,8 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<Guid>("AthleteId")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Calories")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Carbs")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Fats")
-                        .HasColumnType("integer");
 
                     b.Property<string>("Foods")
                         .IsRequired()
@@ -202,9 +211,6 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Protein")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -213,6 +219,52 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.HasIndex("AthleteId");
 
                     b.ToTable("DietMeals");
+                });
+
+            modelBuilder.Entity("SmartCoaching.Domain.Entities.ExerciseLibrary", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<string>("BodyPart")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Equipment")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstructionsEn")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("InstructionsTr")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetMuscle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VideoUrl")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ExerciseLibraries");
                 });
 
             modelBuilder.Entity("SmartCoaching.Domain.Entities.ProgressLog", b =>
@@ -283,6 +335,9 @@ namespace SmartCoaching.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("ExerciseLibraryId")
+                        .HasColumnType("text");
+
                     b.Property<string>("ExerciseName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -306,6 +361,8 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AthleteId");
+
+                    b.HasIndex("ExerciseLibraryId");
 
                     b.ToTable("WorkoutExercises");
                 });
@@ -351,7 +408,14 @@ namespace SmartCoaching.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SmartCoaching.Domain.Entities.ExerciseLibrary", "ExerciseLibrary")
+                        .WithMany()
+                        .HasForeignKey("ExerciseLibraryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Athlete");
+
+                    b.Navigation("ExerciseLibrary");
                 });
 
             modelBuilder.Entity("SmartCoaching.Domain.Entities.Athlete", b =>

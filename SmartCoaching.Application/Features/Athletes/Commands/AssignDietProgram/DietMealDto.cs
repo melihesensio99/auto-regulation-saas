@@ -6,8 +6,4 @@ public class DietMealDto
     public string MealName { get; set; } = default!;
     public string Foods { get; set; } = default!;
     public string Notes { get; set; } = default!;
-    public int Protein { get; set; }
-    public int Carbs { get; set; }
-    public int Fats { get; set; }
-    public int Calories { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using MassTransit;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Events;
@@ -43,7 +43,8 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
                 x.Sets,
                 x.Reps,
                 x.RestTimeInSeconds,
-                Notes = x.Notes ?? string.Empty
+                Notes = x.Notes ?? string.Empty,
+                ExerciseLibraryId = x.ExerciseLibraryId ?? string.Empty
             })
             .ToListAsync(cancellationToken);
 
@@ -56,6 +57,7 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
                 e.Reps,
                 e.RestTimeInSeconds,
                 Notes = e.Notes ?? string.Empty,
+                ExerciseLibraryId = e.ExerciseLibraryId ?? string.Empty,
                 OrderIndex = index
             })
             .ToList();
@@ -68,7 +70,8 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
                 current.Sets == incoming.Sets &&
                 current.Reps == incoming.Reps &&
                 current.RestTimeInSeconds == incoming.RestTimeInSeconds &&
-                current.Notes == incoming.Notes).All(x => x);
+                current.Notes == incoming.Notes &&
+                current.ExerciseLibraryId == incoming.ExerciseLibraryId).All(x => x);
 
         if (isSameProgram)
             return Result<Guid>.Success(athlete.Id);
@@ -82,6 +85,7 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             Reps = e.Reps,
             RestTimeInSeconds = e.RestTimeInSeconds,
             Notes = e.Notes,
+            ExerciseLibraryId = e.ExerciseLibraryId,
             OrderIndex = index
         }).ToList();
 

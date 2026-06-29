@@ -20,4 +20,8 @@ public class WorkoutExercise
     
     // Sıralama (Reordering) için indeks
     public int OrderIndex { get; set; }
+
+    // Kütüphane bağlantısı (Opsiyonel, çünkü eski verilerde olmayabilir)
+    public string? ExerciseLibraryId { get; set; }
+    public ExerciseLibrary? ExerciseLibrary { get; set; }
 }

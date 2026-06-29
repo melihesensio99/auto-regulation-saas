@@ -6,6 +6,9 @@ namespace SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
 public record DietProgramResponseDto(
     Guid AthleteId,
     string GeneralDietNotes,
-    List<DietMealResponseDto> Meals
+    List<DietMealResponseDto> Meals,
+    int TotalCalories,
+    int TotalProtein,
+    int TotalCarbs,
+    int TotalFats
 );
-

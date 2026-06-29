@@ -55,7 +55,8 @@ public sealed class JwtProvider : IJwtProvider
             new Claim(ClaimTypes.Role, Roles.Athlete),
             // Sporcunun tenantId'si KENDİ ID'si olmalıdır, çünkü Global Query Filter'lar buna göre yazılmış.
             new Claim("tenantId", athlete.Id.ToString()),
-            new Claim("isOnboardingCompleted", athlete.IsOnboardingCompleted.ToString())
+            new Claim("isOnboardingCompleted", athlete.IsOnboardingCompleted.ToString()),
+            new Claim("mustChangePassword", athlete.MustChangePassword.ToString())
         };
 
         var signingCredentials = new SigningCredentials(

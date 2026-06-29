@@ -117,7 +117,7 @@ public class MistralAiService : IAiService
             response_format = new { type = "json_object" },
             messages = new[]
             {
-                new { role = "system", content = "Sen profesyonel bir diyetisyen yapay zekasın. Sana verilen öğünlerdeki yiyecek metinlerini analiz et ve Protein, Karbonhidrat (Carbs), Yağ (Fats) ve Kalori (Calories) değerlerini tahmin et. Dönüşün SADECE aşağıdaki gibi JSON formatında olmalıdır. Anahtarlar öğünün Id'si olmalıdır. Örneğin: {\"b097b6a1-0000-0000-0000-000000000000\": {\"Protein\": 30, \"Carbs\": 50, \"Fats\": 10, \"Calories\": 410}}" },
+                new { role = "system", content = "Sen profesyonel bir diyetisyen yapay zekasÄ±n. Sana verilen tÃ¼m Ã¶ÄŸÃ¼nlerdeki yiyecek metinlerini analiz et ve sadece programin toplamini dÃ¶n. Protein, Karbonhidrat (Carbs), YaÄŸ (Fats) ve Kalori (Calories) deÄŸerlerini tahmin et. DÃ¶nÃ¼ÅŸÃ¼n SADECE aÅŸaÄŸÄ±daki gibi JSON formatÄ±nda olmalÄ±dÄ±r: {\"Protein\": 140, \"Carbs\": 220, \"Fats\": 55, \"Calories\": 1850}" },
                 new { role = "user", content = jsonPayload }
             }
         };
@@ -133,7 +133,7 @@ public class MistralAiService : IAiService
 
         using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var jsonDoc = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
-        
+
         var messageContent = jsonDoc.RootElement
             .GetProperty("choices")[0]
             .GetProperty("message")

@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ProgressLog> ProgressLogs { get; set; }
     public DbSet<DietMeal> DietMeals { get; set; }
     public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
+    public DbSet<ExerciseLibrary> ExerciseLibraries { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -52,7 +53,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<WorkoutExercise>()
-            .HasIndex(w => w.AthleteId);
+            .HasOne(w => w.ExerciseLibrary)
+            .WithMany()
+            .HasForeignKey(w => w.ExerciseLibraryId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         // MULTI-TENANCY: Global Query Filters
         // Athlete entity has the master CoachId check.
@@ -60,8 +64,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             _currentUserService.TenantId == Guid.Empty || 
             (_currentUserService.Role == Roles.Coach && a.CoachId == _currentUserService.TenantId) || 
             (_currentUserService.Role == Roles.Athlete && a.Id == _currentUserService.TenantId));
-            
-        // Removed child entity query filters completely to prevent Npgsql UPDATE bugs.
         // Handlers already protect access by checking the Athlete first.
     }
 }

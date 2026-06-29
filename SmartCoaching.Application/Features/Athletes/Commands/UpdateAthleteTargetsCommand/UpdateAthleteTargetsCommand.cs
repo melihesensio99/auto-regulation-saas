@@ -8,5 +8,5 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.UpdateAthleteTarg
 public record UpdateAthleteTargetsCommand(
     Guid AthleteId,
     decimal TargetCalories,
-    int TargetSteps
+    int? TargetSteps = null
 ) : IRequest<Result>;

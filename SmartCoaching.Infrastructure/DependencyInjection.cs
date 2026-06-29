@@ -1,11 +1,14 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SmartCoaching.Application.Common.Interfaces;
+using SmartCoaching.Application.Common.Interfaces.AI;
 using SmartCoaching.Infrastructure.Authentication;
 using SmartCoaching.Infrastructure.Services;
 using MassTransit;
 using SmartCoaching.Application.Features.Athletes.EventHandlers;
-
+using SmartCoaching.Infrastructure.AI;
+using SmartCoaching.Infrastructure.AI.Agents;
+using SmartCoaching.Infrastructure.Persistence;
 namespace SmartCoaching.Infrastructure;
 
 public static class DependencyInjection
@@ -17,6 +20,19 @@ public static class DependencyInjection
         
         // Ai Service
         services.AddHttpClient<IAiService, MistralAiService>();
+        
+        // AI Agent - Auth Context (coachId'yi JWT'den alır, LLM'den DEĞİL)
+        services.AddScoped<IAgentCoachContext, AgentCoachContext>();
+        services.AddScoped<IAgentToolResultTracker, AgentToolResultTracker>();
+        services.AddScoped<ICoachAgentExecutor, NutritionCoachAgentExecutor>();
+        services.AddScoped<ICoachAgentExecutor, WorkoutCoachAgentExecutor>();
+        services.AddScoped<ICoachAgentExecutor, GeneralInsightCoachAgentExecutor>();
+
+        // ApplicationDbContext & Seeder
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<SmartCoaching.Infrastructure.Persistence.Seed.ExerciseSeeder>();
+        // AI Agent Service
+        services.AddScoped<IAiAgentService, GeminiAgentService>();
 
         // Email Service
         services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));

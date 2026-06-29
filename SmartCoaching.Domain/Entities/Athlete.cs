@@ -8,6 +8,7 @@ public class Athlete : BaseEntity
     public string LastName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
+    public bool MustChangePassword { get; private set; }
     
     // Multi-tenancy: Bu sporcu hangi antrenöre (kiracıya) ait?
     public Guid CoachId { get; private set; } 
@@ -19,6 +20,11 @@ public class Athlete : BaseEntity
     public decimal TargetCalories { get; private set; }
     public int TargetSteps { get; private set; }
     public string GeneralDietNotes { get; private set; } = string.Empty;
+    public int DietPlanCalories { get; private set; }
+    public int DietPlanProtein { get; private set; }
+    public int DietPlanCarbs { get; private set; }
+    public int DietPlanFats { get; private set; }
+    public DateTime? DietPlanCalculatedAt { get; private set; }
 
     public DateTime SubscriptionStartDate { get; private set; }
     public DateTime SubscriptionEndDate { get; private set; }
@@ -64,6 +70,7 @@ public class Athlete : BaseEntity
         LastName = lastName;
         Email = email;
         PasswordHash = passwordHash;
+        MustChangePassword = true;
         IsOnboardingCompleted = false;
         SubscriptionStartDate = DateTime.SpecifyKind(subscriptionStartDate.Date, DateTimeKind.Utc);
         SubscriptionEndDate = DateTime.SpecifyKind(subscriptionEndDate.Date, DateTimeKind.Utc);
@@ -133,6 +140,7 @@ public class Athlete : BaseEntity
     public void UpdatePassword(string newPasswordHash)
     {
         PasswordHash = newPasswordHash;
+        MustChangePassword = false;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -152,6 +160,16 @@ public class Athlete : BaseEntity
         _dietMeals.Clear();
         _dietMeals.AddRange(meals);
         GeneralDietNotes = generalDietNotes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetDietProgramSummary(int calories, int protein, int carbs, int fats)
+    {
+        DietPlanCalories = calories;
+        DietPlanProtein = protein;
+        DietPlanCarbs = carbs;
+        DietPlanFats = fats;
+        DietPlanCalculatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 }

@@ -6,5 +6,6 @@ public record WorkoutExerciseDto(
     int Sets,
     string Reps,
     int RestTimeInSeconds,
-    string? Notes
+    string? Notes,
+    string? ExerciseLibraryId
 );

@@ -22,34 +22,33 @@ public class GetAthleteWorkoutProgramQueryHandler : IRequestHandler<GetAthleteWo
     {
         var athlete = await _context.Athletes
             .Include(a => a.WorkoutExercises)
+                .ThenInclude(we => we.ExerciseLibrary)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
-        
+
         if (athlete == null)
             return Result.Failure<AthleteWorkoutProgramDto>(new Error("Athlete.NotFound", "Sporcu bulunamadı.", ErrorType.NotFound));
 
         var exercises = athlete.WorkoutExercises
             .OrderBy(we => we.OrderIndex)
-            .ToList();
-
-        // Günlere göre grupla (Group By DayName)
-        var groupedDays = exercises
-            .GroupBy(e => e.DayName)
-            .Select(g => new WorkoutDayDto(
-                DayName: g.Key,
-                Exercises: g.Select(x => new WorkoutExerciseResponseDto(
-                    Id: x.Id,
-                    ExerciseName: x.ExerciseName,
-                    Sets: x.Sets,
-                    Reps: x.Reps,
-                    RestTimeInSeconds: x.RestTimeInSeconds,
-                    Notes: x.Notes
-                )).ToList()
+            .Select(x => new WorkoutExerciseResponseDto(
+                Id: x.Id,
+                DayName: x.DayName,
+                ExerciseName: x.ExerciseName,
+                Sets: x.Sets,
+                Reps: x.Reps,
+                RestTimeInSeconds: x.RestTimeInSeconds,
+                Notes: x.Notes,
+                ExerciseLibraryId: x.ExerciseLibraryId,
+                TargetMuscle: x.ExerciseLibrary?.TargetMuscle,
+                GifUrl: x.ExerciseLibrary?.VideoUrl,
+                ImageUrl: x.ExerciseLibrary?.ImageUrl,
+                Instructions: x.ExerciseLibrary?.InstructionsTr
             ))
             .ToList();
 
         var response = new AthleteWorkoutProgramDto(
             AthleteId: request.AthleteId,
-            Days: groupedDays
+            Exercises: exercises
         );
 
         return Result<AthleteWorkoutProgramDto>.Success(response);

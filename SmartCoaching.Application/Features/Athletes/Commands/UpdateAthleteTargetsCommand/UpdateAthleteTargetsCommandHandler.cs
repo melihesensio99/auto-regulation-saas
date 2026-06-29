@@ -27,8 +27,9 @@ public class UpdateAthleteTargetsCommandHandler : IRequestHandler<UpdateAthleteT
             return Result.Failure(new Error("Athlete.NotFound", "Belirtilen sporcu bulunamadı veya bu sporcuya erişim izniniz yok."));
         }
 
-        // Değerleri güncelle
-        athlete.UpdateTargets(request.TargetCalories, request.TargetSteps);
+        // Değerleri güncelle. TargetSteps null ise mevcut değeri koru (Agent'ın kısmi güncelleme yapabilmesi için).
+        var effectiveSteps = request.TargetSteps ?? athlete.TargetSteps;
+        athlete.UpdateTargets(request.TargetCalories, effectiveSteps);
 
         // Veritabanına kaydet
         await _context.SaveChangesAsync(cancellationToken);

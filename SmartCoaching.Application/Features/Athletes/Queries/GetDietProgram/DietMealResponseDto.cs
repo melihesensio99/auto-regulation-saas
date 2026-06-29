@@ -7,9 +7,5 @@ public record DietMealResponseDto(
     int Order,
     string MealName,
     string Foods,
-    string Notes,
-    int Protein,
-    int Carbs,
-    int Fats,
-    int Calories
+    string Notes
 );

@@ -13,6 +13,7 @@ public class UpdateAthleteTargetsCommandValidator : AbstractValidator<UpdateAthl
             .GreaterThan(0).WithMessage("Hedef kalori 0'dan büyük olmalıdır.");
 
         RuleFor(x => x.TargetSteps)
-            .GreaterThan(0).WithMessage("Hedef adım 0'dan büyük olmalıdır.");
+            .GreaterThan(0).WithMessage("Hedef adım 0'dan büyük olmalıdır.")
+            .When(x => x.TargetSteps.HasValue);
     }
 }

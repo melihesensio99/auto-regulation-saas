@@ -32,41 +32,30 @@ public class DietPlanAssignedEventConsumer : IConsumer<DietPlanAssignedEvent>
         if (athlete == null || !athlete.DietMeals.Any())
             return;
 
-        // Build a prompt for Mistral AI
-        var mealsPayload = athlete.DietMeals.Select(m => new {
-            m.Id,
+        var mealsPayload = athlete.DietMeals.Select(m => new
+        {
+            m.Order,
             m.MealName,
             m.Foods
         }).ToList();
 
         var jsonPayload = JsonSerializer.Serialize(mealsPayload);
 
-        // Calculate macros
         string responseJson = await _aiService.CalculateMacrosAsync(jsonPayload, context.CancellationToken);
 
         try
         {
-            // Clean markdown
             string cleanJson = responseJson.Trim();
             if (cleanJson.StartsWith("```json")) cleanJson = cleanJson.Substring(7);
             if (cleanJson.StartsWith("```")) cleanJson = cleanJson.Substring(3);
             if (cleanJson.EndsWith("```")) cleanJson = cleanJson.Substring(0, cleanJson.Length - 3);
             cleanJson = cleanJson.Trim();
 
-            var macrosDict = JsonSerializer.Deserialize<Dictionary<Guid, MacroDto>>(cleanJson);
+            var macros = JsonSerializer.Deserialize<MacroDto>(cleanJson);
 
-            if (macrosDict != null)
+            if (macros != null)
             {
-                foreach (var meal in athlete.DietMeals)
-                {
-                    if (macrosDict.TryGetValue(meal.Id, out var macros))
-                    {
-                        meal.Protein = macros.Protein;
-                        meal.Carbs = macros.Carbs;
-                        meal.Fats = macros.Fats;
-                        meal.Calories = macros.Calories;
-                    }
-                }
+                athlete.SetDietProgramSummary(macros.Calories, macros.Protein, macros.Carbs, macros.Fats);
 
                 await _context.SaveChangesAsync(context.CancellationToken);
             }

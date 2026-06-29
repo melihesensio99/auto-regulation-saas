@@ -28,6 +28,13 @@ builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequir
 
 var app = builder.Build();
 
+// Veritabanı Seed İşlemleri
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<SmartCoaching.Infrastructure.Persistence.Seed.ExerciseSeeder>();
+    await seeder.SeedAsync();
+}
+
 // Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
 
