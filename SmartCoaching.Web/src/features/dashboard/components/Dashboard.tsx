@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
-import { useAthletes, useCoachDashboard } from '../hooks/useDashboard';
-import { AthleteDetailsTabs } from './AthleteDetailsTabs';
-import { AthleteList } from './AthleteList';
-import { CoachAssistantWidget } from './CoachAssistantWidget';
-import { CoachDashboardHeader } from './CoachDashboardHeader';
-import { CoachSelectedAthleteHero } from './CoachSelectedAthleteHero';
-import { CoachTeamHero } from './CoachTeamHero';
-import { TeamOverviewPanel } from './TeamOverviewPanel';
+import { useAthletes, useCoachDashboard } from '@/features/dashboard/hooks/useDashboard';
+import { AthleteDetailsTabs } from '@/features/dashboard/components/AthleteDetailsTabs';
+import { AthleteList } from '@/features/dashboard/components/AthleteList';
+import { CoachAssistantWidget } from '@/features/dashboard/components/CoachAssistantWidget';
+import { CoachDashboardHeader } from '@/features/dashboard/components/CoachDashboardHeader';
+import { CoachSelectedAthleteHero } from '@/features/dashboard/components/CoachSelectedAthleteHero';
+import { CoachTeamHero } from '@/features/dashboard/components/CoachTeamHero';
+import { TeamOverviewPanel } from '@/features/dashboard/components/TeamOverviewPanel';
 
 export const Dashboard = () => {
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);

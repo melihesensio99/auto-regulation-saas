@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
-import { EmptyPanel, ErrorPanel, LoadingPanel } from '../../../shared/components/feedback/StatePanels';
-import { useAddFeedback, useProgressLogs } from '../hooks/useDashboard';
-import type { ProgressLog } from '../types';
-import { createLast30DaysRange } from '../utils/progressDateRange';
+import type { ProgressLog } from '@/features/dashboard/types';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '@/shared/components/feedback/StatePanels';
+import { useAddFeedback, useProgressLogs } from '@/features/dashboard/hooks/useDashboard';
+import { createLast30DaysRange } from '@/features/dashboard/utils/progressDateRange';
 
 interface ProgressLogListProps {
     athleteId: string | null;
@@ -35,7 +35,7 @@ const renderProgressPhotos = (log: ProgressLog) => {
 export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
     const [feedbackText, setFeedbackText] = useState('');
 
-    const dateRange = useMemo(() => createLast30DaysRange(), []);
+    const dateRange = useMemo(createLast30DaysRange, []);
     const { data: progressLogs, isLoading, isError } = useProgressLogs(athleteId, dateRange.startDate, dateRange.endDate);
     const addFeedbackMutation = useAddFeedback();
 
@@ -59,7 +59,7 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
         return (
             <div className="glass-panel" style={{ flex: 1 }}>
                 <EmptyPanel
-                    icon="👈"
+                    icon=">"
                     message="Detaylarini gormek icin soldan bir sporcu sec."
                     minHeight={320}
                 />
@@ -91,7 +91,7 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
 
             {visibleLogs.length === 0 ? (
                 <EmptyPanel
-                    icon="📭"
+                    icon="i"
                     message="Bu sporcu henuz gelisim kaydi gondermemis."
                     detail="Kalori, adim, kilo ve notlar geldikce burada listelenecek."
                     minHeight={320}
@@ -119,19 +119,19 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
                                 }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ fontSize: '1.1rem' }}>📅</span>
+                                    <span style={{ fontSize: '1.1rem' }}>Tarih</span>
                                     <h4 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '0.9rem' }}>
                                         {formatProgressDate(log.date)}
                                     </h4>
                                 </div>
                                 <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>
-                                    {log.weightKg ? `⚖️ ${log.weightKg} KG` : '⚖️ - KG'}
+                                    {log.weightKg ? `Kilo ${log.weightKg} KG` : 'Kilo -'}
                                 </span>
                             </div>
 
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
-                                <span className="chip">🔥 {log.consumedCalories} kcal</span>
-                                <span className="chip">👟 {log.takenSteps} adim</span>
+                                <span className="chip">Kalori {log.consumedCalories} kcal</span>
+                                <span className="chip">Adim {log.takenSteps}</span>
                                 <span className={`chip ${log.isWorkoutCompleted ? 'chip--success' : 'chip--warning'}`}>
                                     {log.isWorkoutCompleted ? 'Antrenman var' : 'Dinlenme'}
                                 </span>

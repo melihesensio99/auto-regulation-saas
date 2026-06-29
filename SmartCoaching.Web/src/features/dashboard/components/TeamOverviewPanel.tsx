@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { EmptyPanel, ErrorPanel, LoadingPanel } from '../../../shared/components/feedback/StatePanels';
-import type { CoachDashboardDto } from '../types';
+import type { CoachDashboardDto } from '@/features/dashboard/types';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '@/shared/components/feedback/StatePanels';
 
 interface TeamOverviewPanelProps {
     dashboard: CoachDashboardDto | undefined;
@@ -26,7 +26,7 @@ export const TeamOverviewPanel = ({ dashboard, isLoading, error }: TeamOverviewP
     if (filteredAthletes.length === 0) {
         return (
             <EmptyPanel
-                icon="🔎"
+                icon="?"
                 message="Aramana uygun sporcu bulunamadi."
                 detail="Farkli bir isimle tekrar deneyebilirsin."
                 minHeight={280}

@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState } from 'react';
-import { ProgressLogList } from './ProgressLogList';
-import { WorkoutProgramPanel } from './WorkoutProgramPanel';
-import { DietProgramPanel } from './DietProgramPanel';
-import { AthleteProfilePanel } from './AthleteProfilePanel';
-import { TargetsPanel } from './TargetsPanel';
+import { AthleteProfilePanel } from '@/features/dashboard/components/AthleteProfilePanel';
+import { DietProgramPanel } from '@/features/dashboard/components/DietProgramPanel';
+import { ProgressLogList } from '@/features/dashboard/components/ProgressLogList';
+import { TargetsPanel } from '@/features/dashboard/components/TargetsPanel';
+import { WorkoutProgramPanel } from '@/features/dashboard/components/WorkoutProgramPanel';
 
 interface AthleteDetailsTabsProps {
     athleteId: string | null;
