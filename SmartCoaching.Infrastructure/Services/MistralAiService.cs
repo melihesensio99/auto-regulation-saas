@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Configuration;
-using SmartCoaching.Application.Common.Constants;
+
 using SmartCoaching.Application.Common.Interfaces;
 using System.Net.Http;
 using System.Net.Http.Json;
