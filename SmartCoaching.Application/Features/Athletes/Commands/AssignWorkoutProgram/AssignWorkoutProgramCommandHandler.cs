@@ -1,9 +1,6 @@
-using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using SmartCoaching.Application.Common.Events;
 using SmartCoaching.Application.Common.Interfaces;
-using SmartCoaching.Application.Features.Athletes.Services;
 using SmartCoaching.Domain.Common;
 using SmartCoaching.Domain.Entities;
 using System;
@@ -16,12 +13,10 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProg
 public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutProgramCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
-    private readonly IPublishEndpoint _publishEndpoint;
 
-    public AssignWorkoutProgramCommandHandler(IApplicationDbContext context, IPublishEndpoint publishEndpoint)
+    public AssignWorkoutProgramCommandHandler(IApplicationDbContext context)
     {
         _context = context;
-        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(AssignWorkoutProgramCommand request, CancellationToken cancellationToken)
@@ -95,11 +90,6 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
 
         _context.WorkoutExercises.AddRange(newExercises);
         await _context.SaveChangesAsync(cancellationToken);
-
-        if (newExercises.Any())
-        {
-            await ProgramNotificationHelper.CheckAndSendProgramPublishedEventAsync(athlete, _context, _publishEndpoint, cancellationToken);
-        }
 
         return Result<Guid>.Success(athlete.Id);
     }

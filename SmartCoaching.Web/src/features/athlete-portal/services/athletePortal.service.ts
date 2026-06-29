@@ -1,5 +1,4 @@
-import api from '@/shared/services/api';
-import type { ProgressLog, AthleteWorkoutProgram, AthleteDietProgram } from '../../dashboard/types';
+import { athleteResourcesService } from '@/shared/services/athlete-resources.service';
 
 export interface LogProgressRequest {
     date: string;
@@ -14,29 +13,9 @@ export interface LogProgressRequest {
 }
 
 export const athletePortalService = {
-    getAthleteProfile: async (athleteId: string) => {
-        const response = await api.get(`/athletes/${athleteId}`);
-        return response.data;
-    },
-
-    getProgressLogs: async (athleteId: string, startDate: string, endDate: string): Promise<ProgressLog[]> => {
-        const response = await api.get<ProgressLog[]>(`/Athletes/${athleteId}/progress`, {
-            params: { startDate, endDate }
-        });
-        return response.data;
-    },
-
-    logProgress: async (athleteId: string, data: LogProgressRequest): Promise<void> => {
-        await api.post(`/athletes/${athleteId}/progress`, data);
-    },
-
-    getWorkoutProgram: async (athleteId: string): Promise<AthleteWorkoutProgram> => {
-        const response = await api.get<AthleteWorkoutProgram>(`/athletes/${athleteId}/workout-programs`);
-        return response.data;
-    },
-
-    getDietProgram: async (athleteId: string): Promise<AthleteDietProgram> => {
-        const response = await api.get<AthleteDietProgram>(`/athletes/${athleteId}/diet-programs`);
-        return response.data;
-    }
+    getAthleteProfile: athleteResourcesService.getAthleteById,
+    getProgressLogs: athleteResourcesService.getProgressLogs,
+    logProgress: (athleteId: string, data: LogProgressRequest) => athleteResourcesService.logProgress(athleteId, data),
+    getWorkoutProgram: athleteResourcesService.getWorkoutProgram,
+    getDietProgram: athleteResourcesService.getDietProgram
 };

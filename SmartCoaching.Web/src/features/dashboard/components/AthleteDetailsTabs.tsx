@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { ProgressLogList } from './ProgressLogList';
 import { WorkoutProgramPanel } from './WorkoutProgramPanel';
-import { TeamOverviewPanel } from './TeamOverviewPanel';
 import { DietProgramPanel } from './DietProgramPanel';
 import { AthleteProfilePanel } from './AthleteProfilePanel';
 import { TargetsPanel } from './TargetsPanel';
@@ -28,7 +27,11 @@ export const AthleteDetailsTabs = ({ athleteId }: AthleteDetailsTabsProps) => {
     }, [athleteId]);
 
     if (!athleteId) {
-        return <TeamOverviewPanel />;
+        return (
+            <div className="empty-state" style={{ minHeight: 280 }}>
+                <p>Detayları görmek için bir sporcu seç.</p>
+            </div>
+        );
     }
 
     return (

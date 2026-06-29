@@ -2,6 +2,8 @@
 import { useAssignDietProgram, useDietProgram } from '../hooks/useDashboard';
 import type { DietMealDto } from '../types';
 
+type EditableDietMealField = 'mealName' | 'foods' | 'notes';
+
 export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
     const { data: program, isLoading } = useDietProgram(athleteId);
     const assignDiet = useAssignDietProgram();
@@ -21,10 +23,6 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
             mealName: meal.mealName,
             foods: meal.foods,
             notes: meal.notes,
-            protein: meal.protein,
-            carbs: meal.carbs,
-            fats: meal.fats,
-            calories: meal.calories,
         })));
     }, [program]);
 
@@ -33,12 +31,12 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
     const summary = useMemo(() => {
         return {
             meals: activeMeals.length,
-            calories: activeMeals.reduce((acc, meal) => acc + meal.calories, 0),
-            protein: activeMeals.reduce((acc, meal) => acc + meal.protein, 0),
-            carbs: activeMeals.reduce((acc, meal) => acc + meal.carbs, 0),
-            fats: activeMeals.reduce((acc, meal) => acc + meal.fats, 0),
+            calories: program?.totalCalories ?? 0,
+            protein: program?.totalProtein ?? 0,
+            carbs: program?.totalCarbs ?? 0,
+            fats: program?.totalFats ?? 0,
         };
-    }, [activeMeals]);
+    }, [activeMeals, program]);
 
     const startEditing = () => {
         if (program?.meals?.length) {
@@ -48,10 +46,6 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                 mealName: meal.mealName,
                 foods: meal.foods,
                 notes: meal.notes,
-                protein: meal.protein,
-                carbs: meal.carbs,
-                fats: meal.fats,
-                calories: meal.calories,
             })));
         } else {
             setGeneralNotes('');
@@ -61,10 +55,6 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                     mealName: '1. Öğün',
                     foods: '',
                     notes: '',
-                    protein: 0,
-                    carbs: 0,
-                    fats: 0,
-                    calories: 0,
                 },
             ]);
         }
@@ -81,10 +71,6 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                 mealName: `${nextOrder}. Öğün`,
                 foods: '',
                 notes: '',
-                protein: 0,
-                carbs: 0,
-                fats: 0,
-                calories: 0,
             },
         ]);
     };
@@ -98,13 +84,16 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
         setMeals(updated);
     };
 
-    const handleChangeMeal = (index: number, field: keyof DietMealDto, value: string) => {
-        const updated = [...meals];
-        const target = updated[index] as Record<string, unknown>;
-        target[field] = field === 'mealName' || field === 'foods' || field === 'notes'
-            ? value
-            : Number(value);
-        setMeals(updated);
+    const handleChangeMeal = (index: number, field: EditableDietMealField, value: string) => {
+        setMeals(current =>
+            current.map((meal, mealIndex) => {
+                if (mealIndex !== index) {
+                    return meal;
+                }
+
+                return { ...meal, [field]: value };
+            })
+        );
     };
 
     const handleSave = () => {
@@ -182,9 +171,14 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                         <div className="metric-card__hint">Günlük toplam</div>
                     </div>
                     <div className="metric-card">
-                        <span className="metric-card__label">Karb / Yağ</span>
+                        <span className="metric-card__label">Karb</span>
                         <span className="metric-card__value">{summary.carbs}g</span>
                         <div className="metric-card__hint">Karbonhidrat</div>
+                    </div>
+                    <div className="metric-card">
+                        <span className="metric-card__label">Yağ</span>
+                        <span className="metric-card__value">{summary.fats}g</span>
+                        <div className="metric-card__hint">Günlük toplam</div>
                     </div>
                 </div>
             </div>
@@ -244,12 +238,6 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                                                 onChange={e => handleChangeMeal(index, 'notes', e.target.value)}
                                                 placeholder="Öğün notu"
                                             />
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
-                                                <input className="field-input" type="number" min="0" value={meal.protein} onChange={e => handleChangeMeal(index, 'protein', e.target.value)} placeholder="Protein" />
-                                                <input className="field-input" type="number" min="0" value={meal.carbs} onChange={e => handleChangeMeal(index, 'carbs', e.target.value)} placeholder="Karb" />
-                                                <input className="field-input" type="number" min="0" value={meal.fats} onChange={e => handleChangeMeal(index, 'fats', e.target.value)} placeholder="Yağ" />
-                                                <input className="field-input" type="number" min="0" value={meal.calories} onChange={e => handleChangeMeal(index, 'calories', e.target.value)} placeholder="Kalori" />
-                                            </div>
                                         </div>
                                     </article>
                                 ))}
@@ -283,38 +271,31 @@ export const DietProgramPanel = ({ athleteId }: { athleteId: string }) => {
                 <div className="surface" style={{ padding: 20 }}>
                     <div style={{ display: 'grid', gap: 18 }}>
                         {program?.generalDietNotes && (
-                            <div className="timeline-card" style={{ padding: 18 }}>
-                                <span className="section-label">Genel not</span>
-                                <p style={{ marginTop: 10, whiteSpace: 'pre-wrap' }}>{program.generalDietNotes}</p>
-                            </div>
+                                    <div className="timeline-card" style={{ padding: 18 }}>
+                                        <span className="section-label">Genel not</span>
+                                        <p style={{ marginTop: 10, whiteSpace: 'pre-wrap' }}>{program.generalDietNotes}</p>
+                                    </div>
                         )}
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 14 }}>
-                            {program?.meals.map(meal => (
-                                <article key={meal.id} className="timeline-card" style={{ padding: 16 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
-                                        <strong>{meal.order}. {meal.mealName}</strong>
-                                        <span className="chip">{meal.calories} kcal</span>
-                                    </div>
-
-                                    <div style={{ display: 'grid', gap: 10 }}>
-                                        {meal.foods.split('\n').filter(Boolean).map((food, idx) => (
-                                            <div key={idx} className="pill-group" style={{ justifyContent: 'space-between' }}>
-                                                <span>{food}</span>
+                                    {program?.meals.map(meal => (
+                                        <article key={meal.id} className="timeline-card" style={{ padding: 16 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                                                <strong>{meal.order}. {meal.mealName}</strong>
                                             </div>
-                                        ))}
-                                    </div>
 
-                                    {meal.notes && <p className="caption" style={{ marginTop: 10, whiteSpace: 'pre-wrap' }}>{meal.notes}</p>}
+                                            <div style={{ display: 'grid', gap: 10 }}>
+                                                {meal.foods.split('\n').filter(Boolean).map((food, idx) => (
+                                                    <div key={idx} className="pill-group" style={{ justifyContent: 'space-between' }}>
+                                                        <span>{food}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
 
-                                    <div className="pill-group" style={{ marginTop: 14 }}>
-                                        <span className="chip">P: {meal.protein}g</span>
-                                        <span className="chip">K: {meal.carbs}g</span>
-                                        <span className="chip">Y: {meal.fats}g</span>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
+                                            {meal.notes && <p className="caption" style={{ marginTop: 10, whiteSpace: 'pre-wrap' }}>{meal.notes}</p>}
+                                        </article>
+                                    ))}
+                                </div>
                     </div>
                 </div>
             )}

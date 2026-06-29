@@ -1,4 +1,4 @@
-﻿export interface Athlete {
+export interface Athlete {
     id: string;
     firstName: string;
     lastName: string;
@@ -75,6 +75,11 @@ export interface WorkoutExercise {
     reps: string;
     restTimeInSeconds: number;
     notes: string | null;
+    exerciseLibraryId?: string;
+    targetMuscle?: string;
+    gifUrl?: string;
+    imageUrl?: string;
+    instructions?: string | null;
 }
 
 export interface AssignWorkoutProgramRequest {
@@ -83,21 +88,22 @@ export interface AssignWorkoutProgramRequest {
 
 export interface WorkoutExerciseResponse {
     id: string;
+    dayName: string;
     exerciseName: string;
     sets: number;
     reps: string;
     restTimeInSeconds: number;
     notes: string | null;
-}
-
-export interface WorkoutDay {
-    dayName: string;
-    exercises: WorkoutExerciseResponse[];
+    exerciseLibraryId?: string | null;
+    targetMuscle?: string | null;
+    gifUrl?: string | null;
+    imageUrl?: string | null;
+    instructions?: string | null;
 }
 
 export interface AthleteWorkoutProgram {
     athleteId: string;
-    days: WorkoutDay[];
+    exercises: WorkoutExerciseResponse[];
 }
 
 export interface DietMealDto {
@@ -105,10 +111,6 @@ export interface DietMealDto {
     mealName: string;
     foods: string;
     notes: string;
-    protein: number;
-    carbs: number;
-    fats: number;
-    calories: number;
 }
 
 export interface AssignDietProgramRequest {
@@ -122,21 +124,33 @@ export interface DietMealResponseDto {
     mealName: string;
     foods: string;
     notes: string;
-    protein: number;
-    carbs: number;
-    fats: number;
-    calories: number;
 }
 
 export interface AthleteDietProgram {
     athleteId: string;
     generalDietNotes: string;
     meals: DietMealResponseDto[];
+    totalCalories: number;
+    totalProtein: number;
+    totalCarbs: number;
+    totalFats: number;
 }
 
 export interface UpdateAthleteTargetsRequest {
     targetCalories: number;
     targetSteps: number;
+}
+
+export interface AgentChatRequest {
+    message: string;
+    contextAthleteId?: string | null;
+    contextAthleteName?: string | null;
+}
+
+export interface AgentChatResponse {
+    textReply: string;
+    uiAction?: string | null;
+    actionData?: unknown;
 }
 
 export interface SubmitOnboardingFormRequest {

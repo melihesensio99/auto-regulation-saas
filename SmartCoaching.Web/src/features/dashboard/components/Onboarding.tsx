@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../services/dashboard.service';
 
+const decodeToken = (token: string) => {
+    const payloadStr = atob(token.split('.')[1]);
+    return JSON.parse(payloadStr) as Record<string, string>;
+};
+
 export const Onboarding = () => {
     const navigate = useNavigate();
 
@@ -62,10 +67,10 @@ export const Onboarding = () => {
             }
 
             const payloadStr = atob(token.split('.')[1]);
-            const payload = JSON.parse(payloadStr);
-            const athleteId = payload.sub;
+            const tokenPayload = JSON.parse(payloadStr);
+            const athleteId = tokenPayload.sub;
 
-            await dashboardService.submitOnboardingForm(athleteId, {
+            const refreshedToken = await dashboardService.submitOnboardingForm(athleteId, {
                 ...formData,
                 dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
                 heightCm: h,
@@ -73,8 +78,14 @@ export const Onboarding = () => {
             });
 
             alert('Kaydın tamamlandı! Koçun bilgilerini inceleyecek.');
-            localStorage.removeItem('token');
-            navigate('/login');
+            localStorage.setItem('token', refreshedToken);
+
+            const refreshedPayload = decodeToken(refreshedToken);
+            if (refreshedPayload.mustChangePassword === 'True') {
+                navigate('/change-password', { replace: true });
+            } else {
+                navigate('/athlete/dashboard', { replace: true });
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Form gönderilirken bir hata oluştu.');
         } finally {

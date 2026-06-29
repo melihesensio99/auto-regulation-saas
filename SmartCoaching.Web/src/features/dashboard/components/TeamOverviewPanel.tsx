@@ -1,4 +1,5 @@
-﻿import { useState } from 'react';
+import { useState } from 'react';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '../../../shared/components/feedback/StatePanels';
 import type { CoachDashboardDto } from '../types';
 
 interface TeamOverviewPanelProps {
@@ -11,32 +12,40 @@ export const TeamOverviewPanel = ({ dashboard, isLoading, error }: TeamOverviewP
     const [searchQuery, setSearchQuery] = useState('');
 
     if (isLoading) {
-        return (
-            <div className="surface" style={{ padding: 24, minHeight: 280, display: 'grid', placeItems: 'center' }}>
-                <div className="empty-state">
-                    <div className="loader" />
-                    <p>Dashboard yükleniyor...</p>
-                </div>
-            </div>
-        );
+        return <LoadingPanel message="Dashboard yukleniyor..." />;
     }
 
     if (error || !dashboard) {
-        return (
-            <div className="surface" style={{ padding: 24, minHeight: 280, display: 'grid', placeItems: 'center' }}>
-                <p style={{ color: 'var(--danger-color)' }}>Dashboard yüklenirken bir hata oluştu.</p>
-            </div>
-        );
+        return <ErrorPanel message="Dashboard yuklenirken bir hata olustu." />;
     }
 
-    const filteredAthletes = dashboard.athletePerformances.filter(a =>
-        a.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredAthletes = dashboard.athletePerformances.filter((athlete) =>
+        athlete.fullName.toLowerCase().includes(searchQuery.toLowerCase())
     );
+
+    if (filteredAthletes.length === 0) {
+        return (
+            <EmptyPanel
+                icon="🔎"
+                message="Aramana uygun sporcu bulunamadi."
+                detail="Farkli bir isimle tekrar deneyebilirsin."
+                minHeight={280}
+            />
+        );
+    }
 
     return (
         <div className="card-stack animate-fade-in">
             <div className="surface" style={{ padding: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <div
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                        flexWrap: 'wrap',
+                    }}
+                >
                     <div>
                         <span className="section-label">Dikkat listesi</span>
                         <h3 style={{ marginTop: 8 }}>Takip edilmesi gereken sporcular</h3>
@@ -46,16 +55,24 @@ export const TeamOverviewPanel = ({ dashboard, isLoading, error }: TeamOverviewP
                         type="search"
                         placeholder="Sporcu ara..."
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(event) => setSearchQuery(event.target.value)}
                         className="field-input"
                         style={{ maxWidth: 280 }}
                     />
                 </div>
 
                 <div className="card-stack" style={{ marginTop: 18 }}>
-                    {filteredAthletes.map(athlete => (
+                    {filteredAthletes.map((athlete) => (
                         <article key={athlete.athleteId} className="surface" style={{ padding: 20 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 16,
+                                    flexWrap: 'wrap',
+                                }}
+                            >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                                     <div
                                         className="brand-mark"
@@ -63,15 +80,19 @@ export const TeamOverviewPanel = ({ dashboard, isLoading, error }: TeamOverviewP
                                             width: 42,
                                             height: 42,
                                             background: athlete.isActiveToday ? 'var(--grad-brand)' : 'rgba(255,255,255,0.08)',
-                                            color: athlete.isActiveToday ? '#07131a' : 'var(--text-secondary)'
+                                            color: athlete.isActiveToday ? '#07131a' : 'var(--text-secondary)',
                                         }}
                                     >
-                                        {athlete.fullName.split(' ').map(x => x[0]).slice(0, 2).join('')}
+                                        {athlete.fullName
+                                            .split(' ')
+                                            .map((part) => part[0])
+                                            .slice(0, 2)
+                                            .join('')}
                                     </div>
                                     <div>
                                         <h4 style={{ fontSize: '1.2rem' }}>{athlete.fullName}</h4>
                                         <p className="caption" style={{ marginTop: 4 }}>
-                                            {athlete.isActiveToday ? 'Bugün aktif' : 'Bugün kayıt yok'}
+                                            {athlete.isActiveToday ? 'Bugun aktif' : 'Bugun kayit yok'}
                                         </p>
                                     </div>
                                     {athlete.needsAttention && <span className="chip chip--warning">Dikkat</span>}
@@ -85,7 +106,9 @@ export const TeamOverviewPanel = ({ dashboard, isLoading, error }: TeamOverviewP
                                         Beslenme
                                     </span>
                                     <span className="chip">
-                                        {athlete.lastLogDate ? new Date(athlete.lastLogDate).toLocaleDateString('tr-TR') : 'Kayıt yok'}
+                                        {athlete.lastLogDate
+                                            ? new Date(athlete.lastLogDate).toLocaleDateString('tr-TR')
+                                            : 'Kayit yok'}
                                     </span>
                                 </div>
                             </div>

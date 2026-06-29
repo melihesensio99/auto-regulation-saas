@@ -7,3 +7,8 @@ export interface LoginRequest {
 export interface LoginResponse {
     token: string;
 }
+
+export interface ChangePasswordRequest {
+    oldPassword: string;
+    newPassword: string;
+}

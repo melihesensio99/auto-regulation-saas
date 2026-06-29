@@ -1,6 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAssignWorkout, useWorkoutProgram } from '../hooks/useDashboard';
 import type { WorkoutExercise } from '../types';
+import { ExerciseAutocomplete } from './ExerciseAutocomplete';
+import type { ExerciseLibraryDto } from '../services/exerciseService';
 
 interface WorkoutProgramPanelProps {
     athleteId: string;
@@ -21,23 +23,28 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
     const [reps, setReps] = useState('8-12');
     const [restTime, setRestTime] = useState(60);
     const [notes, setNotes] = useState('');
+    const [activeTabDay, setActiveTabDay] = useState<string | null>(null);
+    const [selectedPreview, setSelectedPreview] = useState<ExerciseLibraryDto | null>(null);
 
     useEffect(() => {
-        if (!program?.days) {
+        if (!program?.exercises) {
             setExercises([]);
             return;
         }
 
-        const flatExercises = program.days.flatMap(day =>
-            day.exercises.map(ex => ({
-                dayName: day.dayName,
-                exerciseName: ex.exerciseName,
-                sets: ex.sets,
-                reps: ex.reps,
-                restTimeInSeconds: ex.restTimeInSeconds,
-                notes: ex.notes ?? null
-            }))
-        );
+        const flatExercises = program.exercises.map(ex => ({
+            dayName: ex.dayName,
+            exerciseName: ex.exerciseName,
+            sets: ex.sets,
+            reps: ex.reps,
+            restTimeInSeconds: ex.restTimeInSeconds,
+            notes: ex.notes ?? null,
+            exerciseLibraryId: ex.exerciseLibraryId ?? undefined,
+            gifUrl: ex.gifUrl ?? undefined,
+            imageUrl: ex.imageUrl ?? undefined,
+            targetMuscle: ex.targetMuscle ?? undefined,
+            instructions: ex.instructions ?? undefined
+        }));
 
         setExercises(flatExercises);
     }, [program]);
@@ -67,6 +74,9 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
         };
     }, [exercises, groupedByDay]);
 
+    const activeDaysList = useMemo(() => DAYS.filter(day => groupedByDay[day]?.length > 0), [groupedByDay]);
+    const currentTab = activeTabDay && activeDaysList.includes(activeTabDay) ? activeTabDay : (activeDaysList[0] ?? null);
+
     const resetForm = () => {
         setExerciseName('');
         setSets(3);
@@ -75,6 +85,7 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
         setNotes('');
         setEditIndex(null);
         setDayName(DAYS[0]);
+        setSelectedPreview(null);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -96,6 +107,11 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
             reps: trimmedReps,
             restTimeInSeconds: restTime,
             notes: trimmedNotes ? trimmedNotes : null,
+            exerciseLibraryId: selectedPreview?.id,
+            gifUrl: selectedPreview?.gifUrl,
+            imageUrl: selectedPreview?.imageUrl,
+            targetMuscle: selectedPreview?.targetMuscle,
+            instructions: selectedPreview?.instructions
         };
 
         if (editIndex !== null) {
@@ -137,6 +153,19 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
         setReps(selected.reps);
         setRestTime(selected.restTimeInSeconds);
         setNotes(selected.notes ?? '');
+        
+        if (selected.exerciseLibraryId) {
+            setSelectedPreview({
+                id: selected.exerciseLibraryId,
+                name: selected.exerciseName,
+                targetMuscle: selected.targetMuscle ?? '',
+                imageUrl: selected.imageUrl ?? '',
+                gifUrl: selected.gifUrl ?? ''
+            });
+        } else {
+            setSelectedPreview(null);
+        }
+
         setEditIndex(flatIndex);
     };
 
@@ -164,6 +193,7 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                     exerciseName: exercise.exerciseName.trim(),
                     reps: exercise.reps.trim(),
                     notes: exercise.notes?.trim() ? exercise.notes.trim() : null,
+                    exerciseLibraryId: exercise.exerciseLibraryId
                 }))
                 .filter(exercise => exercise.dayName.length > 0 && exercise.exerciseName.length > 0 && exercise.reps.length > 0);
 
@@ -226,14 +256,12 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                                 {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
                             </select>
                         </label>
-                        <label style={{ display: 'grid', gap: 6 }}>
+                        <label style={{ display: 'grid', gap: 6, position: 'relative' }}>
                             <span className="caption">Hareket</span>
-                            <input
-                                className="field-input"
-                                required
-                                value={exerciseName}
-                                onChange={e => setExerciseName(e.target.value)}
-                                placeholder="Bench Press, Squat..."
+                            <ExerciseAutocomplete 
+                                value={exerciseName} 
+                                onChange={setExerciseName} 
+                                onSelectExercise={setSelectedPreview} 
                             />
                         </label>
                         <label style={{ display: 'grid', gap: 6 }}>
@@ -260,7 +288,28 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                         />
                     </label>
 
-                    <div className="button-group" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                    {selectedPreview && (
+                        <div className="exercise-preview-card" style={{ marginTop: 8 }}>
+                            <img src={`https://res.cloudinary.com/dc2j01x6b/image/upload/v1/${selectedPreview.gifUrl?.split('/').pop() || selectedPreview.imageUrl?.split('/').pop()}`} alt={selectedPreview.name} />
+                            <div>
+                                <strong>{selectedPreview.name}</strong>
+                                <span className="caption">Hedef: {selectedPreview.targetMuscle}</span>
+                                {selectedPreview.instructions && (
+                                    <details className="exercise-info-accordion exercise-info-accordion--compact" style={{ marginTop: 10 }}>
+                                        <summary>
+                                            <span>Hareket nasıl yapılır?</span>
+                                            <span className="exercise-info-accordion__hint">Bilgi</span>
+                                        </summary>
+                                        <div className="exercise-info-accordion__body">
+                                            <p>{selectedPreview.instructions}</p>
+                                        </div>
+                                    </details>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="button-group" style={{ justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 12 }}>
                         <div className="button-group">
                             <button type="submit" className="btn btn-primary">
                                 {editIndex !== null ? 'Güncelle' : 'Ekle'}
@@ -302,48 +351,66 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                         <p className="caption">Üstteki formdan yeni hareketler ekleyebilirsin.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-                        {DAYS.filter(day => groupedByDay[day]?.length).map(day => {
-                            const dayExercises = groupedByDay[day] ?? [];
+                    <div>
+                        <div className="tab-bar" style={{ marginBottom: 20 }}>
+                            {activeDaysList.map(day => (
+                                <button
+                                    key={day}
+                                    type="button"
+                                    className={`tab-btn ${currentTab === day ? 'active' : ''}`}
+                                    onClick={() => setActiveTabDay(day)}
+                                >
+                                    {day}
+                                </button>
+                            ))}
+                        </div>
+
+                        {currentTab && (() => {
+                            const dayExercises = groupedByDay[currentTab] ?? [];
                             const isOffDay = dayExercises.length === 1 && dayExercises[0].ex.exerciseName === OFF_DAY_MARKER;
                             const regularExercises = dayExercises.filter(item => item.ex.exerciseName !== OFF_DAY_MARKER);
 
                             return (
-                                <article key={day} className="surface" style={{ padding: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
+                                <article className="surface" style={{ padding: 20, border: '1px solid rgba(255,255,255,0.08)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
                                         <div>
-                                            <h4 style={{ margin: 0, fontSize: '1rem' }}>{day}</h4>
+                                            <h4 style={{ margin: 0, fontSize: '1.2rem' }}>{currentTab} Programı</h4>
                                             <p className="caption" style={{ marginTop: 4 }}>
-                                                {isOffDay ? 'Dinlenme günü' : `${regularExercises.length} egzersiz`}
+                                                {isOffDay ? 'Dinlenme günü' : `${regularExercises.length} egzersiz planlandı`}
                                             </p>
                                         </div>
-                                        <button type="button" className="btn btn-secondary" onClick={() => setDayName(day)}>
-                                            Gün seç
-                                        </button>
                                     </div>
 
                                     {isOffDay ? (
-                                        <div className="timeline-card" style={{ padding: 16, textAlign: 'center' }}>
-                                            <div style={{ fontSize: '2rem' }}>😴</div>
-                                            <p style={{ marginTop: 8, marginBottom: 0 }}>Bu gün dinlenme olarak işaretlenmiş.</p>
+                                        <div className="timeline-card" style={{ padding: 24, textAlign: 'center' }}>
+                                            <div style={{ fontSize: '2.5rem' }}>😴</div>
+                                            <p style={{ marginTop: 12, marginBottom: 0, fontSize: '1.1rem' }}>Bu gün dinlenme olarak işaretlenmiş.</p>
                                         </div>
                                     ) : (
-                                        <div style={{ display: 'grid', gap: 10 }}>
-                                            {dayExercises.map(({ ex, flatIndex }) => (
-                                                <div
-                                                    key={flatIndex}
-                                                    className="timeline-card"
-                                                    style={{ padding: 14, cursor: 'pointer' }}
-                                                    onClick={() => handleEdit(flatIndex)}
-                                                >
-                                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                                                        <div style={{ display: 'flex', gap: 12, minWidth: 0 }}>
-                                                            <div className="brand-mark" style={{ width: 38, height: 38, fontSize: '1rem', flexShrink: 0 }}>
-                                                                {getExerciseIcon(ex.exerciseName)}
-                                                            </div>
+                <div style={{ display: 'grid', gap: 12 }}>
+                    {dayExercises.map(({ ex, flatIndex }) => (
+                        <div
+                            key={flatIndex}
+                            className="timeline-card"
+                            style={{ padding: 18, cursor: 'pointer' }}
+                            onClick={() => handleEdit(flatIndex)}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                                <div style={{ display: 'flex', gap: 16, alignItems: 'center', minWidth: 0 }}>
+                                                            {ex.gifUrl || ex.imageUrl ? (
+                                                                <img 
+                                                                    src={`https://res.cloudinary.com/dc2j01x6b/image/upload/v1/${ex.gifUrl?.split('/').pop() || ex.imageUrl?.split('/').pop()}`} 
+                                                                    alt={ex.exerciseName}
+                                                                    style={{ width: 64, height: 64, borderRadius: 8, objectFit: 'cover', background: '#fff', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                                />
+                                                            ) : (
+                                                                <div className="brand-mark" style={{ width: 64, height: 64, fontSize: '1.5rem', flexShrink: 0 }}>
+                                                                    {getExerciseIcon(ex.exerciseName)}
+                                                                </div>
+                                                            )}
                                                             <div>
-                                                                <div style={{ fontWeight: 700, color: '#fff' }}>{ex.exerciseName}</div>
-                                                                <div className="caption" style={{ marginTop: 4 }}>
+                                                                <div style={{ fontWeight: 700, color: '#fff', fontSize: '1.1rem' }}>{ex.exerciseName}</div>
+                                                                <div className="caption" style={{ marginTop: 6, fontSize: '0.95rem' }}>
                                                                     {ex.sets} set · {ex.reps} tekrar · {ex.restTimeInSeconds}s dinlenme
                                                                 </div>
                                                                 {ex.notes && <div className="caption" style={{ marginTop: 6 }}>{ex.notes}</div>}
@@ -356,17 +423,28 @@ export const WorkoutProgramPanel = ({ athleteId }: WorkoutProgramPanelProps) => 
                                                                 e.stopPropagation();
                                                                 handleRemove(flatIndex);
                                                             }}
-                                                        >
-                                                            Sil
-                                                        </button>
+                                                            >
+                                                                Sil
+                                                            </button>
                                                     </div>
+                                                    {ex.instructions && (
+                                                        <details className="exercise-info-accordion" onClick={(e) => e.stopPropagation()}>
+                                                            <summary>
+                                                                <span>Hareket nasıl yapılır?</span>
+                                                                <span className="exercise-info-accordion__hint">Aç</span>
+                                                            </summary>
+                                                            <div className="exercise-info-accordion__body">
+                                                                <p>{ex.instructions}</p>
+                                                            </div>
+                                                        </details>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
                                     )}
                                 </article>
                             );
-                        })}
+                        })()}
                     </div>
                 )}
             </div>

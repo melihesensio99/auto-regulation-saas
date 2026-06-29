@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearStoredToken, getStoredToken } from '@/shared/auth/token';
 
 // Backend API adresimiz .env dosyasından güvenli bir şekilde okunur.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5169/api';
@@ -14,7 +15,7 @@ const api = axios.create({
 // Interceptor (Araya Girici): Her istek arka plana gitmeden önce bu fonksiyondan geçer.
 // Eğer kullanıcının giriş Token'ı varsa, bunu otomatik olarak isteğe (Header) ekler.
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,7 +31,7 @@ api.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 401) {
             // Token süresi bitmiş veya yetkisiz erişim. Çıkış yap.
-            localStorage.removeItem('token');
+            clearStoredToken();
             window.location.href = '/login';
         }
         return Promise.reject(error);

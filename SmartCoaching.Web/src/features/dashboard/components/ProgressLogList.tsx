@@ -1,68 +1,84 @@
-﻿import { useMemo, useState } from 'react';
-import { useProgressLogs, useAddFeedback } from '../hooks/useDashboard';
+import { useMemo, useState } from 'react';
+import { EmptyPanel, ErrorPanel, LoadingPanel } from '../../../shared/components/feedback/StatePanels';
+import { useAddFeedback, useProgressLogs } from '../hooks/useDashboard';
 import type { ProgressLog } from '../types';
+import { createLast30DaysRange } from '../utils/progressDateRange';
 
 interface ProgressLogListProps {
     athleteId: string | null;
 }
 
+const formatProgressDate = (date: string) =>
+    new Date(date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const renderProgressPhotos = (log: ProgressLog) => {
+    const photos = [
+        { url: log.frontPhotoUrl, alt: 'Front' },
+        { url: log.backPhotoUrl, alt: 'Back' },
+        { url: log.sidePhotoUrl, alt: 'Side' },
+    ].filter((photo): photo is { url: string; alt: string } => Boolean(photo.url));
+
+    if (photos.length === 0) {
+        return <span className="caption" style={{ color: 'var(--text-muted)' }}>Fotograf eklenmemis</span>;
+    }
+
+    return photos.map((photo) => (
+        <img
+            key={photo.alt}
+            src={photo.url}
+            alt={photo.alt}
+            style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }}
+        />
+    ));
+};
+
 export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
     const [feedbackText, setFeedbackText] = useState('');
 
-    const dateRange = useMemo(() => {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - 30);
-
-        return {
-            startDate: startDate.toISOString(),
-            endDate: new Date().toISOString(),
-        };
-    }, []);
-
+    const dateRange = useMemo(() => createLast30DaysRange(), []);
     const { data: progressLogs, isLoading, isError } = useProgressLogs(athleteId, dateRange.startDate, dateRange.endDate);
     const addFeedbackMutation = useAddFeedback();
 
     const handleFeedbackSubmit = (progressLogId: string) => {
-        if (!athleteId || !feedbackText.trim()) return;
+        if (!athleteId || !feedbackText.trim()) {
+            return;
+        }
 
         addFeedbackMutation.mutate(
             { athleteId, progressLogId, feedback: feedbackText },
             {
                 onSuccess: () => {
                     setFeedbackText('');
-                    alert('✅ Feedback başarıyla gönderildi!');
-                }
+                    alert('Geri bildirim basariyla gonderildi.');
+                },
             }
         );
     };
 
     if (!athleteId) {
         return (
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div className="empty-state">
-                    <span className="empty-state-icon">👈</span>
-                    <p>Detaylarını görmek için sol taraftan bir sporcu seçin.</p>
-                </div>
+            <div className="glass-panel" style={{ flex: 1 }}>
+                <EmptyPanel
+                    icon="👈"
+                    message="Detaylarini gormek icin soldan bir sporcu sec."
+                    minHeight={320}
+                />
             </div>
         );
     }
 
     if (isLoading) {
         return (
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <p>Gelişim kayıtları yükleniyor...</p>
+            <div className="glass-panel" style={{ flex: 1 }}>
+                <LoadingPanel message="Gelisim kayitlari yukleniyor..." />
             </div>
         );
     }
 
     if (isError) {
         return (
-            <div className="glass-panel" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                <div className="empty-state">
-                    <span className="empty-state-icon">⚠️</span>
-                    <p>Gelişim kayıtları alınamadı.</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Bu sporcuya erişim, tarih filtresi veya servis yanıtı kontrol edilmeli.</p>
-                </div>
+            <div className="glass-panel" style={{ flex: 1 }}>
+                <ErrorPanel message="Gelisim kayitlari alinamadi." />
             </div>
         );
     }
@@ -71,70 +87,123 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
 
     return (
         <div className="glass-panel" style={{ flex: 1, overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>📊 Gelişim Günlüğü</h3>
+            <h3 style={{ marginBottom: '20px', fontSize: '0.95rem', fontWeight: 700 }}>Gelisim Gunlugu</h3>
 
             {visibleLogs.length === 0 ? (
-                <div className="empty-state">
-                    <span className="empty-state-icon">📭</span>
-                    <p>Bu sporcu henüz gelişim kaydı göndermemiş.</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Kalori, adım, kilo ve notlar kayıt altına alındığında burada listelenecek.</p>
-                </div>
+                <EmptyPanel
+                    icon="📭"
+                    message="Bu sporcu henuz gelisim kaydi gondermemis."
+                    detail="Kalori, adim, kilo ve notlar geldikce burada listelenecek."
+                    minHeight={320}
+                />
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    {visibleLogs.map((log: ProgressLog, index: number) => (
-                        <div key={log.id} className="animate-fade-in" style={{
-                            animationDelay: `${index * 0.08}s`,
-                            background: 'rgba(0,0,0,0.25)',
-                            padding: '20px',
-                            borderRadius: '14px',
-                            border: '1px solid var(--border-glass)'
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    {visibleLogs.map((log, index) => (
+                        <div
+                            key={log.id}
+                            className="animate-fade-in"
+                            style={{
+                                animationDelay: `${index * 0.08}s`,
+                                background: 'rgba(0,0,0,0.25)',
+                                padding: '20px',
+                                borderRadius: '14px',
+                                border: '1px solid var(--border-glass)',
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '16px',
+                                }}
+                            >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <span style={{ fontSize: '1.1rem' }}>📅</span>
                                     <h4 style={{ margin: 0, color: 'var(--accent-primary)', fontSize: '0.9rem' }}>
-                                        {new Date(log.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                        {formatProgressDate(log.date)}
                                     </h4>
                                 </div>
                                 <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '5px 12px' }}>
-                                    ⚖️ {log.weightKg || '-'} KG
+                                    {log.weightKg ? `⚖️ ${log.weightKg} KG` : '⚖️ - KG'}
                                 </span>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-                                {log.frontPhotoUrl && <img src={log.frontPhotoUrl} alt="Front" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
-                                {log.backPhotoUrl && <img src={log.backPhotoUrl} alt="Back" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
-                                {log.sidePhotoUrl && <img src={log.sidePhotoUrl} alt="Side" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px' }} />}
-                                {!log.frontPhotoUrl && !log.backPhotoUrl && !log.sidePhotoUrl && (
-                                    <span className="caption" style={{ color: 'var(--text-muted)' }}>Fotoğraf eklenmemiş</span>
-                                )}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+                                <span className="chip">🔥 {log.consumedCalories} kcal</span>
+                                <span className="chip">👟 {log.takenSteps} adim</span>
+                                <span className={`chip ${log.isWorkoutCompleted ? 'chip--success' : 'chip--warning'}`}>
+                                    {log.isWorkoutCompleted ? 'Antrenman var' : 'Dinlenme'}
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                                {renderProgressPhotos(log)}
                             </div>
 
                             {log.aiAnalysis && (
-                                <div style={{
-                                    padding: '16px 20px', marginBottom: '16px', borderRadius: '12px',
-                                    background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)',
-                                    border: '1px solid rgba(139, 92, 246, 0.25)'
-                                }}>
-                                    <h5 style={{ color: '#a78bfa', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 700 }}>✨ Mistral AI Analizi</h5>
-                                    <p style={{ color: '#d1d5db', lineHeight: '1.65', fontSize: '0.85rem', margin: 0 }}>{log.aiAnalysis}</p>
+                                <div
+                                    style={{
+                                        padding: '16px 20px',
+                                        marginBottom: '16px',
+                                        borderRadius: '12px',
+                                        background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.08) 0%, rgba(59, 130, 246, 0.05) 100%)',
+                                        border: '1px solid rgba(139, 92, 246, 0.25)',
+                                    }}
+                                >
+                                    <h5 style={{ color: '#a78bfa', marginBottom: '8px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                        AI Analizi
+                                    </h5>
+                                    <p style={{ color: '#d1d5db', lineHeight: '1.65', fontSize: '0.85rem', margin: 0 }}>
+                                        {log.aiAnalysis}
+                                    </p>
+                                </div>
+                            )}
+
+                            {log.notes && (
+                                <div
+                                    style={{
+                                        marginTop: '12px',
+                                        padding: '12px 14px',
+                                        borderRadius: '10px',
+                                        background: 'rgba(255,255,255,0.04)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                    }}
+                                >
+                                    <h5
+                                        style={{
+                                            margin: '0 0 6px 0',
+                                            fontSize: '0.78rem',
+                                            color: 'var(--text-muted)',
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        Gunluk not
+                                    </h5>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.55 }}>{log.notes}</p>
                                 </div>
                             )}
 
                             {log.coachFeedback ? (
-                                <div style={{
-                                    background: 'rgba(16, 185, 129, 0.08)', padding: '14px 18px', borderRadius: '10px',
-                                    border: '1px solid rgba(16, 185, 129, 0.2)'
-                                }}>
-                                    <h5 style={{ color: 'var(--success)', marginBottom: '6px', fontSize: '0.8rem', fontWeight: 700 }}>✅ Sizin Geri Bildiriminiz</h5>
+                                <div
+                                    style={{
+                                        background: 'rgba(16, 185, 129, 0.08)',
+                                        padding: '14px 18px',
+                                        borderRadius: '10px',
+                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                    }}
+                                >
+                                    <h5 style={{ color: 'var(--success)', marginBottom: '6px', fontSize: '0.8rem', fontWeight: 700 }}>
+                                        Sizin geri bildiriminiz
+                                    </h5>
                                     <p style={{ margin: 0, fontSize: '0.85rem' }}>{log.coachFeedback}</p>
                                 </div>
                             ) : (
                                 <div style={{ marginTop: '12px' }}>
                                     <textarea
-                                        placeholder="Sporcuya haftalık geri bildiriminizi yazın..."
+                                        placeholder="Sporcuya haftalik geri bildiriminizi yazin..."
                                         value={feedbackText}
-                                        onChange={(e) => setFeedbackText(e.target.value)}
+                                        onChange={(event) => setFeedbackText(event.target.value)}
                                         className="form-control"
                                         style={{ width: '100%', minHeight: '70px', resize: 'vertical', marginBottom: '10px' }}
                                     />
@@ -143,7 +212,7 @@ export const ProgressLogList = ({ athleteId }: ProgressLogListProps) => {
                                         disabled={addFeedbackMutation.isPending}
                                         className="btn-save"
                                     >
-                                        {addFeedbackMutation.isPending ? '⏳ Gönderiliyor...' : '📨 Geri Bildirim Gönder'}
+                                        {addFeedbackMutation.isPending ? 'Gonderiliyor...' : 'Geri bildirim gonder'}
                                     </button>
                                 </div>
                             )}

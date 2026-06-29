@@ -9,6 +9,7 @@ using SmartCoaching.Application.Features.Athletes.EventHandlers;
 using SmartCoaching.Infrastructure.AI;
 using SmartCoaching.Infrastructure.AI.Agents;
 using SmartCoaching.Infrastructure.Persistence;
+
 namespace SmartCoaching.Infrastructure;
 
 public static class DependencyInjection
@@ -42,9 +43,7 @@ public static class DependencyInjection
         services.AddMassTransit(x =>
         {
             x.AddConsumer<AthleteCreatedEventConsumer>();
-            x.AddConsumer<DietPlanAssignedEventConsumer>();
             x.AddConsumer<OnboardingCompletedEventConsumer>();
-            x.AddConsumer<ProgramPublishedEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

@@ -309,6 +309,10 @@ select:focus-visible {
   align-items: start;
 }
 
+.coach-layout--full {
+  grid-template-columns: 1fr;
+}
+
 .stats-grid,
 .metric-grid,
 .summary-grid {
@@ -814,6 +818,80 @@ button:hover:not(:disabled) {
   border-bottom: 0;
 }
 
+.exercise-preview-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  background: rgba(255,255,255,0.03);
+}
+
+.exercise-preview-card img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.exercise-info-accordion {
+  border-radius: 18px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  background: rgba(56, 189, 248, 0.05);
+  overflow: hidden;
+}
+
+.exercise-info-accordion--compact {
+  margin-top: 0;
+}
+
+.exercise-info-accordion summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px 14px;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.exercise-info-accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+.exercise-info-accordion__hint {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #bae6fd;
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.exercise-info-accordion__body {
+  padding: 0 14px 14px;
+}
+
+.exercise-info-accordion__body p {
+  margin: 0;
+  color: rgba(244, 247, 251, 0.8);
+  line-height: 1.75;
+  font-size: 0.92rem;
+  font-style: italic;
+  border-left: 2px solid rgba(56, 189, 248, 0.45);
+  padding-left: 12px;
+}
+
 .drag-handle {
   color: var(--text-muted);
   cursor: grab;
@@ -931,6 +1009,316 @@ button:hover:not(:disabled) {
   gap: 16px;
 }
 
+.athlete-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.athlete-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.goal-progress-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.goal-progress-card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border-soft);
+  background: rgba(255,255,255,0.035);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.goal-progress-card--summary {
+  border-color: rgba(139, 92, 246, 0.18);
+  background: linear-gradient(180deg, rgba(139,92,246,0.08), rgba(255,255,255,0.03));
+}
+
+.goal-progress-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.goal-progress-card__value {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-top: 6px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.progress-bar--small {
+  height: 10px;
+}
+
+.progress-bar__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #38bdf8 0%, #22c55e 100%);
+  box-shadow: 0 12px 20px rgba(56,189,248,0.2);
+}
+
+.progress-bar__fill--green {
+  background: linear-gradient(90deg, #22c55e 0%, #86efac 100%);
+  box-shadow: 0 12px 20px rgba(34,197,94,0.2);
+}
+
+.progress-bar__fill--violet {
+  background: linear-gradient(90deg, #8b5cf6 0%, #38bdf8 100%);
+  box-shadow: 0 12px 20px rgba(139,92,246,0.2);
+}
+
+.progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.dashboard-section {
+  padding: 24px;
+}
+
+.section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.trend-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.trend-log-card {
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid var(--border-soft);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    rgba(255,255,255,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.trend-log-card--today {
+  border-color: rgba(56,189,248,0.35);
+  box-shadow: 0 18px 42px rgba(56,189,248,0.08);
+}
+
+.trend-log-card__top,
+.trend-log-card__footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trend-log-card__date {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.trend-metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.trend-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trend-metric__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-secondary);
+}
+
+.trend-metric__head strong {
+  color: var(--text-primary);
+}
+
+.program-focus-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.program-focus-card {
+  padding: 24px;
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.program-focus-card__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #06111a;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 18px 28px rgba(245, 158, 11, 0.18);
+}
+
+.program-focus-card__icon--green {
+  background: linear-gradient(135deg, #22c55e, #38bdf8);
+  box-shadow: 0 18px 28px rgba(34, 197, 94, 0.18);
+}
+
+.program-focus-card p {
+  max-width: 56ch;
+}
+
+.workout-day-tabs {
+  width: 100%;
+}
+
+.workout-day-card {
+  padding: 20px;
+  border-radius: 26px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+    rgba(255,255,255,0.02);
+}
+
+.workout-day-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+}
+
+.workout-day-card__header h3 {
+  font-size: 1.25rem;
+}
+
+.workout-exercise-list {
+  display: grid;
+  gap: 14px;
+}
+
+.workout-exercise-card {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.025);
+}
+
+.workout-exercise-card__media {
+  min-width: 0;
+}
+
+.workout-exercise-card__media img,
+.workout-exercise-card__fallback {
+  width: 112px;
+  height: 112px;
+  border-radius: 18px;
+  object-fit: cover;
+}
+
+.workout-exercise-card__fallback {
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+  font-size: 1.8rem;
+}
+
+.workout-exercise-card__content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workout-exercise-card__topline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.workout-exercise-card__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.workout-exercise-card__muscle {
+  margin-top: 4px;
+}
+
+.workout-exercise-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.workout-exercise-card__stats span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.workout-exercise-card__notes {
+  color: rgba(244, 247, 251, 0.72);
+}
+
+.workout-exercise-card__accordion {
+  margin-top: 2px;
+}
+
+.workout-exercise-card__accordion .exercise-info-accordion__body p {
+  font-style: normal;
+}
+
 .mobile-only {
   display: none;
 }
@@ -992,7 +1380,9 @@ button:hover:not(:disabled) {
 @media (max-width: 1180px) {
   .coach-layout,
   .auth-grid,
-  .coach-hero__grid {
+  .coach-hero__grid,
+  .athlete-hero-grid,
+  .program-focus-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1015,7 +1405,9 @@ button:hover:not(:disabled) {
   .stats-grid,
   .metric-grid,
   .summary-grid,
-  .split-grid {
+  .split-grid,
+  .trend-grid,
+  .workout-exercise-card {
     grid-template-columns: 1fr;
   }
 
@@ -1052,6 +1444,22 @@ button:hover:not(:disabled) {
   .pill-button {
     width: 100%;
     justify-content: center;
+  }
+
+  .workout-day-card__header,
+  .workout-exercise-card__topline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .workout-exercise-card {
+    grid-template-columns: 1fr;
+  }
+
+  .workout-exercise-card__media img,
+  .workout-exercise-card__fallback {
+    width: 100%;
+    height: 200px;
   }
 
   .form-actions {

@@ -26,7 +26,7 @@ export const AthleteLayout = () => {
                         className={`tab-btn ${location.pathname === '/athlete/dashboard' ? 'active' : ''}`}
                         onClick={() => navigate('/athlete/dashboard')}
                     >
-                        Ana sayfa
+                        Takip
                     </button>
                     <button
                         type="button"

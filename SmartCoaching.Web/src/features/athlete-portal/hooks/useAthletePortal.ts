@@ -1,21 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { athletePortalService, type LogProgressRequest } from '../services/athletePortal.service';
-
-// Decode token to get Athlete ID (assuming the athlete is logged in)
-const getAthleteIdFromToken = (): string | null => {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-    try {
-        const payloadStr = atob(token.split('.')[1]);
-        const payload = JSON.parse(payloadStr);
-        return payload.sub; // Or however you store the ID in your JWT
-    } catch {
-        return null;
-    }
-};
+import { getCurrentAthleteId } from '@/shared/auth/token';
 
 export const useAthleteProfile = () => {
-    const athleteId = getAthleteIdFromToken();
+    const athleteId = getCurrentAthleteId();
     return useQuery({
         queryKey: ['athleteProfile', athleteId],
         queryFn: () => athletePortalService.getAthleteProfile(athleteId!),
@@ -24,7 +12,7 @@ export const useAthleteProfile = () => {
 };
 
 export const useAthleteProgressLogs = (startDate: string, endDate: string) => {
-    const athleteId = getAthleteIdFromToken();
+    const athleteId = getCurrentAthleteId();
     return useQuery({
         queryKey: ['athleteProgressLogs', athleteId, startDate, endDate],
         queryFn: () => athletePortalService.getProgressLogs(athleteId!, startDate, endDate),
@@ -34,7 +22,7 @@ export const useAthleteProgressLogs = (startDate: string, endDate: string) => {
 
 export const useLogProgress = () => {
     const queryClient = useQueryClient();
-    const athleteId = getAthleteIdFromToken();
+    const athleteId = getCurrentAthleteId();
 
     return useMutation({
         mutationFn: (data: LogProgressRequest) => athletePortalService.logProgress(athleteId!, data),
@@ -45,7 +33,7 @@ export const useLogProgress = () => {
 };
 
 export const useAthleteWorkoutProgram = () => {
-    const athleteId = getAthleteIdFromToken();
+    const athleteId = getCurrentAthleteId();
     return useQuery({
         queryKey: ['athleteWorkoutProgram', athleteId],
         queryFn: () => athletePortalService.getWorkoutProgram(athleteId!),
@@ -55,7 +43,7 @@ export const useAthleteWorkoutProgram = () => {
 };
 
 export const useAthleteDietProgram = () => {
-    const athleteId = getAthleteIdFromToken();
+    const athleteId = getCurrentAthleteId();
     return useQuery({
         queryKey: ['athleteDietProgram', athleteId],
         queryFn: () => athletePortalService.getDietProgram(athleteId!),
