@@ -11,56 +11,70 @@ export const CoachSelectedAthleteHero = ({
     athletePerformance,
     onBack,
 }: CoachSelectedAthleteHeroProps) => {
+    const targetCalories = athlete?.targetCalories ?? 0;
+    const targetSteps = athlete?.targetSteps ?? 0;
+    const weightKg = athlete?.startingWeightKg ?? null;
+    const shortGoal =
+        athlete?.shortTermGoal ||
+        athlete?.mainReason ||
+        athlete?.longTermGoal ||
+        'Goal not defined';
+
     return (
-        <section className="coach-hero surface">
-            <div className="coach-hero__grid">
-                <div className="card-stack">
-                    <span className="eyebrow">Athlete focus</span>
-                    <div>
-                        <h2 className="page-title" style={{ fontSize: '2.2rem' }}>
-                            {athlete?.firstName} {athlete?.lastName}
-                        </h2>
-                        <p className="page-subtitle" style={{ marginTop: 10 }}>
-                            Sporcunun son durumu ve program ozetini tek bakista gor.
-                        </p>
-                    </div>
+        <section className="coach-athlete-workspace surface">
+            <div className="coach-athlete-workspace__hero">
+                <div className="coach-athlete-workspace__intro">
+                    <span className="eyebrow">Athlete workspace</span>
+                    <h1>
+                        {athlete?.firstName} {athlete?.lastName}
+                    </h1>
+                    <p>
+                        Athlete overview, adherence, targets and planning details in one workspace.
+                    </p>
+
                     <div className="button-group">
                         <button
                             type="button"
                             className="btn btn-secondary"
                             onClick={onBack}
                         >
-                            Takim ozetine don
+                            Back to dashboard
                         </button>
+                        <span className="chip">{shortGoal}</span>
                         {athletePerformance && (
                             <span className={`chip ${athletePerformance.isActiveToday ? 'chip--success' : 'chip--warning'}`}>
-                                {athletePerformance.isActiveToday ? 'Bugun aktif' : 'Bugun kayit yok'}
+                                {athletePerformance.isActiveToday ? 'Active today' : 'No log today'}
                             </span>
-                        )}
-                        {athletePerformance?.needsAttention && (
-                            <span className="chip chip--warning">Dikkat</span>
                         )}
                     </div>
                 </div>
 
-                <div className="card-stack">
-                    <div className="metric-card">
-                        <span className="metric-card__label">Son kayit</span>
-                        <span className="metric-card__value">
-                            {athletePerformance?.lastLogDate ? new Date(athletePerformance.lastLogDate).toLocaleDateString('tr-TR') : '-'}
-                        </span>
-                        <div className="metric-card__hint">Guncellenme tarihi</div>
-                    </div>
-                    {athletePerformance && (
-                        <div className="timeline-card" style={{ padding: 18 }}>
-                            <span className="section-label">Program durumu</span>
-                            <div style={{ marginTop: 10, display: 'grid', gap: 8 }}>
-                                <span>{athletePerformance.hasWorkoutProgram ? 'Antrenman var' : 'Antrenman eksik'}</span>
-                                <span>{athletePerformance.hasDietProgram ? 'Beslenme var' : 'Beslenme eksik'}</span>
-                                {athletePerformance.attentionReason && <span className="caption">{athletePerformance.attentionReason}</span>}
-                            </div>
-                        </div>
-                    )}
+                <div className="coach-athlete-workspace__stats">
+                    <article className="coach-dashboard-stat">
+                        <span>Target calories</span>
+                        <strong>{targetCalories || '-'}</strong>
+                        <small>Current calorie target</small>
+                    </article>
+                    <article className="coach-dashboard-stat coach-dashboard-stat--cyan">
+                        <span>Target steps</span>
+                        <strong>{targetSteps || '-'}</strong>
+                        <small>Current step target</small>
+                    </article>
+                    <article className="coach-dashboard-stat coach-dashboard-stat--violet">
+                        <span>Starting weight</span>
+                        <strong>{weightKg ? `${weightKg} kg` : '-'}</strong>
+                        <small>Initial athlete profile</small>
+                    </article>
+                    <article className="coach-dashboard-stat coach-dashboard-stat--amber">
+                        <span>Status</span>
+                        <strong>{athletePerformance?.needsAttention ? 'Pending' : 'Tracking'}</strong>
+                        <small>
+                            {athletePerformance?.attentionReason ||
+                                (athletePerformance?.hasWorkoutProgram && athletePerformance?.hasDietProgram
+                                    ? 'Plans are ready'
+                                    : 'Program setup still needed')}
+                        </small>
+                    </article>
                 </div>
             </div>
         </section>

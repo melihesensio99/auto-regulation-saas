@@ -35,22 +35,22 @@ export const AthleteDetailsTabs = ({ athleteId }: AthleteDetailsTabsProps) => {
     }
 
     return (
-        <div className="card-stack" style={{ minHeight: 0 }}>
-            <div className="tab-bar">
+        <div className="coach-athlete-detail card-stack" style={{ minHeight: 0 }}>
+            <div className="coach-athlete-detail__tabs">
                 {tabs.map(tab => (
                     <button
                         key={tab.key}
                         type="button"
                         onClick={() => tab.enabled && setActiveTab(tab.key)}
                         disabled={!tab.enabled}
-                        className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}
+                        className={`tab-btn coach-athlete-detail__tab ${activeTab === tab.key ? 'active' : ''}`}
                     >
                         {tab.label}
                     </button>
                 ))}
             </div>
 
-            <div className="surface" style={{ padding: 20 }}>
+            <div className="coach-athlete-detail__panel surface" style={{ padding: 20 }}>
                 {activeTab === 'profile' && <AthleteProfilePanel athleteId={athleteId} />}
                 {activeTab === 'progresslogs' && <ProgressLogList athleteId={athleteId} />}
                 {activeTab === 'workout' && <WorkoutProgramPanel athleteId={athleteId} />}
