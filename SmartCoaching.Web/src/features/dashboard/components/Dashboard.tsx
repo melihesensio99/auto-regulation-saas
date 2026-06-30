@@ -70,7 +70,6 @@ export const Dashboard = () => {
                 <CoachTopbar
                     searchQuery={searchQuery}
                     onSearchChange={setSearchQuery}
-                    onInviteAthlete={() => setIsAddAthleteModalOpen(true)}
                 />
 
                 {selectedAthleteId ? (
@@ -88,10 +87,20 @@ export const Dashboard = () => {
                 ) : (
                     <section className="coach-workspace__overview">
                         <section className="coach-dashboard-hero">
-                            <div className="coach-dashboard-hero__copy">
-                                <span className="eyebrow">Coach Dashboard</span>
-                                <h1>Welcome back, Coach</h1>
-                                <p>Here&apos;s what&apos;s happening across your team today.</p>
+                            <div className="coach-dashboard-hero__headline">
+                                <div className="coach-dashboard-hero__copy">
+                                    <span className="eyebrow">Coach Dashboard</span>
+                                    <h1>Welcome back, Coach</h1>
+                                    <p>Here&apos;s what&apos;s happening across your team today.</p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="coach-dashboard-hero__link"
+                                    onClick={() => setIsAddAthleteModalOpen(true)}
+                                >
+                                    + Invite athlete
+                                </button>
                             </div>
 
                             <div className="coach-dashboard-hero__metrics">

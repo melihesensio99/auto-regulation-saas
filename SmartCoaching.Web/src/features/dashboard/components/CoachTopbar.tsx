@@ -1,13 +1,11 @@
 interface CoachTopbarProps {
     searchQuery: string;
     onSearchChange: (value: string) => void;
-    onInviteAthlete: () => void;
 }
 
 export const CoachTopbar = ({
     searchQuery,
     onSearchChange,
-    onInviteAthlete,
 }: CoachTopbarProps) => {
     return (
         <header className="coach-workspace__topbar">
@@ -22,14 +20,6 @@ export const CoachTopbar = ({
             </label>
 
             <div className="coach-workspace__topbar-actions">
-                <button
-                    type="button"
-                    className="coach-workspace__invite-link"
-                    onClick={onInviteAthlete}
-                >
-                    + Invite athlete
-                </button>
-
                 <button
                     type="button"
                     className="coach-workspace__ghost-button"
