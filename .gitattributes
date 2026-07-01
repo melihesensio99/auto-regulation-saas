@@ -1,1 +1,3 @@
-SmartCoaching.Web/** linguist-vendored
+# Ignore heavy auto-generated or UI library folders from stats to keep C# as the primary language
+SmartCoaching.Web/src/shared/components/ui/** linguist-vendored
+SmartCoaching.Web/node_modules/** linguist-vendored
