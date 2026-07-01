@@ -16,8 +16,22 @@ export interface AthleteDto {
     targetCalories: number;
     targetSteps: number;
     isOnboardingCompleted: boolean;
+    dateOfBirth?: string;
+    phoneNumber?: string;
+    occupation?: string;
     mainReason?: number;
     shortTermGoal?: string;
+    longTermGoal?: string;
+    expectations?: string;
+    heightCm?: number;
+    startingWeightKg?: number;
+    trainingHistory?: string;
+    currentTrainingRoutine?: string;
+    outsidePhysicalActivity?: string;
+    hasTrackedMacros?: string;
+    hasWorkedWithCoach?: string;
+    hearAboutUs?: string;
+    additionalNotes?: string;
     subscriptionEndDate: string;
 }
 
@@ -72,6 +86,16 @@ export const coachService = {
             }
             throw error;
         }
+    },
+    getAthleteProgressLogs: async (athleteId: string, startDate?: string, endDate?: string): Promise<any[]> => {
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        const response = await api.get<any[]>(`/athletes/${athleteId}/progress?${params.toString()}`);
+        return response.data;
+    },
+    addCoachFeedback: async (athleteId: string, logId: string, feedback: string): Promise<void> => {
+        await api.put(`/athletes/${athleteId}/progress/${logId}/feedback`, { feedback });
     }
 };
 

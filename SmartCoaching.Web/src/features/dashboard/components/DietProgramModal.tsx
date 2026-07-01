@@ -18,13 +18,84 @@ export const DietProgramModal: React.FC<DietProgramModalProps> = ({ athleteId, o
     
     const [isSaving, setIsSaving] = useState(false);
 
+    const splitMealItems = (value: string) =>
+        value
+            .split(/\r?\n|,/)
+            .map(item => item.trim())
+            .filter(Boolean);
+
+    const splitMealNotes = (value?: string) =>
+        (value ?? '')
+            .split('|')
+            .map(item => item.trim())
+            .filter(Boolean);
+
+    const getMealAccent = (value: string) => {
+        switch (value.trim().toLowerCase()) {
+            case 'breakfast':
+                return 'from-amber-400/20 to-orange-400/10 border-amber-400/20 text-amber-300';
+            case 'morning snack':
+                return 'from-sky-400/20 to-cyan-400/10 border-sky-400/20 text-sky-300';
+            case 'lunch':
+                return 'from-emerald-400/20 to-green-400/10 border-emerald-400/20 text-emerald-300';
+            case 'afternoon snack':
+                return 'from-pink-400/20 to-fuchsia-400/10 border-pink-400/20 text-pink-300';
+            case 'dinner':
+                return 'from-violet-400/20 to-purple-400/10 border-violet-400/20 text-violet-300';
+            case 'evening snack':
+                return 'from-indigo-400/20 to-blue-400/10 border-indigo-400/20 text-indigo-300';
+            default:
+                return 'from-white/10 to-white/5 border-white/10 text-neon-purple';
+        }
+    };
+
+    const normalizeMeals = (incomingMeals: DietMealDto[]) => {
+        const groupedMeals = new Map<string, DietMealDto>();
+
+        incomingMeals.forEach((meal) => {
+            const key = meal.mealName.trim().toLowerCase();
+            const existingMeal = groupedMeals.get(key);
+
+            if (!existingMeal) {
+                groupedMeals.set(key, {
+                    ...meal,
+                    mealName: meal.mealName.trim(),
+                    foods: meal.foods.trim(),
+                    notes: meal.notes?.trim() ?? '',
+                });
+                return;
+            }
+
+            const mergedFoods = [existingMeal.foods, meal.foods]
+                .map(value => value?.trim())
+                .filter(Boolean)
+                .join('\n');
+
+            const mergedNotes = [existingMeal.notes, meal.notes]
+                .map(value => value?.trim())
+                .filter(Boolean)
+                .join(' | ');
+
+            groupedMeals.set(key, {
+                ...existingMeal,
+                foods: mergedFoods,
+                notes: mergedNotes,
+            });
+        });
+
+        return Array.from(groupedMeals.values()).map((meal, index) => ({
+            ...meal,
+            order: index + 1,
+        }));
+    };
+
     useEffect(() => {
         let isMounted = true;
         const fetchExisting = async () => {
             try {
                 const program = await coachService.getAthleteDietProgram(athleteId);
                 if (isMounted && program && Array.isArray(program.meals)) {
-                    setMeals(program.meals);
+                    setMeals(normalizeMeals(program.meals));
                     setGeneralNotes(program.generalDietNotes || '');
                 }
             } catch (error) {
@@ -37,15 +108,18 @@ export const DietProgramModal: React.FC<DietProgramModalProps> = ({ athleteId, o
 
     const handleAddMeal = () => {
         if (!foods) return;
-        
-        const newMeal: DietMealDto = {
-            order: meals.length + 1,
-            mealName,
-            foods,
-            notes
-        };
-        
-        setMeals([...meals, newMeal]);
+
+        const updatedMeals = normalizeMeals([
+            ...meals,
+            {
+                order: meals.length + 1,
+                mealName,
+                foods,
+                notes
+            }
+        ]);
+
+        setMeals(updatedMeals);
         
         // Reset form
         setFoods('');
@@ -61,14 +135,18 @@ export const DietProgramModal: React.FC<DietProgramModalProps> = ({ athleteId, o
     };
 
     const handleDeleteMeal = (index: number) => {
-        setMeals(meals.filter((_, i) => i !== index));
+        const remainingMeals = meals.filter((_, i) => i !== index).map((meal, mealIndex) => ({
+            ...meal,
+            order: mealIndex + 1,
+        }));
+        setMeals(remainingMeals);
     };
 
     const handleSaveProgram = async () => {
         if (meals.length === 0) return;
         setIsSaving(true);
         try {
-            await coachService.assignDietProgram(athleteId, meals, generalNotes);
+            await coachService.assignDietProgram(athleteId, normalizeMeals(meals), generalNotes);
             onSaved();
         } catch (error) {
             console.error("Failed to save program", error);
@@ -158,20 +236,42 @@ export const DietProgramModal: React.FC<DietProgramModalProps> = ({ athleteId, o
                                 </div>
                             ) : (
                                 meals.map((m, i) => (
-                                    <div key={i} className="bg-white/5 p-3 rounded-lg border border-white/5 group">
+                                    <div key={i} className={`bg-gradient-to-br ${getMealAccent(m.mealName)} p-3 rounded-lg border group`}>
                                         <div className="flex items-center justify-between mb-2">
                                             <span className="font-bold text-neon-purple">{m.mealName}</span>
-                                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEditMeal(i)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white" title="Edit">
-                                                    <Edit2 className="w-3.5 h-3.5" />
-                                                </button>
-                                                <button onClick={() => handleDeleteMeal(i)} className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400" title="Delete">
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </button>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[11px] text-gray-400 bg-black/30 px-2 py-1 rounded-full">
+                                                    {splitMealItems(m.foods).length} {splitMealItems(m.foods).length === 1 ? 'item' : 'items'}
+                                                </span>
+                                                <span className="text-xs text-gray-500 bg-black/40 px-2 py-1 rounded-full">Meal {m.order || i + 1}</span>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-gray-300 mb-2">{m.foods}</p>
-                                        {m.notes && <p className="text-xs text-gray-400 italic">Note: {m.notes}</p>}
+                                        <div className="space-y-2">
+                                            {splitMealItems(m.foods).map((food, foodIndex) => (
+                                                <div key={`${m.mealName}-${foodIndex}`} className="flex items-start gap-2 text-sm text-gray-300">
+                                                    <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-cyan shrink-0" />
+                                                    <span>{food}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity mt-3">
+                                            <button onClick={() => handleEditMeal(i)} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white" title="Edit">
+                                                <Edit2 className="w-3.5 h-3.5" />
+                                            </button>
+                                            <button onClick={() => handleDeleteMeal(i)} className="p-1 hover:bg-red-500/20 rounded text-gray-400 hover:text-red-400" title="Delete">
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                        {splitMealNotes(m.notes).length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-white/5 space-y-1.5">
+                                                <p className="text-[11px] uppercase tracking-[0.24em] text-gray-500">Notes</p>
+                                                {splitMealNotes(m.notes).map((note, noteIndex) => (
+                                                    <p key={`${m.mealName}-note-${noteIndex}`} className="text-xs text-gray-400 italic">
+                                                        {note}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))
                             )}

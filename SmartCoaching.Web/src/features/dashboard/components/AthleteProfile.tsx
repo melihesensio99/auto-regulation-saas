@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import { User, Dumbbell, Utensils, BarChart3, ClipboardList, Plus, Edit2, Timer, Repeat, Layers } from 'lucide-react';
+import { User, Dumbbell, Utensils, BarChart3, ClipboardList, Plus, Edit2, Timer, Repeat, Layers, Sunrise, Coffee, Sun, Apple, Moon, UtensilsCrossed, MessageSquare } from 'lucide-react';
 import { coachService, type AthleteDto } from '../services/coachService';
 import { WorkoutProgramModal } from './WorkoutProgramModal';
 import { DietProgramModal } from './DietProgramModal';
 
-export const AthleteProfile: React.FC<{ athleteId?: string }> = ({ athleteId }) => {
+export const AthleteProfile: React.FC<{ athleteId?: string; onBack?: () => void }> = ({ athleteId, onBack }) => {
     const [activeTab, setActiveTab] = useState('workout');
     const [athlete, setAthlete] = useState<AthleteDto | null>(null);
     const [isLoading, setIsLoading] = useState(!!athleteId);
+    const [dietSummary, setDietSummary] = useState<{
+        totalCalories: number;
+        totalProtein: number;
+        totalCarbs: number;
+        totalFats: number;
+        hasMeals: boolean;
+    } | null>(null);
     
     // Modal states
     const [isWorkoutModalOpen, setIsWorkoutModalOpen] = useState(false);
@@ -23,6 +30,15 @@ export const AthleteProfile: React.FC<{ athleteId?: string }> = ({ athleteId }) 
             try {
                 const data = await coachService.getAthleteById(athleteId);
                 setAthlete(data);
+
+                const dietProgram = await coachService.getAthleteDietProgram(athleteId);
+                setDietSummary(dietProgram ? {
+                    totalCalories: dietProgram.totalCalories ?? 0,
+                    totalProtein: dietProgram.totalProtein ?? 0,
+                    totalCarbs: dietProgram.totalCarbs ?? 0,
+                    totalFats: dietProgram.totalFats ?? 0,
+                    hasMeals: Array.isArray(dietProgram.meals) && dietProgram.meals.length > 0,
+                } : null);
             } catch (error) {
                 console.error("Failed to fetch athlete profile", error);
             } finally {
@@ -47,40 +63,54 @@ export const AthleteProfile: React.FC<{ athleteId?: string }> = ({ athleteId }) 
         }
     };
 
-    const CircularChart = ({ label, value, unit, colorClass, strokeColor }: { label: string, value: string | number, unit?: string, colorClass: string, strokeColor: string }) => (
-        <div className="flex flex-col items-center justify-center bg-black/40 p-4 rounded-2xl border border-white/5 shadow-lg min-w-[120px]">
-            <div className="relative w-20 h-20 flex items-center justify-center mb-3 drop-shadow-xl">
-                {/* Background Ring */}
-                <svg className="absolute w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                    <path
-                        className="text-white/10"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                    {/* Foreground Ring - 100% full since it represents the target itself */}
-                    <path
-                        className={strokeColor}
-                        strokeDasharray="100, 100"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        fill="none"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    />
-                </svg>
-                <div className="flex flex-col items-center justify-center relative z-10">
-                    <span className={`text-xl font-bold ${colorClass}`}>{value}</span>
-                    {unit && <span className="text-xs text-gray-400 -mt-1">{unit}</span>}
+    const TargetShowcaseCard = ({
+        label,
+        value,
+        unit,
+        accentClass,
+        glowClass,
+        helper,
+    }: {
+        label: string;
+        value: string | number;
+        unit?: string;
+        accentClass: string;
+        glowClass: string;
+        helper: string;
+    }) => (
+        <div className="min-w-[190px] rounded-[28px] border border-white/10 bg-black/35 px-5 py-4 shadow-[0_18px_50px_rgba(0,0,0,0.28)] backdrop-blur">
+            <div className="flex items-start justify-between gap-4">
+                <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.28em] text-gray-500">{label}</p>
+                    <div className="flex items-end gap-2">
+                        <span className={`text-3xl font-bold leading-none ${accentClass}`}>{value}</span>
+                        {unit && <span className="pb-1 text-xs uppercase tracking-[0.22em] text-gray-500">{unit}</span>}
+                    </div>
+                    <p className="text-sm text-gray-400">{helper}</p>
+                </div>
+                <div className={`relative flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-black/40 ${glowClass}`}>
+                    <div className="absolute inset-[7px] rounded-[18px] border border-white/10" />
+                    <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br opacity-20 ${accentClass === 'text-neon-cyan' ? 'from-neon-cyan to-cyan-300' : 'from-neon-purple to-fuchsia-300'}`} />
+                    <div className={`relative h-8 w-8 rounded-full border-2 ${accentClass === 'text-neon-cyan' ? 'border-neon-cyan/80' : 'border-neon-purple/80'}`} />
                 </div>
             </div>
-            <span className="text-[11px] text-gray-400 font-medium uppercase tracking-wider text-center">{label}</span>
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/8">
+                <div className={`h-full rounded-full bg-gradient-to-r ${accentClass === 'text-neon-cyan' ? 'from-neon-cyan to-cyan-300' : 'from-neon-purple to-fuchsia-300'}`} style={{ width: '100%' }} />
+            </div>
         </div>
     );
 
     return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {onBack && (
+                <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex items-center rounded-2xl border border-cyan-400/30 px-4 py-2 text-sm text-cyan-200 transition hover:border-cyan-400/60 hover:text-white"
+                >
+                    Back to dashboard
+                </button>
+            )}
             
             {/* Hero Banner */}
             <div className="glass-panel relative overflow-hidden p-8 border-t-2 border-neon-cyan/50">
@@ -103,19 +133,21 @@ export const AthleteProfile: React.FC<{ athleteId?: string }> = ({ athleteId }) 
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        <CircularChart 
-                            label="Target Steps" 
-                            value={athlete?.targetSteps ?? 0} 
-                            colorClass="text-neon-cyan" 
-                            strokeColor="text-neon-cyan" 
+                    <div className="flex flex-wrap items-center justify-end gap-4">
+                        <TargetShowcaseCard
+                            label="Target Steps"
+                            value={athlete?.targetSteps ?? 0}
+                            accentClass="text-neon-cyan"
+                            glowClass="shadow-[0_0_28px_rgba(0,240,255,0.12)]"
+                            helper="Daily movement goal"
                         />
-                        <CircularChart 
-                            label="Target Calories" 
-                            value={athlete?.targetCalories ?? 0} 
+                        <TargetShowcaseCard
+                            label={dietSummary?.hasMeals ? "Plan Calories" : "Target Calories"}
+                            value={dietSummary?.hasMeals ? dietSummary.totalCalories : (athlete?.targetCalories ?? 0)}
                             unit="kcal"
-                            colorClass="text-neon-purple" 
-                            strokeColor="text-neon-purple" 
+                            accentClass="text-neon-purple"
+                            glowClass="shadow-[0_0_28px_rgba(157,0,255,0.12)]"
+                            helper={dietSummary?.hasMeals ? "Current meal total" : "Coach calorie target"}
                         />
                     </div>
                 </div>
@@ -151,8 +183,16 @@ export const AthleteProfile: React.FC<{ athleteId?: string }> = ({ athleteId }) 
                     setWorkoutProgramInitialDay(day);
                     setIsWorkoutModalOpen(true);
                 }} />}
-                {activeTab === 'diet' && <DietTab key={`diet-${refreshDiet}`} athlete={athlete} onUpdateTargets={handleUpdateTargets} onOpenModal={() => setIsDietModalOpen(true)} />}
-                {activeTab === 'progress' && <div className="glass-panel p-8 text-center text-gray-500">Progress Logs coming soon...</div>}
+                {activeTab === 'diet' && (
+                    <DietTab
+                        key={`diet-${refreshDiet}`}
+                        athlete={athlete}
+                        onUpdateTargets={handleUpdateTargets}
+                        onOpenModal={() => setIsDietModalOpen(true)}
+                        onDietSummaryChange={setDietSummary}
+                    />
+                )}
+                {activeTab === 'progress' && <ProgressLogsTab athlete={athlete} />}
                 {activeTab === 'info' && <AthleteInfoTab athlete={athlete} />}
             </div>
 
@@ -386,21 +426,71 @@ const WorkoutTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calor
     );
 };
 
-const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories: number, steps: number) => void; onOpenModal: () => void }> = ({ athlete, onUpdateTargets, onOpenModal }) => {
+const DietTab: React.FC<{
+    athlete: AthleteDto | null;
+    onUpdateTargets: (calories: number, steps: number) => void;
+    onOpenModal: () => void;
+    onDietSummaryChange: (summary: {
+        totalCalories: number;
+        totalProtein: number;
+        totalCarbs: number;
+        totalFats: number;
+        hasMeals: boolean;
+    } | null) => void;
+}> = ({ athlete, onUpdateTargets, onOpenModal, onDietSummaryChange }) => {
     const [isEditingCalories, setIsEditingCalories] = useState(false);
     const [caloriesValue, setCaloriesValue] = useState(athlete?.targetCalories?.toString() ?? "0");
     const [program, setProgram] = useState<any>(null);
     const [isLoadingProgram, setIsLoadingProgram] = useState(false);
 
-    const [isRefreshingAI, setIsRefreshingAI] = useState(false);
-
     React.useEffect(() => {
+        const updateDietSummary = (data: any) => {
+            onDietSummaryChange(data ? {
+                totalCalories: data.totalCalories ?? 0,
+                totalProtein: data.totalProtein ?? 0,
+                totalCarbs: data.totalCarbs ?? 0,
+                totalFats: data.totalFats ?? 0,
+                hasMeals: Array.isArray(data.meals) && data.meals.length > 0,
+            } : null);
+        };
+
         const fetchProgram = async () => {
             if (!athlete) return;
             setIsLoadingProgram(true);
             try {
                 const data = await coachService.getAthleteDietProgram(athlete.id);
                 setProgram(data);
+                updateDietSummary(data);
+
+                const shouldPollForTotals =
+                    data &&
+                    Array.isArray(data.meals) &&
+                    data.meals.length > 0 &&
+                    (data.totalCalories ?? 0) === 0 &&
+                    (data.totalProtein ?? 0) === 0 &&
+                    (data.totalCarbs ?? 0) === 0 &&
+                    (data.totalFats ?? 0) === 0;
+
+                if (shouldPollForTotals) {
+                    for (let attempt = 0; attempt < 6; attempt += 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1500));
+                        const refreshed = await coachService.getAthleteDietProgram(athlete.id);
+                        setProgram(refreshed);
+                        updateDietSummary(refreshed);
+
+                        if (
+                            refreshed &&
+                            (
+                                (refreshed.totalCalories ?? 0) > 0 ||
+                                (refreshed.totalProtein ?? 0) > 0 ||
+                                (refreshed.totalCarbs ?? 0) > 0 ||
+                                (refreshed.totalFats ?? 0) > 0
+                            )
+                        ) {
+                            break;
+                        }
+                    }
+                }
             } catch (error) {
                 console.error("Failed to fetch diet program", error);
             } finally {
@@ -409,19 +499,6 @@ const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories
         };
         fetchProgram();
     }, [athlete]);
-
-    const handleRefreshAI = async () => {
-        if (!athlete) return;
-        setIsRefreshingAI(true);
-        try {
-            const data = await coachService.getAthleteDietProgram(athlete.id);
-            setProgram(data);
-        } catch (error) {
-            console.error("Failed to refresh diet program", error);
-        } finally {
-            setIsRefreshingAI(false);
-        }
-    };
 
     const handleSaveCalories = () => {
         const val = parseInt(caloriesValue);
@@ -432,13 +509,105 @@ const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories
     };
 
     const hasMeals = program && Array.isArray(program.meals) && program.meals.length > 0;
+    const splitMealItems = (value: string) =>
+        value
+            .split(/\r?\n|,/)
+            .map(item => item.trim())
+            .filter(Boolean);
+
+    const splitMealNotes = (value?: string) =>
+        (value ?? '')
+            .split('|')
+            .map(item => item.trim())
+            .filter(Boolean);
+
+    const getMealAccent = (value: string) => {
+        switch (value.trim().toLowerCase()) {
+            case 'breakfast':
+                return 'from-amber-400/15 to-orange-400/5 border-amber-400/20 text-amber-300';
+            case 'morning snack':
+                return 'from-sky-400/15 to-cyan-400/5 border-sky-400/20 text-sky-300';
+            case 'lunch':
+                return 'from-emerald-400/15 to-green-400/5 border-emerald-400/20 text-emerald-300';
+            case 'afternoon snack':
+                return 'from-pink-400/15 to-fuchsia-400/5 border-pink-400/20 text-pink-300';
+            case 'dinner':
+                return 'from-violet-400/15 to-purple-400/5 border-violet-400/20 text-violet-300';
+            case 'evening snack':
+                return 'from-indigo-400/15 to-blue-400/5 border-indigo-400/20 text-indigo-300';
+            default:
+                return 'from-white/10 to-white/5 border-white/10 text-neon-purple';
+        }
+    };
+
+    const getMealIcon = (value: string) => {
+        switch (value.trim().toLowerCase()) {
+            case 'breakfast':
+                return Sunrise;
+            case 'morning snack':
+                return Apple;
+            case 'lunch':
+                return Sun;
+            case 'afternoon snack':
+                return Coffee;
+            case 'dinner':
+                return UtensilsCrossed;
+            case 'evening snack':
+                return Moon;
+            default:
+                return Utensils;
+        }
+    };
+
+    const groupedMeals = React.useMemo(() => {
+        if (!program?.meals || !Array.isArray(program.meals)) {
+            return [];
+        }
+
+        const groups = new Map<string, {
+            mealName: string;
+            order: number;
+            foods: string[];
+            notes: string[];
+        }>();
+
+        program.meals.forEach((meal: any, index: number) => {
+            const normalizedName = (meal?.mealName || 'Unknown Meal').trim();
+            const key = normalizedName.toLowerCase();
+            const existing = groups.get(key);
+
+            if (!existing) {
+                groups.set(key, {
+                    mealName: normalizedName,
+                    order: meal?.order || index + 1,
+                    foods: splitMealItems(meal?.foods || ''),
+                    notes: splitMealNotes(meal?.notes),
+                });
+                return;
+            }
+
+            groups.set(key, {
+                ...existing,
+                foods: [...existing.foods, ...splitMealItems(meal?.foods || '')],
+                notes: [...existing.notes, ...splitMealNotes(meal?.notes)],
+            });
+        });
+
+        return Array.from(groups.values()).sort((left, right) => left.order - right.order);
+    }, [program]);
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div className="glass-panel p-6 flex flex-col md:flex-row gap-4 md:items-center justify-between border-l-2 border-neon-purple">
                 <div>
-                    <h3 className="text-xl font-bold">Diet Program Macros</h3>
-                    <p className="text-sm text-gray-400">Target calories vs Mistral AI calculated macros.</p>
+                    <div className="inline-flex items-center gap-2 rounded-full border border-neon-purple/20 bg-neon-purple/10 px-3 py-1 text-[11px] uppercase tracking-[0.28em] text-neon-purple">
+                        <Utensils className="h-3.5 w-3.5" />
+                        Diet Intelligence
+                    </div>
+                    <h3 className="mt-3 text-2xl font-bold text-white">Diet Program Macros</h3>
+                    <p className="mt-2 max-w-2xl text-sm text-gray-400">
+                        Meal plan total is refreshed automatically after you save a new food item, so this area stays aligned with the current plan.
+                    </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {isEditingCalories ? (
@@ -456,30 +625,51 @@ const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories
                             <Edit2 className="w-4 h-4" /> Edit Target
                         </button>
                     )}
-                    <button 
-                        onClick={handleRefreshAI} 
-                        className="glow-btn-cyan flex items-center gap-2 text-sm px-4 py-2"
-                        disabled={isRefreshingAI}
-                    >
-                        <Repeat className={`w-4 h-4 ${isRefreshingAI ? 'animate-spin' : ''}`} /> 
-                        Refresh AI
-                    </button>
                 </div>
             </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {[
-                { label: 'Target Calories', value: `${athlete?.targetCalories ?? 0} kcal`, color: 'text-white' },
-                { label: 'AI Protein', value: `${program?.totalProtein ?? 0}g`, color: 'text-neon-cyan' },
-                { label: 'AI Carbs', value: `${program?.totalCarbs ?? 0}g`, color: 'text-neon-purple' },
-                { label: 'AI Fats', value: `${program?.totalFats ?? 0}g`, color: 'text-yellow-400' },
+                {
+                    label: 'Plan Calories',
+                    helper: 'Current meal total',
+                    value: `${program?.totalCalories ?? 0} kcal`,
+                    color: 'text-white',
+                    ring: 'from-white/10 to-white/5 border-white/10',
+                },
+                {
+                    label: 'AI Protein',
+                    helper: 'Muscle support',
+                    value: `${program?.totalProtein ?? 0}g`,
+                    color: 'text-neon-cyan',
+                    ring: 'from-neon-cyan/15 to-cyan-400/5 border-neon-cyan/20',
+                },
+                {
+                    label: 'AI Carbs',
+                    helper: 'Energy pool',
+                    value: `${program?.totalCarbs ?? 0}g`,
+                    color: 'text-neon-purple',
+                    ring: 'from-neon-purple/15 to-fuchsia-400/5 border-neon-purple/20',
+                },
+                {
+                    label: 'AI Fats',
+                    helper: 'Recovery balance',
+                    value: `${program?.totalFats ?? 0}g`,
+                    color: 'text-yellow-400',
+                    ring: 'from-yellow-400/15 to-amber-400/5 border-yellow-400/20',
+                },
             ].map((m, i) => (
-                <div key={i} className="glass-panel p-4 text-center relative overflow-hidden group">
-                    {(program?.totalProtein === 0 && hasMeals && m.label !== 'Target Calories') && (
+                <div key={i} className={`glass-panel bg-gradient-to-br ${m.ring} p-5 relative overflow-hidden group min-h-[128px]`}>
+                    {(program?.totalProtein === 0 && hasMeals) && (
                         <div className="absolute inset-0 bg-neon-purple/5 animate-pulse rounded-lg" />
                     )}
-                    <p className="text-sm text-gray-400 relative z-10">{m.label}</p>
-                    <p className={`text-2xl font-bold mt-1 ${m.color} relative z-10`}>{m.value}</p>
+                    <div className="relative z-10 flex h-full flex-col justify-between">
+                        <div>
+                            <p className="text-[11px] uppercase tracking-[0.24em] text-gray-400">{m.label}</p>
+                            <p className={`text-3xl font-bold mt-3 ${m.color}`}>{m.value}</p>
+                        </div>
+                        <p className="text-sm text-gray-500 mt-4">{m.helper}</p>
+                    </div>
                 </div>
             ))}
         </div>
@@ -519,17 +709,39 @@ const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories
                     </div>
                 )}
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {program.meals.map((meal: any, index: number) => (
-                        <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col">
-                            <h4 className="font-bold text-neon-purple mb-2 flex items-center justify-between">
-                                {meal?.mealName || 'Unknown Meal'}
-                                <span className="text-xs text-gray-500 bg-black/40 px-2 py-1 rounded-full">Meal {meal?.order || index + 1}</span>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    {groupedMeals.map((meal, index) => (
+                        <div key={`${meal.mealName}-${index}`} className={`bg-gradient-to-br ${getMealAccent(meal.mealName)} border rounded-2xl p-5 flex flex-col min-h-[220px]`}>
+                            <h4 className="font-bold text-neon-purple mb-4 flex items-center justify-between gap-3">
+                                <span className="flex items-center gap-3 text-lg">
+                                    {React.createElement(getMealIcon(meal.mealName), {
+                                        className: 'h-4.5 w-4.5 text-current'
+                                    })}
+                                    <span>{meal.mealName}</span>
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[11px] text-gray-400 bg-black/30 px-2 py-1 rounded-full">
+                                        {meal.foods.length} {meal.foods.length === 1 ? 'item' : 'items'}
+                                    </span>
+                                    <span className="text-xs text-gray-500 bg-black/40 px-2 py-1 rounded-full">Meal {meal.order || index + 1}</span>
+                                </div>
                             </h4>
-                            <p className="text-gray-300 text-sm flex-1 whitespace-pre-wrap">{meal?.foods || ''}</p>
-                            {meal?.notes && (
-                                <div className="mt-4 pt-4 border-t border-white/5">
-                                    <p className="text-xs text-gray-400 italic">Note: {meal.notes}</p>
+                            <div className="space-y-2.5 flex-1">
+                                {meal.foods.map((food, foodIndex) => (
+                                    <div key={`${meal.mealName}-${foodIndex}`} className="flex items-start gap-3 text-sm text-gray-200 bg-black/10 rounded-xl px-3 py-2">
+                                        <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-cyan shrink-0" />
+                                        <span>{food}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {meal.notes.length > 0 && (
+                                <div className="mt-5 pt-4 border-t border-white/5 space-y-2">
+                                    <p className="text-[11px] uppercase tracking-[0.24em] text-gray-500">Notes</p>
+                                    {meal.notes.map((note, noteIndex) => (
+                                        <p key={`${meal.mealName}-note-${noteIndex}`} className="text-xs text-gray-300 italic bg-black/10 rounded-lg px-3 py-2">
+                                            {note}
+                                        </p>
+                                    ))}
                                 </div>
                             )}
                         </div>
@@ -538,6 +750,176 @@ const DietTab: React.FC<{ athlete: AthleteDto | null; onUpdateTargets: (calories
             </div>
         )}
     </div>
+    );
+};
+
+const ProgressLogsTab: React.FC<{ athlete: AthleteDto | null }> = ({ athlete }) => {
+    const [logs, setLogs] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [feedbackText, setFeedbackText] = useState<{ [key: string]: string }>({});
+
+    React.useEffect(() => {
+        if (!athlete) return;
+        const fetchLogs = async () => {
+            try {
+                // Fetch last 30 days
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - 30);
+                const data = await coachService.getAthleteProgressLogs(athlete.id, start.toISOString(), end.toISOString());
+                setLogs(data.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+            } catch (error) {
+                console.error("Failed to load progress logs", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchLogs();
+    }, [athlete]);
+
+    const handleSendFeedback = async (logId: string) => {
+        if (!athlete) return;
+        const text = feedbackText[logId];
+        if (!text || !text.trim()) return;
+        try {
+            await coachService.addCoachFeedback(athlete.id, logId, text);
+            setLogs(logs.map(log => log.id === logId ? { ...log, coachFeedback: text } : log));
+            setFeedbackText({ ...feedbackText, [logId]: '' });
+        } catch (error) {
+            console.error("Failed to send feedback", error);
+            alert("Failed to send feedback.");
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="glass-panel p-12 text-center text-gray-400 border-dashed border-2 border-white/10">
+                <div className="w-8 h-8 border-4 border-neon-cyan border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p>Loading progress history...</p>
+            </div>
+        );
+    }
+
+    if (logs.length === 0) {
+        return (
+            <div className="glass-panel p-12 text-center text-gray-400 border-dashed border-2 border-white/10">
+                <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-white mb-2">No Progress Logs Yet</h3>
+                <p className="max-w-md mx-auto mb-6 text-sm">
+                    {athlete?.firstName} hasn't submitted any daily progress logs yet.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-6 animate-in fade-in duration-500">
+            {logs.map((log) => {
+                const logDate = new Date(log.date);
+                const isWorkoutDone = log.isWorkoutCompleted;
+                const calPercent = Math.min(100, (log.consumedCalories / (athlete?.targetCalories || 1)) * 100);
+                const stepPercent = Math.min(100, (log.takenSteps / (athlete?.targetSteps || 1)) * 100);
+
+                return (
+                    <div key={log.id} className="glass-panel p-6 border border-white/5 relative overflow-hidden group">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-neon-cyan opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div className="flex flex-col xl:flex-row gap-6">
+                            {/* Date and Summary Column */}
+                            <div className="xl:w-64 shrink-0 space-y-4 border-b xl:border-b-0 xl:border-r border-white/10 pb-4 xl:pb-0 xl:pr-6">
+                                <div>
+                                    <h4 className="text-xl font-bold text-white">{logDate.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })}</h4>
+                                    <p className="text-sm text-gray-500">{logDate.toLocaleDateString()}</p>
+                                </div>
+                                
+                                <div className="space-y-3 mt-4">
+                                    <div>
+                                        <div className="flex justify-between text-xs mb-1">
+                                            <span className="text-gray-400">Calories</span>
+                                            <span className="text-white">{log.consumedCalories} / {athlete?.targetCalories}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-black/50 rounded-full overflow-hidden">
+                                            <div className="h-full bg-neon-purple" style={{ width: `${calPercent}%` }}></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between text-xs mb-1">
+                                            <span className="text-gray-400">Steps</span>
+                                            <span className="text-white">{log.takenSteps} / {athlete?.targetSteps}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-black/50 rounded-full overflow-hidden">
+                                            <div className="h-full bg-neon-cyan" style={{ width: `${stepPercent}%` }}></div>
+                                        </div>
+                                    </div>
+                                    {log.weightKg && (
+                                        <div className="flex justify-between text-xs items-center bg-white/5 px-2 py-1.5 rounded-lg">
+                                            <span className="text-gray-400">Weight</span>
+                                            <span className="text-white font-bold">{log.weightKg} kg</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Details and Feedback Column */}
+                            <div className="flex-1 space-y-4">
+                                <div className="flex items-center gap-3">
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${isWorkoutDone ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+                                        {isWorkoutDone ? 'Workout Completed' : 'Workout Missed'}
+                                    </span>
+                                </div>
+
+                                {log.notes && (
+                                    <div className="bg-black/30 p-4 rounded-xl border border-white/5">
+                                        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Athlete Notes</p>
+                                        <p className="text-sm text-white/90 whitespace-pre-wrap">{log.notes}</p>
+                                    </div>
+                                )}
+
+                                {(log.frontPhotoUrl || log.backPhotoUrl || log.sidePhotoUrl) && (
+                                    <div>
+                                        <p className="text-xs uppercase tracking-wider text-gray-500 mb-2">Progress Photos</p>
+                                        <div className="flex gap-4 overflow-x-auto pb-2">
+                                            {[log.frontPhotoUrl, log.sidePhotoUrl, log.backPhotoUrl].filter(Boolean).map((url, idx) => (
+                                                <img key={idx} src={url} alt="Progress" className="h-32 w-24 object-cover rounded-lg border border-white/10" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Coach Feedback Section */}
+                                <div className="pt-4 mt-4 border-t border-white/5">
+                                    {log.coachFeedback ? (
+                                        <div className="bg-neon-cyan/5 border border-neon-cyan/20 p-4 rounded-xl">
+                                            <p className="text-xs uppercase tracking-wider text-neon-cyan/80 mb-2 flex items-center gap-2">
+                                                <MessageSquare className="w-3 h-3" /> Coach Feedback Sent
+                                            </p>
+                                            <p className="text-sm text-white/90 italic">"{log.coachFeedback}"</p>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-3">
+                                            <input 
+                                                type="text" 
+                                                value={feedbackText[log.id] || ''}
+                                                onChange={(e) => setFeedbackText({ ...feedbackText, [log.id]: e.target.value })}
+                                                placeholder="Add feedback to this log..."
+                                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-neon-cyan/50"
+                                            />
+                                            <button 
+                                                onClick={() => handleSendFeedback(log.id)}
+                                                disabled={!feedbackText[log.id]?.trim()}
+                                                className="glow-btn-cyan px-4 py-2 text-sm disabled:opacity-50"
+                                            >
+                                                Send Feedback
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
     );
 };
 
@@ -556,6 +938,30 @@ const AthleteInfoTab: React.FC<{ athlete: AthleteDto | null }> = ({ athlete }) =
         );
     }
     
+    const getGoalText = (reason?: number) => {
+        const goals = {
+            1: "Kas Kazanımı (Hypertrophy)",
+            2: "Yağ Kaybı (Fat Loss)",
+            3: "Güç Artışı (Strength)",
+            4: "Dayanıklılık (Endurance)",
+            5: "Genel Fitness",
+            6: "Rehabilitasyon"
+        };
+        return goals[reason as keyof typeof goals] || "Belirtilmemiş";
+    };
+
+    const calculateAge = (dob?: string) => {
+        if (!dob) return '-';
+        const birthDate = new Date(dob);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return `${age} yaşında`;
+    };
+
     return (
         <div className="animate-in fade-in duration-500">
             <div className="glass-panel p-8">
@@ -566,10 +972,77 @@ const AthleteInfoTab: React.FC<{ athlete: AthleteDto | null }> = ({ athlete }) =
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
-                        <h4 className="text-lg font-semibold text-neon-cyan mb-2">Physical Attributes</h4>
-                        <div className="p-4 bg-white/5 rounded-lg text-gray-300">
-                            Information is available but not yet fully mapped to this view.
+                        <h4 className="text-lg font-semibold text-neon-cyan mb-4">Physical Attributes</h4>
+                        <div className="space-y-3">
+                            <div className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400">Yaş</span>
+                                <span className="text-white font-medium">{calculateAge(athlete.dateOfBirth)}</span>
+                            </div>
+                            <div className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400">Boy</span>
+                                <span className="text-white font-medium">{athlete.heightCm ? `${athlete.heightCm} cm` : '-'}</span>
+                            </div>
+                            <div className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400">Başlangıç Kilosu</span>
+                                <span className="text-white font-medium">{athlete.startingWeightKg ? `${athlete.startingWeightKg} kg` : '-'}</span>
+                            </div>
+                            <div className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400">Meslek</span>
+                                <span className="text-white font-medium">{athlete.occupation || '-'}</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-neon-purple mb-4">Goals & Experience</h4>
+                        <div className="space-y-3">
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Ana Hedef</span>
+                                <span className="text-white font-medium">{getGoalText(athlete.mainReason)}</span>
+                            </div>
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Kısa Vadeli Hedef</span>
+                                <span className="text-white font-medium">{athlete.shortTermGoal || "Belirtilmemiş"}</span>
+                            </div>
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Uzun Vadeli Hedef</span>
+                                <span className="text-white font-medium">{athlete.longTermGoal || "Belirtilmemiş"}</span>
+                            </div>
+                            <div className="flex justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400">Koçla Çalıştı Mı?</span>
+                                <span className="text-white font-medium">{athlete.hasWorkedWithCoach || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 space-y-4">
+                    <h4 className="text-lg font-semibold text-emerald-400 mb-4">Training & Nutrition History</h4>
+                    <div className="space-y-3">
+                        {athlete.trainingHistory && (
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Antrenman Geçmişi</span>
+                                <span className="text-white font-medium">{athlete.trainingHistory}</span>
+                            </div>
+                        )}
+                        {athlete.currentTrainingRoutine && (
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Mevcut Antrenman Düzeni</span>
+                                <span className="text-white font-medium">{athlete.currentTrainingRoutine}</span>
+                            </div>
+                        )}
+                        {athlete.hasTrackedMacros && (
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Makro Takibi Deneyimi</span>
+                                <span className="text-white font-medium">{athlete.hasTrackedMacros}</span>
+                            </div>
+                        )}
+                        {athlete.expectations && (
+                            <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                                <span className="text-gray-400 text-sm">Beklentiler</span>
+                                <span className="text-white font-medium">{athlete.expectations}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
