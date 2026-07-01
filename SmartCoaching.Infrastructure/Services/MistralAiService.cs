@@ -59,4 +59,58 @@ public class MistralAiService : IAiService
 
         return messageContent?.Trim() ?? "{}";
     }
+
+    public async Task<string> EstimateFoodFromImageAsync(string base64Image, CancellationToken cancellationToken = default)
+    {
+        var apiKey = _configuration["Mistral:ApiKey"];
+        // Must use a pixtral model for vision
+        var model = "pixtral-12b-2409"; 
+
+        if (string.IsNullOrEmpty(apiKey))
+            return "{}";
+
+        if (!base64Image.StartsWith("data:image"))
+        {
+            // Guessing jpeg if not specified
+            base64Image = $"data:image/jpeg;base64,{base64Image}";
+        }
+
+        var requestBody = new
+        {
+            model = model,
+            response_format = new { type = "json_object" },
+            messages = new[]
+            {
+                new 
+                { 
+                    role = "user", 
+                    content = new object[]
+                    {
+                        new { type = "text", text = "Bu fotoğraftaki yemeğin adını, miktarını ve makrolarını tahmin et. Döneceğin SADECE aşağıdaki gibi JSON formatında olmalıdır: {\"FoodName\": \"Hamburger\", \"EstimatedGrams\": 250, \"Calories\": 550, \"Protein\": 30, \"Carbs\": 45, \"Fats\": 25}" },
+                        new { type = "image_url", image_url = base64Image }
+                    }
+                }
+            }
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.mistral.ai/v1/chat/completions");
+        request.Headers.Add("Authorization", $"Bearer {apiKey}");
+        request.Content = JsonContent.Create(requestBody);
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            return "{}";
+
+        using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var jsonDoc = await JsonDocument.ParseAsync(responseStream, cancellationToken: cancellationToken);
+
+        var messageContent = jsonDoc.RootElement
+            .GetProperty("choices")[0]
+            .GetProperty("message")
+            .GetProperty("content")
+            .GetString();
+
+        return messageContent?.Trim() ?? "{}";
+    }
 }

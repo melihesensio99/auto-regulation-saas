@@ -28,11 +28,25 @@ builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetRequir
 
 var app = builder.Build();
 
-// Veritabanı Seed İşlemleri
+// Veritabanı Seed ve Düzeltme İşlemleri
 using (var scope = app.Services.CreateScope())
 {
-    var seeder = scope.ServiceProvider.GetRequiredService<SmartCoaching.Infrastructure.Persistence.Seed.ExerciseSeeder>();
-    await seeder.SeedAsync();
+    var context = scope.ServiceProvider.GetRequiredService<SmartCoaching.Infrastructure.Persistence.ApplicationDbContext>();
+    
+    // Eksik olan sütunu EF Core Migration'ları atladığı için manuel ekliyoruz:
+    try 
+    {
+        Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRaw(
+            context.Database, 
+            "ALTER TABLE \"Athletes\" ADD COLUMN IF NOT EXISTS \"MustChangePassword\" boolean NOT NULL DEFAULT false;");
+    } 
+    catch (Exception ex) 
+    {
+        Console.WriteLine("Sütun eklenirken hata veya zaten var: " + ex.Message);
+    }
+
+    var exerciseSeeder = scope.ServiceProvider.GetRequiredService<SmartCoaching.Infrastructure.Persistence.Seed.ExerciseSeeder>();
+    await exerciseSeeder.SeedAsync();
 }
 
 // Configure the HTTP request pipeline.

@@ -9,6 +9,7 @@ using SmartCoaching.Application.Features.Athletes.EventHandlers;
 using SmartCoaching.Infrastructure.AI;
 using SmartCoaching.Infrastructure.AI.Agents;
 using SmartCoaching.Infrastructure.Persistence;
+using SmartCoaching.Infrastructure.Persistence.Seed;
 
 namespace SmartCoaching.Infrastructure;
 
@@ -22,6 +23,10 @@ public static class DependencyInjection
         // Ai Service
         services.AddHttpClient<IAiService, MistralAiService>();
         
+        // FatSecret Service & Caching
+        services.AddMemoryCache();
+        services.AddHttpClient<IFatSecretService, FatSecretService>();
+        
         // AI Agent - Auth Context (coachId'yi JWT'den alır, LLM'den DEĞİL)
         services.AddScoped<IAgentCoachContext, AgentCoachContext>();
         services.AddScoped<IAgentToolResultTracker, AgentToolResultTracker>();
@@ -31,7 +36,8 @@ public static class DependencyInjection
 
         // ApplicationDbContext & Seeder
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-        services.AddScoped<SmartCoaching.Infrastructure.Persistence.Seed.ExerciseSeeder>();
+        services.AddScoped<ExerciseSeeder>();
+        
         // AI Agent Service
         services.AddScoped<IAiAgentService, GeminiAgentService>();
 
@@ -44,6 +50,7 @@ public static class DependencyInjection
         {
             x.AddConsumer<AthleteCreatedEventConsumer>();
             x.AddConsumer<OnboardingCompletedEventConsumer>();
+            x.AddConsumer<DietProgramUpdatedEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
