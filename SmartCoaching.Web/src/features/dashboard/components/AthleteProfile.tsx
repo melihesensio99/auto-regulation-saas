@@ -3,6 +3,7 @@ import { User, Dumbbell, Utensils, BarChart3, ClipboardList, Plus, Edit2, Timer,
 import { coachService, type AthleteDto } from '../services/coachService';
 import { WorkoutProgramModal } from './WorkoutProgramModal';
 import { DietProgramModal } from './DietProgramModal';
+import { CoachFloatingAssistant } from './CoachFloatingAssistant';
 
 export const AthleteProfile: React.FC<{ athleteId?: string; onBack?: () => void }> = ({ athleteId, onBack }) => {
     const [activeTab, setActiveTab] = useState('workout');
@@ -221,6 +222,24 @@ export const AthleteProfile: React.FC<{ athleteId?: string; onBack?: () => void 
                 />
             )}
 
+            {athlete && (
+                <CoachFloatingAssistant 
+                    athleteId={athlete.id} 
+                    athleteName={`${athlete.firstName} ${athlete.lastName}`} 
+                    onActionReceived={(action, data) => {
+                        if (action === 'REFRESH_DASHBOARD') {
+                            if (data?.scope === 'diet' || data?.scope === 'calories' || data?.scope === 'targets') {
+                                setRefreshDiet(prev => prev + 1);
+                            }
+                            if (data?.scope === 'workout' || data?.scope === 'steps' || data?.scope === 'targets') {
+                                setRefreshWorkout(prev => prev + 1);
+                            }
+                            // Re-fetch targets
+                            coachService.getAthleteById(athlete.id).then(setAthlete).catch(console.error);
+                        }
+                    }} 
+                />
+            )}
         </div>
     );
 };

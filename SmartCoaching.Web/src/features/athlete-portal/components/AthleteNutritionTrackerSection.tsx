@@ -8,6 +8,7 @@ interface AthleteNutritionTrackerSectionProps {
     onAddCalories: (addedCals: number, addedFoods: string[]) => void;
     consumedFoods?: any[];
     setConsumedFoods?: React.Dispatch<React.SetStateAction<any[]>>;
+    onNavigateToLog?: () => void;
 }
 
 interface StagedFoodItem extends FatSecretFoodItem {
@@ -16,6 +17,7 @@ interface StagedFoodItem extends FatSecretFoodItem {
     baseProtein: number;
     baseCarbs: number;
     baseFats: number;
+    imageUrl?: string;
 }
 
 export const AthleteNutritionTrackerSection = ({
@@ -82,15 +84,46 @@ export const AthleteNutritionTrackerSection = ({
         setStagedFoods(newFoods);
     };
 
-    const handleCommitFoods = () => {
+    const [isCommitting, setIsCommitting] = useState(false);
+
+    const handleCommitFoods = async () => {
         if (stagedFoods.length === 0) return;
-        const totalCals = stagedFoods.reduce((sum, f) => sum + f.calories, 0);
-        const names = stagedFoods.map(f => `${f.name} (${f.grams}g)`);
-        onAddCalories(totalCals, names);
-        if (setConsumedFoods) {
-            setConsumedFoods(prev => [...prev, ...stagedFoods]);
+        setIsCommitting(true);
+        try {
+            const totalCals = stagedFoods.reduce((sum, f) => sum + f.calories, 0);
+            const names = stagedFoods.map(f => `${f.name} (${f.grams}g)`);
+            
+            // Log each to backend
+            for (const food of stagedFoods) {
+                await nutritionService.logConsumedFood({
+                    foodName: food.name,
+                    calories: food.calories,
+                    protein: food.protein || 0,
+                    carbs: food.carbs || 0,
+                    fats: food.fats || 0
+                });
+            }
+
+            onAddCalories(totalCals, names);
+            if (setConsumedFoods) {
+                setConsumedFoods(prev => [...prev, ...stagedFoods]);
+            }
+            setStagedFoods([]);
+            
+            // Switch tab to log section using URLSearchParams via window.history or alert user
+            if (onNavigateToLog) {
+                onNavigateToLog();
+            } else {
+                const url = new URL(window.location.href);
+                url.searchParams.set('section', 'log');
+                window.history.pushState({}, '', url);
+                window.dispatchEvent(new Event('popstate'));
+            }
+        } catch (error) {
+            console.error('Failed to commit foods', error);
+        } finally {
+            setIsCommitting(false);
         }
-        setStagedFoods([]);
     };
 
     const handleRemoveConsumedFood = (index: number) => {
@@ -149,9 +182,10 @@ export const AthleteNutritionTrackerSection = ({
                         fats: analysis.fats,
                         grams: initGrams,
                         baseCalories: analysis.calories / baseRatio,
-                        baseProtein: analysis.protein / baseRatio,
-                        baseCarbs: analysis.carbs / baseRatio,
-                        baseFats: analysis.fats / baseRatio
+                        baseProtein: (analysis.protein || 0) / baseRatio,
+                        baseCarbs: (analysis.carbs || 0) / baseRatio,
+                        baseFats: (analysis.fats || 0) / baseRatio,
+                        imageUrl: reader.result as string
                     };
                     setStagedFoods(prev => [...prev, aiFood]);
                 }
@@ -212,9 +246,14 @@ export const AthleteNutritionTrackerSection = ({
                                 {stagedFoods.map((food, idx) => (
                                     <div key={idx} className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-col gap-4 group">
                                         <div className="flex justify-between items-start gap-4">
+                                            {food.imageUrl && (
+                                                <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden border border-white/10">
+                                                    <img src={food.imageUrl} alt={food.name} className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
                                             <div className="flex-1">
                                                 <span className="font-medium text-white block mb-1">{food.name}</span>
-                                                <div className="grid grid-cols-3 gap-2 text-xs text-gray-400">
+                                                <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-400">
                                                     <div>Protein: <span className="text-neon-cyan">{food.protein?.toFixed(1) || 0}g</span></div>
                                                     <div>Karbonhidrat: <span className="text-neon-purple">{food.carbs?.toFixed(1) || 0}g</span></div>
                                                     <div>Yağ: <span className="text-yellow-400">{food.fats?.toFixed(1) || 0}g</span></div>
@@ -264,10 +303,11 @@ export const AthleteNutritionTrackerSection = ({
 
                                 <button
                                     onClick={handleCommitFoods}
-                                    className={`w-full mt-6 flex items-center justify-center gap-2 py-4 px-4 rounded-xl transition-all font-bold text-base ${isOverTarget ? 'bg-red-500/20 border border-red-500/50 text-red-500 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 shadow-[0_0_20px_rgba(52,211,153,0.2)]'}`}
+                                    disabled={isCommitting}
+                                    className={`w-full mt-6 flex items-center justify-center gap-2 py-4 px-4 rounded-xl transition-all font-bold text-base disabled:opacity-50 ${isOverTarget ? 'bg-red-500/20 border border-red-500/50 text-red-500 hover:bg-red-500/30 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/30 shadow-[0_0_20px_rgba(52,211,153,0.2)]'}`}
                                 >
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    Günlük Kaloriye İşle (+{totalStagedCalories} kcal)
+                                    {isCommitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                                    {isCommitting ? 'Aktarılıyor...' : `Veri Girişine Aktar (+${totalStagedCalories} kcal)`}
                                 </button>
                             </div>
                         )}

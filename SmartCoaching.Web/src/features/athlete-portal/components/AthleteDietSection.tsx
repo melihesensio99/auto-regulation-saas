@@ -10,6 +10,9 @@ interface AthleteDietSectionProps {
     onCaloriesChange: (value: string) => void;
     notes: string;
     onNotesChange: (value: string) => void;
+    consumedFoods: any[];
+    setConsumedFoods: React.Dispatch<React.SetStateAction<any[]>>;
+    onNavigateToLog: () => void;
 }
 
 const getMealAccent = (value: string) => {
@@ -45,7 +48,10 @@ export const AthleteDietSection = ({
     calories,
     onCaloriesChange,
     notes,
-    onNotesChange
+    onNotesChange,
+    consumedFoods,
+    setConsumedFoods,
+    onNavigateToLog
 }: AthleteDietSectionProps) => {
 
     const handleAddCalories = (addedCals: number, addedFoods: string[]) => {
@@ -102,6 +108,9 @@ export const AthleteDietSection = ({
                 targetCalories={targetCalories}
                 currentCalories={Number(calories) || 0}
                 onAddCalories={handleAddCalories}
+                consumedFoods={consumedFoods}
+                setConsumedFoods={setConsumedFoods}
+                onNavigateToLog={onNavigateToLog}
             />
 
             <div className="glass-panel p-6 flex items-center justify-between border-l-2 border-neon-purple">

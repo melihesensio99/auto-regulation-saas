@@ -1,5 +1,7 @@
-import { Activity, CalendarCheck, TrendingUp, Users } from 'lucide-react';
+import { Activity, CalendarCheck, TrendingUp, Users, Plus } from 'lucide-react';
 import { useAthletes, useCoachDashboard } from '../hooks/useDashboard';
+import { useState } from 'react';
+import { AddAthleteModal } from './AddAthleteModal';
 
 const statCards = [
     {
@@ -40,6 +42,7 @@ interface CoachDashboardOverviewProps {
 }
 
 export const CoachDashboardOverview = ({ onSelectAthlete }: CoachDashboardOverviewProps) => {
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const { data: dashboard, isLoading: isDashboardLoading } = useCoachDashboard();
     const { data: athletes = [], isLoading: isAthletesLoading } = useAthletes();
 
@@ -110,11 +113,19 @@ export const CoachDashboardOverview = ({ onSelectAthlete }: CoachDashboardOvervi
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.9fr)_minmax(360px,1fr)]">
                 <section className="rounded-[32px] border border-white/8 bg-[#111826] p-6">
-                    <div className="flex items-start justify-between gap-4 border-b border-white/6 pb-5">
+                    <div className="flex items-center justify-between gap-4 border-b border-white/6 pb-5">
                         <div>
                             <h2 className="text-[30px] font-semibold tracking-[-0.04em] text-white">My athletes</h2>
                             <p className="mt-1 text-sm text-white/45">{athletes.length} total · updated live</p>
                         </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsAddModalOpen(true)}
+                            className="inline-flex items-center gap-2 rounded-2xl bg-cyan-400/10 px-4 py-2.5 text-sm font-semibold text-cyan-300 transition hover:bg-cyan-400/20"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add Athlete
+                        </button>
                     </div>
 
                     <div className="mt-6 overflow-hidden rounded-[24px] border border-white/6">
@@ -226,6 +237,8 @@ export const CoachDashboardOverview = ({ onSelectAthlete }: CoachDashboardOvervi
                     </div>
                 </section>
             </div>
+            
+            {isAddModalOpen && <AddAthleteModal onClose={() => setIsAddModalOpen(false)} />}
         </section>
     );
 };

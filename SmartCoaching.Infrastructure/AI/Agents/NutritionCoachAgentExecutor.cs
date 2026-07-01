@@ -41,6 +41,7 @@ Kullanacağın araçlar:
 - GetAthletes
 - GetAthleteProfile
 - GetAthleteProgress
+- GetAthleteConsumedFoods
 - GetDietProgram
 - UpdateDietProgram
 - UpdateTargetCalories

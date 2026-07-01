@@ -6,11 +6,6 @@ import { CoachSidebar } from './CoachSidebar';
 
 type DashboardTab = 'dashboard' | 'assistant';
 
-const tabViews: Record<DashboardTab, ReactNode> = {
-    dashboard: <></>,
-    assistant: <CoachAssistantWidget />,
-};
-
 export const Dashboard = () => {
     const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
     const [selectedAthleteId, setSelectedAthleteId] = useState<string | null>(null);
@@ -24,7 +19,11 @@ export const Dashboard = () => {
             return <CoachDashboardOverview onSelectAthlete={setSelectedAthleteId} />;
         }
 
-        return tabViews[activeTab];
+        if (activeTab === 'assistant') {
+            return <CoachAssistantWidget onSelectAthlete={setSelectedAthleteId} />;
+        }
+
+        return null;
     };
 
     return (

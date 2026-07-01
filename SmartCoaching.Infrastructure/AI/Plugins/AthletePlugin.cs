@@ -124,4 +124,39 @@ public class AthletePlugin
 
         return JsonSerializer.Serialize(logs, JsonOptions);
     }
+
+    [KernelFunction("GetAthleteConsumedFoods")]
+    [Description("Belirli bir sporcunun son 3 gündeki detaylı besin tüketim listesini (ör. Hamburger, Pizza vb.) getirir.")]
+    public async Task<string> GetAthleteConsumedFoodsAsync(
+        [Description("Sporcunun benzersiz kimliği (Guid)")] Guid athleteId,
+        CancellationToken cancellationToken)
+    {
+        var coachId = _coachContext.CoachId;
+
+        var athleteExists = await _context.Athletes
+            .AnyAsync(a => a.Id == athleteId && a.CoachId == coachId, cancellationToken);
+
+        if (!athleteExists)
+        {
+            return "{\"error\": \"Athlete not found or not assigned to you.\"}";
+        }
+
+        var cutoffDate = DateTime.UtcNow.AddDays(-3);
+
+        var foods = await _context.ConsumedFoods
+            .Where(f => f.AthleteId == athleteId && f.Date >= cutoffDate)
+            .OrderByDescending(f => f.Date)
+            .Select(f => new
+            {
+                f.Date,
+                f.FoodName,
+                f.Calories,
+                f.Protein,
+                f.Carbs,
+                f.Fats
+            })
+            .ToListAsync(cancellationToken);
+
+        return JsonSerializer.Serialize(foods, JsonOptions);
+    }
 }

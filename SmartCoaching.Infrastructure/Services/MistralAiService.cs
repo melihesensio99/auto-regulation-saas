@@ -86,7 +86,7 @@ public class MistralAiService : IAiService
                     role = "user", 
                     content = new object[]
                     {
-                        new { type = "text", text = "Bu fotoğraftaki yemeğin adını, miktarını ve makrolarını tahmin et. Döneceğin SADECE aşağıdaki gibi JSON formatında olmalıdır: {\"FoodName\": \"Hamburger\", \"EstimatedGrams\": 250, \"Calories\": 550, \"Protein\": 30, \"Carbs\": 45, \"Fats\": 25}" },
+                        new { type = "text", text = "Bu fotoğraftaki yemeğin adını, miktarını ve makrolarını tahmin et. Döneceğin SADECE aşağıdaki gibi JSON formatında olmalıdır ve TÜM ALANLARI (FoodName, EstimatedGrams, Calories, Protein, Carbs, Fats) EKSİKSİZ içermelidir: {\"FoodName\": \"Hamburger\", \"EstimatedGrams\": 250, \"Calories\": 550, \"Protein\": 30, \"Carbs\": 45, \"Fats\": 25}" },
                         new { type = "image_url", image_url = base64Image }
                     }
                 }

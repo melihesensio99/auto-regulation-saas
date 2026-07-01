@@ -104,6 +104,7 @@ export const AthleteDashboard = () => {
                         onNotesChange={setNotes}
                         consumedFoods={consumedFoods}
                         setConsumedFoods={setConsumedFoods}
+                        onNavigateToLog={() => handleSectionChange('log')}
                     />
                 );
             case 'log':

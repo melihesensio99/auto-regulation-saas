@@ -96,6 +96,10 @@ export const coachService = {
     },
     addCoachFeedback: async (athleteId: string, logId: string, feedback: string): Promise<void> => {
         await api.put(`/athletes/${athleteId}/progress/${logId}/feedback`, { feedback });
+    },
+    askAiAgent: async (message: string, contextAthleteId?: string, contextAthleteName?: string): Promise<{ textReply: string; uiAction?: string; actionData?: any }> => {
+        const response = await api.post<{ textReply: string; uiAction?: string; actionData?: any }>('/agent/chat', { message, contextAthleteId, contextAthleteName });
+        return response.data;
     }
 };
 
