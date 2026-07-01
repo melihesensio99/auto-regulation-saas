@@ -1,4 +1,4 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useMemo, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AthleteDietSection } from './AthleteDietSection';
 import { AthleteProgressSection } from './AthleteProgressSection';
@@ -11,6 +11,7 @@ import {
     useAthleteProgressLogs,
     useAthleteWorkoutProgram,
     useLogProgress,
+    useDailyNutrition,
 } from '../hooks/useAthletePortal';
 import { createLastWeekDateRange, getDailyProgressSummary, getWeeklySummary } from '../utils/dashboardMetrics';
 
@@ -57,6 +58,29 @@ export const AthleteDashboard = () => {
         targetCalories,
         targetSteps,
     });
+
+    const { data: dailyNutrition } = useDailyNutrition(dailySummary.todayIso);
+
+    // Sync backend foods with local state when loaded
+    useEffect(() => {
+        if (dailyNutrition?.foods) {
+            const mappedFoods = dailyNutrition.foods.map((f: any) => ({
+                id: f.id,
+                name: f.foodName,
+                calories: f.calories,
+                protein: f.protein,
+                carbs: f.carbs,
+                fats: f.fats,
+                grams: 100, // or approximate
+                baseCalories: f.calories,
+                baseProtein: f.protein,
+                baseCarbs: f.carbs,
+                baseFats: f.fats,
+                imageUrl: f.imageUrl
+            }));
+            setConsumedFoods(mappedFoods);
+        }
+    }, [dailyNutrition]);
 
     const handleSectionChange = (section: AthleteSectionKey) => {
         const nextParams = new URLSearchParams(searchParams);

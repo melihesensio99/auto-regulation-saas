@@ -22,6 +22,7 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
     public async Task<Result<Guid>> Handle(AssignWorkoutProgramCommand request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
+            .Include(a => a.WorkoutExercises)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)
@@ -84,11 +85,7 @@ public class AssignWorkoutProgramCommandHandler : IRequestHandler<AssignWorkoutP
             OrderIndex = index
         }).ToList();
 
-        await _context.WorkoutExercises
-            .Where(x => x.AthleteId == athlete.Id)
-            .ExecuteDeleteAsync(cancellationToken);
-
-        _context.WorkoutExercises.AddRange(newExercises);
+        athlete.SetWorkoutExercises(newExercises);
         await _context.SaveChangesAsync(cancellationToken);
 
         return Result<Guid>.Success(athlete.Id);

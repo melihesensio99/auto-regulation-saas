@@ -27,6 +27,7 @@ export interface LogConsumedFoodRequest {
     protein: number;
     carbs: number;
     fats: number;
+    source?: string;
 }
 
 export const nutritionService = {

@@ -143,12 +143,12 @@ export const AthleteProfile: React.FC<{ athleteId?: string; onBack?: () => void 
                             helper="Daily movement goal"
                         />
                         <TargetShowcaseCard
-                            label={dietSummary?.hasMeals ? "Plan Calories" : "Target Calories"}
-                            value={dietSummary?.hasMeals ? dietSummary.totalCalories : (athlete?.targetCalories ?? 0)}
+                            label="Target Calories"
+                            value={athlete?.targetCalories ?? 0}
                             unit="kcal"
                             accentClass="text-neon-purple"
                             glowClass="shadow-[0_0_28px_rgba(157,0,255,0.12)]"
-                            helper={dietSummary?.hasMeals ? "Current meal total" : "Coach calorie target"}
+                            helper="Coach calorie target"
                         />
                     </div>
                 </div>

@@ -169,6 +169,7 @@ public class Athlete : BaseEntity
         DietPlanProtein = protein;
         DietPlanCarbs = carbs;
         DietPlanFats = fats;
+        TargetCalories = calories; // Auto-sync Target Calories when diet changes
         DietPlanCalculatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }

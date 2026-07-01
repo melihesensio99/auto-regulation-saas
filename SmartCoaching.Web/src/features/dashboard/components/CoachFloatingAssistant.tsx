@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Bot, Send, Sparkles, X, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 import { coachService } from '../services/coachService';
 import ReactMarkdown from 'react-markdown';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Message {
     id: string;
@@ -16,6 +17,7 @@ interface CoachFloatingAssistantProps {
 }
 
 export const CoachFloatingAssistant: React.FC<CoachFloatingAssistantProps> = ({ athleteId, athleteName, onActionReceived }) => {
+    const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
@@ -53,6 +55,12 @@ export const CoachFloatingAssistant: React.FC<CoachFloatingAssistantProps> = ({ 
             if (response.uiAction && onActionReceived) {
                 onActionReceived(response.uiAction, response.actionData);
             }
+
+            // Invalidate queries to refresh the dashboard instantly
+            queryClient.invalidateQueries({ queryKey: ['athleteProfile', athleteId] });
+            queryClient.invalidateQueries({ queryKey: ['athleteDietProgram', athleteId] });
+            queryClient.invalidateQueries({ queryKey: ['athleteWorkoutProgram', athleteId] });
+            queryClient.invalidateQueries({ queryKey: ['athleteProgress', athleteId] });
 
         } catch (error) {
             console.error('Failed to ask AI agent', error);

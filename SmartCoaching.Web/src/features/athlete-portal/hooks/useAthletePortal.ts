@@ -51,3 +51,19 @@ export const useAthleteDietProgram = () => {
         retry: false
     });
 };
+
+export const useDailyNutrition = (date: string) => {
+    return useQuery({
+        queryKey: ['dailyNutrition', date],
+        queryFn: async () => {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`http://localhost:5246/api/nutrition/daily/${date}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (!res.ok) throw new Error('Failed to fetch daily nutrition');
+            return res.json();
+        }
+    });
+};

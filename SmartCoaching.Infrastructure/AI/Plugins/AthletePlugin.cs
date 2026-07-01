@@ -111,6 +111,7 @@ public class AthletePlugin
             .Take(7)
             .Select(p => new
             {
+                p.Id,
                 p.Date,
                 p.TakenSteps,
                 p.ConsumedCalories,
@@ -123,6 +124,28 @@ public class AthletePlugin
             .ToListAsync(cancellationToken);
 
         return JsonSerializer.Serialize(logs, JsonOptions);
+    }
+
+    [KernelFunction("AddCoachFeedback")]
+    [Description("Belirli bir gelişim günlüğüne (ProgressLog) koç adına veya asistan olarak geri bildirim yazar.")]
+    public async Task<string> AddCoachFeedbackAsync(
+        [Description("Gelişim günlüğünün benzersiz kimliği (ProgressLogId)")] Guid progressLogId,
+        [Description("Sporcuya verilecek geri bildirim metni")] string feedback,
+        CancellationToken cancellationToken)
+    {
+        var coachId = _coachContext.CoachId;
+
+        var log = await _context.ProgressLogs
+            .Include(p => p.Athlete)
+            .FirstOrDefaultAsync(p => p.Id == progressLogId && p.Athlete.CoachId == coachId, cancellationToken);
+
+        if (log == null)
+            return "{\"error\": \"Progress log not found or does not belong to your athlete.\"}";
+
+        log.AddCoachFeedback(feedback);
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return "{\"status\": \"success\", \"message\": \"Feedback added successfully.\"}";
     }
 
     [KernelFunction("GetAthleteConsumedFoods")]

@@ -11,6 +11,7 @@ using SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram;
 using SmartCoaching.Application.Features.Athletes.Commands.AssignWorkoutProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetDietProgram;
 using SmartCoaching.Application.Features.Athletes.Queries.GetWorkoutProgram;
+using SmartCoaching.Application.Features.Exercises.Queries;
 
 namespace SmartCoaching.Infrastructure.AI.Plugins;
 
@@ -57,14 +58,27 @@ public class CoachProgramPlugin
     public async Task<string> UpdateDietProgramAsync(
         [Description("Sporcunun benzersiz kimliği (Guid)")] Guid athleteId,
         [Description("Genel diyet notları")] string generalDietNotes,
-        [Description("Öğünlerin listesi. Her öğün order, mealName, foods ve notes alanlarını içermelidir.")] List<DietMealDto> meals,
+        [Description("Öğünlerin listesini JSON formatında string olarak gönder. Örnek: [{\"order\": 1, \"mealName\": \"Sabah\", \"foods\": \"2 yumurta\", \"notes\": \"\"}]")] string mealsJson,
         CancellationToken cancellationToken)
     {
+        var meals = new List<DietMealDto>();
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(mealsJson))
+            {
+                meals = JsonSerializer.Deserialize<List<DietMealDto>>(mealsJson, JsonOptions) ?? new List<DietMealDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            return JsonSerializer.Serialize(new { error = "Invalid meals format. Must be a JSON array.", details = ex.Message });
+        }
+
         var command = new AssignDietProgramCommand
         {
             AthleteId = athleteId,
             GeneralDietNotes = generalDietNotes ?? string.Empty,
-            Meals = meals ?? new List<DietMealDto>()
+            Meals = meals
         };
 
         var result = await _sender.Send(command, cancellationToken);
@@ -111,15 +125,28 @@ public class CoachProgramPlugin
     }
 
     [KernelFunction("UpdateWorkoutProgram")]
-    [Description("Sporcunun antrenman programını tamamen yeniler. Egzersiz listesini dayName, exerciseName, sets, reps, restTimeInSeconds ve notes alanlarıyla gönder.")]
+    [Description("Sporcunun antrenman programını tamamen yeniler. Egzersiz listesini JSON formatında string olarak gönder.")]
     public async Task<string> UpdateWorkoutProgramAsync(
         [Description("Sporcunun benzersiz kimliği (Guid)")] Guid athleteId,
-        [Description("Egzersizlerin listesi. Her egzersiz dayName, exerciseName, sets, reps, restTimeInSeconds ve notes alanlarını içermelidir.")] List<WorkoutExerciseDto> exercises,
+        [Description("Egzersizlerin listesini JSON formatında string olarak gönder. Örnek: [{\"dayName\": \"Monday\", \"exerciseName\": \"Squat\", \"sets\": 3, \"reps\": \"10\", \"restTimeInSeconds\": 60, \"notes\": \"\", \"exerciseLibraryId\": \"uuid-here\"}]")] string exercisesJson,
         CancellationToken cancellationToken)
     {
+        var exercises = new List<WorkoutExerciseDto>();
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(exercisesJson))
+            {
+                exercises = JsonSerializer.Deserialize<List<WorkoutExerciseDto>>(exercisesJson, JsonOptions) ?? new List<WorkoutExerciseDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            return JsonSerializer.Serialize(new { error = "Invalid exercises format. Must be a JSON array.", details = ex.Message });
+        }
+
         var command = new AssignWorkoutProgramCommand(
             athleteId,
-            exercises ?? new List<WorkoutExerciseDto>());
+            exercises);
 
         var result = await _sender.Send(command, cancellationToken);
 
@@ -145,5 +172,15 @@ public class CoachProgramPlugin
             error = result.Error.Message,
             code = result.Error.Code
         }, JsonOptions);
+    }
+
+    [KernelFunction("SearchExercises")]
+    [Description("Antrenman programına egzersiz eklemeden önce, egzersizin veritabanındaki ID'sini (ExerciseLibraryId) bulmak için kullanılır. Arama kelimesi (örneğin 'Squat') alır ve eşleşen egzersizleri döndürür.")]
+    public async Task<string> SearchExercisesAsync(
+        [Description("Aranacak egzersiz adı veya kas grubu (örn. 'bench', 'curl', 'chest')")] string query,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new SearchExercisesQuery(query), cancellationToken);
+        return JsonSerializer.Serialize(result, JsonOptions);
     }
 }

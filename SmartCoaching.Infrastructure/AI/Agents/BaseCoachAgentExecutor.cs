@@ -51,13 +51,27 @@ public abstract class BaseCoachAgentExecutor : ICoachAgentExecutor
             ToolCallBehavior = GeminiToolCallBehavior.AutoInvokeKernelFunctions
         };
 
-        var result = await chatCompletionService.GetChatMessageContentAsync(
-            chatHistory,
-            executionSettings: executionSettings,
-            kernel: kernel,
-            cancellationToken: context.CancellationToken);
-
-        var finalReply = result.Content ?? "Şu an net bir cevap üretemedim. İstersen isteğini biraz daha netleştirip tekrar deneyelim.";
+        string finalReply;
+        try
+        {
+            var result = await chatCompletionService.GetChatMessageContentAsync(
+                chatHistory,
+                executionSettings: executionSettings,
+                kernel: kernel,
+                cancellationToken: context.CancellationToken);
+            
+            finalReply = result.Content ?? "Şu an net bir cevap üretemedim. İstersen isteğini biraz daha netleştirip tekrar deneyelim.";
+        }
+        catch (Microsoft.SemanticKernel.HttpOperationException ex)
+        {
+            finalReply = "Şu anda yapay zeka sunucularında (Google Gemini) yoğunluk var veya geçici bir kesinti yaşanıyor (503 Service Unavailable). Lütfen birkaç saniye bekleyip tekrar deneyin.";
+            System.Console.WriteLine($"AI API Hatası: {ex.Message}");
+        }
+        catch (System.Exception ex)
+        {
+            finalReply = "İşlem sırasında beklenmedik bir hata oluştu. Lütfen tekrar deneyin.";
+            System.Console.WriteLine($"Genel Hata: {ex.Message}");
+        }
         var lastAction = _toolResultTracker.GetRecordedActions().LastOrDefault();
 
         return new AgentResponse

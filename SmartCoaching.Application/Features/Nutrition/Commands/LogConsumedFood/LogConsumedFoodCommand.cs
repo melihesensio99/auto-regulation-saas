@@ -14,7 +14,7 @@ public record LogConsumedFoodCommand(
     decimal Protein,
     decimal Carbs,
     decimal Fats,
-    string Source,
+    string? Source = null,
     string? ImageUrl = null,
     string? ExternalId = null
 ) : IRequest<Guid>;
@@ -32,18 +32,20 @@ public class LogConsumedFoodCommandHandler : IRequestHandler<LogConsumedFoodComm
 
     public async Task<Guid> Handle(LogConsumedFoodCommand request, CancellationToken cancellationToken)
     {
-        // Yalnızca Athlete kendisi ekleyebilir (veya Coach da ekleyebilir, basitleştirmek için AthleteId = TenantId diyoruz)
         var athleteId = _currentUserService.TenantId;
+
+        var dateToUse = request.Date == default ? DateTime.UtcNow : request.Date;
+        var sourceToUse = string.IsNullOrWhiteSpace(request.Source) ? "Manuel" : request.Source;
 
         var consumedFood = ConsumedFood.Create(
             athleteId,
-            request.Date,
+            dateToUse,
             request.FoodName,
             request.Calories,
             request.Protein,
             request.Carbs,
             request.Fats,
-            request.Source,
+            sourceToUse,
             request.ImageUrl,
             request.ExternalId
         );

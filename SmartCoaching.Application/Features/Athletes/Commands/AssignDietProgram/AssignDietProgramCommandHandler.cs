@@ -26,6 +26,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
     public async Task<Result<Guid>> Handle(AssignDietProgramCommand request, CancellationToken cancellationToken)
     {
         var athlete = await _context.Athletes
+            .Include(a => a.DietMeals)
             .FirstOrDefaultAsync(a => a.Id == request.AthleteId, cancellationToken);
 
         if (athlete == null)
@@ -37,9 +38,9 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             .Select(m => new
             {
                 m.Order,
-                MealName = m.MealName.Trim(),
-                Foods = m.Foods.Trim(),
-                Notes = m.Notes.Trim()
+                MealName = m.MealName?.Trim() ?? string.Empty,
+                Foods = m.Foods?.Trim() ?? string.Empty,
+                Notes = m.Notes?.Trim() ?? string.Empty
             })
             .ToList();
 
@@ -51,9 +52,9 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             .Select(m => new
             {
                 m.Order,
-                MealName = m.MealName.Trim(),
-                Foods = m.Foods.Trim(),
-                Notes = m.Notes.Trim()
+                MealName = m.MealName != null ? m.MealName.Trim() : string.Empty,
+                Foods = m.Foods != null ? m.Foods.Trim() : string.Empty,
+                Notes = m.Notes != null ? m.Notes.Trim() : string.Empty
             })
             .ToListAsync(cancellationToken);
 
@@ -78,12 +79,7 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
             Order = m.Order
         }).ToList();
 
-        await _context.DietMeals
-            .Where(m => m.AthleteId == athlete.Id)
-            .ExecuteDeleteAsync(cancellationToken);
-
         athlete.SetDietMeals(newMeals, incomingGeneralNotes);
-        _context.DietMeals.AddRange(newMeals);
 
         await _context.SaveChangesAsync(cancellationToken);
 
