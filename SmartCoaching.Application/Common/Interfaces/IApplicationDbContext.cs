@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Domain.Entities;
+using SmartCoaching.Application.Common.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,6 +12,7 @@ public interface IApplicationDbContext
     DbSet<Athlete> Athletes { get; }
     DbSet<ProgressLog> ProgressLogs { get; }
     DbSet<DietMeal> DietMeals { get; }
+    DbSet<ConsumedFood> ConsumedFoods { get; }
     DbSet<WorkoutExercise> WorkoutExercises { get; }
     DbSet<ExerciseLibrary> ExerciseLibraries { get; }
 

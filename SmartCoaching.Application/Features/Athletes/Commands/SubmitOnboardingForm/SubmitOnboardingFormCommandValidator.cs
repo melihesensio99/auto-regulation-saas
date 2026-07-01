@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using System;
 
 namespace SmartCoaching.Application.Features.Athletes.Commands.SubmitOnboardingForm;
@@ -27,8 +27,8 @@ public class SubmitOnboardingFormCommandValidator : AbstractValidator<SubmitOnbo
             .MaximumLength(200).WithMessage("Meslek/Okul en fazla 200 karakter olabilir.");
 
         RuleFor(x => x.MainReason)
-            .Must(value => !string.IsNullOrWhiteSpace(value)).WithMessage("Ana sebep boş bırakılamaz.")
-            .MaximumLength(1000).WithMessage("Ana sebep en fazla 1000 karakter olabilir.");
+            .NotNull().WithMessage("Ana sebep boş bırakılamaz.")
+            .IsInEnum().WithMessage("Geçersiz ana sebep seçimi.");
 
         RuleFor(x => x.ShortTermGoal)
             .Must(value => !string.IsNullOrWhiteSpace(value)).WithMessage("Kısa vadeli hedef boş bırakılamaz.")

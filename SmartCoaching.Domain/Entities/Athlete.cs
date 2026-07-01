@@ -33,7 +33,7 @@ public class Athlete : BaseEntity
     public bool IsOnboardingCompleted { get; private set; }
     public string? PhoneNumber { get; private set; }
     public string? Occupation { get; private set; }
-    public string? MainReason { get; private set; }
+    public SmartCoaching.Domain.Enums.AthleteGoal? MainReason { get; private set; }
     public string? ShortTermGoal { get; private set; }
     public string? LongTermGoal { get; private set; }
     public string? Expectations { get; private set; }
@@ -89,7 +89,7 @@ public class Athlete : BaseEntity
         DateTime dateOfBirth, 
         string phoneNumber,
         string occupation,
-        string mainReason,
+        SmartCoaching.Domain.Enums.AthleteGoal? mainReason,
         string shortTermGoal,
         string longTermGoal,
         string expectations,

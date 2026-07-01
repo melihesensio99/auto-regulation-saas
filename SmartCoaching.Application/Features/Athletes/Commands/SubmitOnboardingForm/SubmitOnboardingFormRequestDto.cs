@@ -6,7 +6,7 @@ public record SubmitOnboardingFormRequestDto(
     DateTime DateOfBirth,
     string PhoneNumber,
     string Occupation,
-    string MainReason,
+    SmartCoaching.Domain.Enums.AthleteGoal? MainReason,
     string ShortTermGoal,
     string LongTermGoal,
     string Expectations,

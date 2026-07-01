@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Constants;
 using SmartCoaching.Domain.Entities;
+using System;
 
 namespace SmartCoaching.Infrastructure.Persistence;
 
@@ -19,6 +20,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Athlete> Athletes => Set<Athlete>();
     public DbSet<ProgressLog> ProgressLogs { get; set; }
     public DbSet<DietMeal> DietMeals { get; set; }
+    public DbSet<ConsumedFood> ConsumedFoods { get; set; }
     public DbSet<WorkoutExercise> WorkoutExercises { get; set; }
     public DbSet<ExerciseLibrary> ExerciseLibraries { get; set; }
 
@@ -31,7 +33,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasMany(c => c.Athletes)
             .WithOne(a => a.Coach)
             .HasForeignKey(a => a.CoachId)
-            .OnDelete(DeleteBehavior.Cascade); // Antrenör silinirse sporcuları da silinsin
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Email alanını veritabanında benzersiz (unique) yapalım
         modelBuilder.Entity<Coach>()
@@ -43,6 +45,13 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .HasMany(a => a.ProgressLogs)
             .WithOne(pl => pl.Athlete)
             .HasForeignKey(pl => pl.AthleteId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Athlete - ConsumedFood İlişkisi (1'e Çok)
+        modelBuilder.Entity<Athlete>()
+            .HasMany<ConsumedFood>()
+            .WithOne(c => c.Athlete)
+            .HasForeignKey(c => c.AthleteId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Athlete - WorkoutExercise İlişkisi (1'e Çok)
@@ -59,11 +68,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             .OnDelete(DeleteBehavior.SetNull);
 
         // MULTI-TENANCY: Global Query Filters
-        // Athlete entity has the master CoachId check.
         modelBuilder.Entity<Athlete>().HasQueryFilter(a => 
             _currentUserService.TenantId == Guid.Empty || 
             (_currentUserService.Role == Roles.Coach && a.CoachId == _currentUserService.TenantId) || 
             (_currentUserService.Role == Roles.Athlete && a.Id == _currentUserService.TenantId));
-        // Handlers already protect access by checking the Athlete first.
     }
 }

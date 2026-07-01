@@ -12,7 +12,7 @@ public record AthleteDto(
     bool IsOnboardingCompleted,
     string? PhoneNumber,
     string? Occupation,
-    string? MainReason,
+    SmartCoaching.Domain.Enums.AthleteGoal? MainReason,
     string? ShortTermGoal,
     string? LongTermGoal,
     string? Expectations,

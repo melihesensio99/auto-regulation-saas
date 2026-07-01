@@ -4,6 +4,8 @@ using SmartCoaching.Application.Common.Interfaces;
 using SmartCoaching.Domain.Common;
 using SmartCoaching.Domain.Entities;
 using System;
+using SmartCoaching.Application.Common.Events;
+using MassTransit;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +15,12 @@ namespace SmartCoaching.Application.Features.Athletes.Commands.AssignDietProgram
 public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgramCommand, Result<Guid>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public AssignDietProgramCommandHandler(IApplicationDbContext context)
+    public AssignDietProgramCommandHandler(IApplicationDbContext context, IPublishEndpoint publishEndpoint)
     {
         _context = context;
+        _publishEndpoint = publishEndpoint;
     }
 
     public async Task<Result<Guid>> Handle(AssignDietProgramCommand request, CancellationToken cancellationToken)
@@ -82,6 +86,8 @@ public class AssignDietProgramCommandHandler : IRequestHandler<AssignDietProgram
         _context.DietMeals.AddRange(newMeals);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _publishEndpoint.Publish(new DietProgramUpdatedEvent(athlete.Id), cancellationToken);
 
         return Result.Success(athlete.Id);
     }

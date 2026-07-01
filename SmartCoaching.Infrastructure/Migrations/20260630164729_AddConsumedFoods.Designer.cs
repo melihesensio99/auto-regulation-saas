@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SmartCoaching.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using SmartCoaching.Infrastructure.Persistence;
 namespace SmartCoaching.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260630164729_AddConsumedFoods")]
+    partial class AddConsumedFoods
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,8 +101,8 @@ namespace SmartCoaching.Infrastructure.Migrations
                     b.Property<string>("LongTermGoal")
                         .HasColumnType("text");
 
-                    b.Property<int?>("MainReason")
-                        .HasColumnType("integer");
+                    b.Property<string>("MainReason")
+                        .HasColumnType("text");
 
                     b.Property<bool>("MustChangePassword")
                         .HasColumnType("boolean");
