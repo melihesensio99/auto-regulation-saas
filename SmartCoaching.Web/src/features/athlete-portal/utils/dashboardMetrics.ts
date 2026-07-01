@@ -69,8 +69,8 @@ export const getDailyProgressSummary = ({
 
     const consumedCalories = activeLog?.consumedCalories ?? 0;
     const takenSteps = activeLog?.takenSteps ?? 0;
-    const calorieProgress = targetCalories > 0 ? clampPercent((consumedCalories / targetCalories) * 100) : 0;
-    const stepProgress = targetSteps > 0 ? clampPercent((takenSteps / targetSteps) * 100) : 0;
+    const rawCalorieProgress = targetCalories > 0 ? (consumedCalories / targetCalories) * 100 : 0;
+    const rawStepProgress = targetSteps > 0 ? (takenSteps / targetSteps) * 100 : 0;
     const workoutProgress = activeLog?.isWorkoutCompleted ? 100 : 0;
 
     return {
@@ -80,9 +80,9 @@ export const getDailyProgressSummary = ({
         activeLog,
         consumedCalories,
         takenSteps,
-        calorieProgress,
-        stepProgress,
+        calorieProgress: rawCalorieProgress,
+        stepProgress: rawStepProgress,
         workoutProgress,
-        dailyCompletion: Math.round((calorieProgress + stepProgress + workoutProgress) / 3),
+        dailyCompletion: Math.round((clampPercent(rawCalorieProgress) + clampPercent(rawStepProgress) + workoutProgress) / 3),
     };
 };

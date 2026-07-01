@@ -46,17 +46,17 @@ export const AthleteProgressSection = ({
     ...dailyLogProps
 }: AthleteProgressSectionProps) => {
     return (
-        <div className="card-stack">
+        <div className="card-stack space-y-6">
+            <AthleteDailyLogSection
+                {...dailyLogProps}
+            />
+
             <AthleteTrendSection
                 logs={logs}
                 targetCalories={targetCalories}
                 targetSteps={targetSteps}
                 weeklySummary={weeklySummary}
                 todayIso={todayIso}
-            />
-
-            <AthleteDailyLogSection
-                {...dailyLogProps}
             />
         </div>
     );
