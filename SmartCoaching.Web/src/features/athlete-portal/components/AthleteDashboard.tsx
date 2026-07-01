@@ -1,31 +1,52 @@
-import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { AthleteDietSection } from './AthleteDietSection';
+import { AthleteProfileSection } from './AthleteProfileSection';
+import { AthleteProgressSection } from './AthleteProgressSection';
+import { AthleteSectionSidebar, type AthleteSectionKey } from './AthleteSectionSidebar';
+import { AthleteTargetsSection } from './AthleteTargetsSection';
+import { AthleteWorkoutSection } from './AthleteWorkoutSection';
 import {
     useAthleteDietProgram,
     useAthleteProfile,
     useAthleteProgressLogs,
     useAthleteWorkoutProgram,
-    useLogProgress
+    useLogProgress,
 } from '../hooks/useAthletePortal';
-import { AthleteDailyLogSection } from './AthleteDailyLogSection';
-import { AthleteHeroSummary } from './AthleteHeroSummary';
-import { AthleteTrendSection } from './AthleteTrendSection';
-import {
-    createLastWeekDateRange,
-    getDailyProgressSummary,
-    getWeeklySummary
-} from '../utils/dashboardMetrics';
+import { createLastWeekDateRange, getDailyProgressSummary, getWeeklySummary } from '../utils/dashboardMetrics';
+
+const VALID_SECTIONS: AthleteSectionKey[] = ['profile', 'progress', 'workout', 'diet', 'targets'];
+
+const getSectionFromQuery = (value: string | null): AthleteSectionKey =>
+    VALID_SECTIONS.includes(value as AthleteSectionKey) ? (value as AthleteSectionKey) : 'profile';
+
+const renderSectionTitle = (section: AthleteSectionKey) => {
+    switch (section) {
+        case 'profile':
+            return { eyebrow: 'Profile', title: 'Profil', description: 'Temel bilgilerini ve onboarding detaylarini burada gor.' };
+        case 'progress':
+            return { eyebrow: 'Progress', title: 'Gelisim', description: 'Gunluk loglari, trend akislarini ve yeni kaydini tek yerde yonet.' };
+        case 'workout':
+            return { eyebrow: 'Workout', title: 'Antrenman', description: 'Gun bazli planini sec, hareket aciklamalarina bak ve egzersiz akisina odaklan.' };
+        case 'diet':
+            return { eyebrow: 'Diet', title: 'Beslenme', description: 'Ogünlerini, toplam makrolari ve genel beslenme notlarini net gor.' };
+        case 'targets':
+            return { eyebrow: 'Targets', title: 'Hedefler', description: 'Kalori, adim ve genel uyum barlarini tek bakista takip et.' };
+        default:
+            return { eyebrow: 'Profile', title: 'Profil', description: 'Temel bilgilerini ve onboarding detaylarini burada gor.' };
+    }
+};
 
 export const AthleteDashboard = () => {
-    const navigate = useNavigate();
-    const { data: profile, isLoading: isProfileLoading } = useAthleteProfile();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeSection = getSectionFromQuery(searchParams.get('section'));
+    const { startDate, endDate } = useMemo(() => createLastWeekDateRange(), []);
+
+    const { data: profile } = useAthleteProfile();
+    const { data: logs } = useAthleteProgressLogs(startDate, endDate);
     const { data: workoutProgram } = useAthleteWorkoutProgram();
     const { data: dietProgram } = useAthleteDietProgram();
-    const { mutate: logProgress, isPending: isLogging } = useLogProgress();
-
-    const dateRange = useMemo(createLastWeekDateRange, []);
-    const { data: progressLogs } = useAthleteProgressLogs(dateRange.startDate, dateRange.endDate);
+    const logProgress = useLogProgress();
 
     const [calories, setCalories] = useState('');
     const [steps, setSteps] = useState('');
@@ -38,23 +59,36 @@ export const AthleteDashboard = () => {
 
     const targetCalories = profile?.targetCalories ?? 0;
     const targetSteps = profile?.targetSteps ?? 0;
+    const weeklySummary = getWeeklySummary(logs);
     const dailySummary = getDailyProgressSummary({
-        logs: progressLogs,
+        logs,
         targetCalories,
         targetSteps,
     });
-    const weeklySummary = getWeeklySummary(progressLogs);
 
-    if (isProfileLoading) {
-        return (
-            <div className="empty-state">
-                <div className="loader" />
-                <p>Profil yukleniyor...</p>
-            </div>
-        );
-    }
+    const sectionMeta = renderSectionTitle(activeSection);
 
-    const resetDailyLogForm = () => {
+    const handleSectionChange = (section: AthleteSectionKey) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('section', section);
+        setSearchParams(nextParams, { replace: true });
+    };
+
+    const handleSubmitLog = async (event: FormEvent) => {
+        event.preventDefault();
+
+        await logProgress.mutateAsync({
+            date: new Date().toISOString(),
+            consumedCalories: Number(calories),
+            takenSteps: Number(steps),
+            isWorkoutCompleted: workoutCompleted,
+            weightKg: weight ? Number(weight) : null,
+            notes: notes || null,
+            frontPhotoUrl: frontPhotoUrl || null,
+            backPhotoUrl: backPhotoUrl || null,
+            sidePhotoUrl: sidePhotoUrl || null,
+        });
+
         setCalories('');
         setSteps('');
         setWeight('');
@@ -65,119 +99,89 @@ export const AthleteDashboard = () => {
         setSidePhotoUrl('');
     };
 
-    const handleLogProgress = (event: FormEvent) => {
-        event.preventDefault();
-
-        logProgress(
-            {
-                date: new Date().toISOString(),
-                consumedCalories: Number.parseInt(calories, 10) || 0,
-                takenSteps: Number.parseInt(steps, 10) || 0,
-                weightKg: weight ? Number.parseFloat(weight) : null,
-                notes,
-                isWorkoutCompleted: workoutCompleted,
-                frontPhotoUrl: frontPhotoUrl || null,
-                backPhotoUrl: backPhotoUrl || null,
-                sidePhotoUrl: sidePhotoUrl || null
-            },
-            {
-                onSuccess: () => {
-                    alert('Gunluk gelisim kaydedildi!');
-                    resetDailyLogForm();
-                }
-            }
-        );
-    };
+    const renderedSection = (() => {
+        switch (activeSection) {
+            case 'progress':
+                return (
+                    <AthleteProgressSection
+                        logs={logs}
+                        targetCalories={targetCalories}
+                        targetSteps={targetSteps}
+                        weeklySummary={weeklySummary}
+                        todayIso={dailySummary.todayIso}
+                        calories={calories}
+                        steps={steps}
+                        weight={weight}
+                        notes={notes}
+                        workoutCompleted={workoutCompleted}
+                        frontPhotoUrl={frontPhotoUrl}
+                        backPhotoUrl={backPhotoUrl}
+                        sidePhotoUrl={sidePhotoUrl}
+                        calorieProgress={dailySummary.calorieProgress}
+                        stepProgress={dailySummary.stepProgress}
+                        dailyCompletion={dailySummary.dailyCompletion}
+                        isLogging={logProgress.isPending}
+                        onSubmit={handleSubmitLog}
+                        onCaloriesChange={setCalories}
+                        onStepsChange={setSteps}
+                        onWeightChange={setWeight}
+                        onNotesChange={setNotes}
+                        onWorkoutCompletedChange={setWorkoutCompleted}
+                        onFrontPhotoUrlChange={setFrontPhotoUrl}
+                        onBackPhotoUrlChange={setBackPhotoUrl}
+                        onSidePhotoUrlChange={setSidePhotoUrl}
+                    />
+                );
+            case 'workout':
+                return <AthleteWorkoutSection exercises={workoutProgram?.exercises} />;
+            case 'diet':
+                return <AthleteDietSection program={dietProgram} />;
+            case 'targets':
+                return (
+                    <AthleteTargetsSection
+                        targetCalories={targetCalories}
+                        targetSteps={targetSteps}
+                        consumedCalories={dailySummary.consumedCalories}
+                        takenSteps={dailySummary.takenSteps}
+                        calorieProgress={dailySummary.calorieProgress}
+                        stepProgress={dailySummary.stepProgress}
+                        dailyCompletion={dailySummary.dailyCompletion}
+                    />
+                );
+            case 'profile':
+            default:
+                return <AthleteProfileSection profile={profile} />;
+        }
+    })();
 
     return (
-        <div className="card-stack athlete-dashboard" style={{ gap: 24 }}>
-            <AthleteHeroSummary
-                firstName={profile?.firstName}
-                targetCalories={targetCalories}
-                targetSteps={targetSteps}
-                consumedCalories={dailySummary.consumedCalories}
-                takenSteps={dailySummary.takenSteps}
-                calorieProgress={dailySummary.calorieProgress}
-                stepProgress={dailySummary.stepProgress}
-                dailyCompletion={dailySummary.dailyCompletion}
-                hasTodayLog={!!dailySummary.todayLog}
-                isWorkoutCompleted={!!dailySummary.activeLog?.isWorkoutCompleted}
-                activeLogDate={dailySummary.todayLog?.date ?? dailySummary.activeLog?.date ?? null}
-            />
+        <div className="grid items-start gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+            <AthleteSectionSidebar activeSection={activeSection} onSelect={handleSectionChange} />
 
-            <AthleteTrendSection
-                logs={progressLogs}
-                targetCalories={targetCalories}
-                targetSteps={targetSteps}
-                weeklySummary={weeklySummary}
-                todayIso={dailySummary.todayIso}
-            />
-
-            <div className="program-focus-grid">
-                <section className="program-focus-card surface">
-                    <div className="program-focus-card__icon">N</div>
-                    <div className="card-stack">
+            <div className="space-y-6">
+                <section className="rounded-[28px] border border-white/8 bg-[#0b111d] p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                         <div>
-                            <span className="section-label">Beslenme Programi</span>
-                            <h2 style={{ marginTop: 8, fontSize: '1.7rem' }}>Beslenme duzeni</h2>
+                            <span className="text-[11px] uppercase tracking-[0.28em] text-white/35">{sectionMeta.eyebrow}</span>
+                            <h1 className="mt-3 text-[clamp(2.2rem,3.5vw,3.8rem)] font-semibold leading-[0.95] tracking-[-0.06em] text-white">
+                                {profile?.firstName} {profile?.lastName}
+                            </h1>
+                            <p className="mt-3 max-w-3xl text-[15px] leading-7 text-white/52">{sectionMeta.description}</p>
                         </div>
-                        <p>
-                            Toplam kalori, protein, karb ve yag dengesini tek yerde gor. Gunluk hedefe gore kocun ne verdigini buradan takip et.
-                        </p>
-                        <div className="button-group">
-                            <span className="chip">{dietProgram?.meals?.length ?? 0} ogun</span>
-                            <span className="chip">Toplam {dietProgram?.totalCalories ?? 0} kcal</span>
+
+                        <div className="flex flex-wrap gap-3">
+                            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/65">
+                                {profile?.mainReason || 'Hedef tanimi yok'}
+                            </span>
+                            <span className={`rounded-full px-4 py-2 text-sm ${dailySummary.todayLog ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'}`}>
+                                {dailySummary.todayLog ? 'Bugun kayit var' : 'Bugun kayit yok'}
+                            </span>
                         </div>
-                        <button type="button" className="btn btn-primary" onClick={() => navigate('/athlete/programs?view=diet')}>
-                            Beslenmeyi ac
-                        </button>
                     </div>
                 </section>
 
-                <section className="program-focus-card surface">
-                    <div className="program-focus-card__icon program-focus-card__icon--green">W</div>
-                    <div className="card-stack">
-                        <div>
-                            <span className="section-label">Antrenman Programi</span>
-                            <h2 style={{ marginTop: 8, fontSize: '1.7rem' }}>Antrenman duzeni</h2>
-                        </div>
-                        <p>
-                            Haftalik egzersiz planini ayri bir alanda izle. Gun bazli yuk, set, tekrar ve dinlenme bilgilerini net sekilde gor.
-                        </p>
-                        <div className="button-group">
-                            <span className="chip">{workoutProgram?.exercises?.length ?? 0} egzersiz</span>
-                            <span className="chip">{workoutProgram?.exercises?.length ? 'Program var' : 'Program bekleniyor'}</span>
-                        </div>
-                        <button type="button" className="btn btn-primary" onClick={() => navigate('/athlete/programs?view=workout')}>
-                            Antrenmani ac
-                        </button>
-                    </div>
-                </section>
+                {renderedSection}
             </div>
-
-            <AthleteDailyLogSection
-                calories={calories}
-                steps={steps}
-                weight={weight}
-                notes={notes}
-                workoutCompleted={workoutCompleted}
-                frontPhotoUrl={frontPhotoUrl}
-                backPhotoUrl={backPhotoUrl}
-                sidePhotoUrl={sidePhotoUrl}
-                calorieProgress={dailySummary.calorieProgress}
-                stepProgress={dailySummary.stepProgress}
-                dailyCompletion={dailySummary.dailyCompletion}
-                isLogging={isLogging}
-                onSubmit={handleLogProgress}
-                onCaloriesChange={setCalories}
-                onStepsChange={setSteps}
-                onWeightChange={setWeight}
-                onNotesChange={setNotes}
-                onWorkoutCompletedChange={setWorkoutCompleted}
-                onFrontPhotoUrlChange={setFrontPhotoUrl}
-                onBackPhotoUrlChange={setBackPhotoUrl}
-                onSidePhotoUrlChange={setSidePhotoUrl}
-            />
         </div>
     );
 };

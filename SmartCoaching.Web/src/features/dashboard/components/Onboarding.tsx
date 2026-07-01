@@ -1,233 +1,162 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dashboardService } from '../services/dashboard.service';
+import { athleteService, type OnboardingData } from '../../athlete-portal/services/athleteService';
 
-const decodeToken = (token: string) => {
-    const payloadStr = atob(token.split('.')[1]);
-    return JSON.parse(payloadStr) as Record<string, string>;
-};
-
-export const Onboarding = () => {
+export const Onboarding: React.FC = () => {
     const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const [formData, setFormData] = useState({
-        dateOfBirth: '',
+    const [formData, setFormData] = useState<Partial<OnboardingData>>({
+        heightCm: 175,
+        startingWeightKg: 70,
+        dateOfBirth: '2000-01-01',
         phoneNumber: '',
         occupation: '',
-        mainReason: '',
+        mainReason: 1, // 1 = MuscleHypertrophy, 2 = FatLoss, 3 = StrengthGain, 4 = Endurance, 5 = GeneralFitness, 6 = Rehab
         shortTermGoal: '',
         longTermGoal: '',
         expectations: '',
-        heightCm: '',
-        startingWeightKg: '',
         trainingHistory: '',
         currentTrainingRoutine: '',
-        outsidePhysicalActivity: '',
-        hasTrackedMacros: '',
-        hasWorkedWithCoach: '',
-        hearAboutUs: '',
-        additionalNotes: ''
+        outsidePhysicalActivity: ''
     });
 
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'number' ? Number(value) : value
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsLoading(true);
         setError(null);
 
-        if (!formData.dateOfBirth || !formData.phoneNumber || !formData.shortTermGoal || !formData.heightCm || !formData.startingWeightKg) {
-            setError('Lütfen zorunlu alanları doldurun.');
-            return;
-        }
-
-        const h = parseFloat(formData.heightCm);
-        const w = parseFloat(formData.startingWeightKg);
-
-        if (h < 100 || h > 250) {
-            setError('Lütfen geçerli bir boy giriniz (100-250 cm).');
-            return;
-        }
-        if (w < 30 || w > 300) {
-            setError('Lütfen geçerli bir kilo giriniz (30-300 kg).');
-            return;
-        }
-
         try {
-            setIsLoading(true);
-            const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-
-            const payloadStr = atob(token.split('.')[1]);
-            const tokenPayload = JSON.parse(payloadStr);
-            const athleteId = tokenPayload.sub;
-
-            const refreshedToken = await dashboardService.submitOnboardingForm(athleteId, {
-                ...formData,
-                dateOfBirth: new Date(formData.dateOfBirth).toISOString(),
-                heightCm: h,
-                startingWeightKg: w
-            });
-
-            alert('Kaydın tamamlandı! Koçun bilgilerini inceleyecek.');
-            localStorage.setItem('token', refreshedToken);
-
-            const refreshedPayload = decodeToken(refreshedToken);
-            if (refreshedPayload.mustChangePassword === 'True') {
-                navigate('/change-password', { replace: true });
-            } else {
-                navigate('/athlete/dashboard', { replace: true });
-            }
+            await athleteService.submitOnboarding(formData as OnboardingData);
+            // Refresh token logic or redirect
+            navigate('/athlete/dashboard');
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Form gönderilirken bir hata oluştu.');
+            setError(err.response?.data?.message || 'Onboarding failed. Please check all fields.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="page-shell auth-shell" style={{ alignItems: 'stretch' }}>
-            <div className="auth-grid" style={{ width: 'min(1240px, 100%)' }}>
-                <section className="auth-visual surface">
-                    <span className="kicker">Onboarding</span>
-                    <div className="card-stack" style={{ marginTop: 18 }}>
-                        <h1 className="hero-title">Seni ve hedefini tanıyalım.</h1>
-                        <p className="hero-copy">
-                            Buradaki bilgiler, koçunun sana daha net program yazmasına yardımcı olur.
-                        </p>
+        <div className="min-h-screen bg-dark-bg text-white p-8 overflow-y-auto selection:bg-neon-cyan/30 relative">
+            {/* Background Glow */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-cyan/20 blur-[120px] rounded-full pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-purple/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div className="max-w-3xl mx-auto glass-panel p-8 md:p-12 relative z-10">
+                <div className="text-center mb-10">
+                    <h1 className="text-4xl font-bold glow-text mb-4">Welcome to SmartCoaching!</h1>
+                    <p className="text-gray-400 text-lg">Let's get to know you so your coach can create the perfect program.</p>
+                </div>
+
+                {error && (
+                    <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    
+                    {/* Basic Info */}
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold border-b border-white/10 pb-2 text-neon-cyan">1. Basic Information</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Height (cm)</label>
+                                <input type="number" name="heightCm" value={formData.heightCm} onChange={handleChange} required className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-cyan transition-all outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Weight (kg)</label>
+                                <input type="number" name="startingWeightKg" value={formData.startingWeightKg} onChange={handleChange} required className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-cyan transition-all outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Date of Birth</label>
+                                <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} required className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-cyan transition-all outline-none" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Phone Number</label>
+                                <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} required className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-cyan transition-all outline-none" placeholder="+1234567890" />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Occupation / School</label>
+                                <input type="text" name="occupation" value={formData.occupation} onChange={handleChange} required className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-cyan transition-all outline-none" placeholder="e.g. Software Engineer, Student" />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="card-stack" style={{ marginTop: 24 }}>
-                        <div className="auth-feature">
-                            <h4>Kısa vadeli hedef</h4>
-                            <p>Önümüzdeki birkaç haftada neyi değiştirmek istediğini yaz.</p>
-                        </div>
-                        <div className="auth-feature">
-                            <h4>Geçmiş ve rutin</h4>
-                            <p>Eski antrenman alışkanlıklarını ve mevcut düzenini anlat.</p>
-                        </div>
-                        <div className="auth-feature">
-                            <h4>Notlar</h4>
-                            <p>Sakatlık, sağlık durumu ve özel dikkat isteyen noktaları ekle.</p>
-                        </div>
-                    </div>
-                </section>
-
-                <section className="auth-panel surface">
-                    <div className="card-stack">
+                    {/* Goals & Expectations */}
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold border-b border-white/10 pb-2 text-neon-purple">2. Goals & Expectations</h2>
+                        
                         <div>
-                            <span className="eyebrow">Profile setup</span>
-                            <h2 style={{ marginTop: 10, fontSize: '2rem' }}>Başvuru formu</h2>
-                            <p style={{ marginTop: 8 }}>Seni doğru analiz etmek için temel bilgileri doldur.</p>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Main Goal</label>
+                            <select name="mainReason" value={formData.mainReason} onChange={handleChange} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-purple transition-all outline-none">
+                                <option value={1}>Muscle Gain (Hypertrophy)</option>
+                                <option value={2}>Fat Loss / Weight Loss</option>
+                                <option value={3}>Strength Gain</option>
+                                <option value={4}>Endurance / Conditioning</option>
+                                <option value={5}>General Fitness & Health</option>
+                                <option value={6}>Rehabilitation / Recovery</option>
+                            </select>
                         </div>
 
-                        {error && <div className="chip chip--danger" style={{ justifyContent: 'flex-start' }}>{error}</div>}
-
-                        <form onSubmit={handleSubmit} className="card-stack">
-                            <div className="split-grid">
-                                <div className="field">
-                                    <label className="field-label">Doğum tarihi *</label>
-                                    <input className="field-input" type="date" name="dateOfBirth" required value={formData.dateOfBirth} onChange={handleChange} />
-                                </div>
-                                <div className="field">
-                                    <label className="field-label">Telefon numarası *</label>
-                                    <input className="field-input" type="tel" name="phoneNumber" required value={formData.phoneNumber} onChange={handleChange} placeholder="+90 5..." />
-                                </div>
-                                <div className="field">
-                                    <label className="field-label">Boy (cm) *</label>
-                                    <input className="field-input" type="number" name="heightCm" required min="100" max="250" value={formData.heightCm} onChange={handleChange} placeholder="180" />
-                                </div>
-                                <div className="field">
-                                    <label className="field-label">Kilo (kg) *</label>
-                                    <input className="field-input" type="number" name="startingWeightKg" step="0.1" required min="30" max="300" value={formData.startingWeightKg} onChange={handleChange} placeholder="75.5" />
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Short Term Goal (1-3 months)</label>
+                                <textarea name="shortTermGoal" value={formData.shortTermGoal} onChange={handleChange} required rows={3} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-purple transition-all outline-none" placeholder="e.g. Lose 5kg or bench 100kg" />
                             </div>
-
-                            <div className="field">
-                                <label className="field-label">Meslek / okul *</label>
-                                <input className="field-input" type="text" name="occupation" required value={formData.occupation} onChange={handleChange} placeholder="Günlük yaşamında ne yapıyorsun?" />
+                            <div>
+                                <label className="block text-sm font-medium text-gray-300 mb-2">Long Term Goal (1 year+)</label>
+                                <textarea name="longTermGoal" value={formData.longTermGoal} onChange={handleChange} required rows={3} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-purple transition-all outline-none" placeholder="e.g. Compete in powerlifting or get visible abs" />
                             </div>
+                        </div>
 
-                            <div className="field">
-                                <label className="field-label">Koçluk almak isteme sebebi</label>
-                                <textarea className="field-textarea" name="mainReason" value={formData.mainReason} onChange={handleChange} />
-                            </div>
-
-                            <div className="split-grid">
-                                <div className="field">
-                                    <label className="field-label">Kısa vadeli hedef *</label>
-                                    <textarea className="field-textarea" name="shortTermGoal" required value={formData.shortTermGoal} onChange={handleChange} />
-                                </div>
-                                <div className="field">
-                                    <label className="field-label">Uzun vadeli hedef *</label>
-                                    <textarea className="field-textarea" name="longTermGoal" required value={formData.longTermGoal} onChange={handleChange} />
-                                </div>
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Beklentilerin *</label>
-                                <textarea className="field-textarea" name="expectations" required value={formData.expectations} onChange={handleChange} />
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Antrenman geçmişi *</label>
-                                <textarea className="field-textarea" name="trainingHistory" required value={formData.trainingHistory} onChange={handleChange} placeholder="Ne zamandır spor yapıyorsun?" />
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Şu anki düzenin *</label>
-                                <textarea className="field-textarea" name="currentTrainingRoutine" required value={formData.currentTrainingRoutine} onChange={handleChange} placeholder="Haftada kaç gün, hangi tarz çalışma?" />
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Antrenman dışı aktivite *</label>
-                                <textarea className="field-textarea" name="outsidePhysicalActivity" required value={formData.outsidePhysicalActivity} onChange={handleChange} placeholder="Adım sayın, işin, günlük hareketliliğin..." />
-                            </div>
-
-                            <div className="split-grid">
-                                <div className="field">
-                                    <label className="field-label">Makro takibi yaptın mı? *</label>
-                                    <select name="hasTrackedMacros" required value={formData.hasTrackedMacros} onChange={handleChange}>
-                                        <option value="">Seçiniz...</option>
-                                        <option value="Evet, aktif olarak yapıyorum">Evet, aktif olarak yapıyorum</option>
-                                        <option value="Evet, eskiden yaptım">Evet, eskiden yaptım</option>
-                                        <option value="Hayır, yapmadım">Hayır, yapmadım</option>
-                                    </select>
-                                </div>
-                                <div className="field">
-                                    <label className="field-label">Koçla çalıştın mı? *</label>
-                                    <select name="hasWorkedWithCoach" required value={formData.hasWorkedWithCoach} onChange={handleChange}>
-                                        <option value="">Seçiniz...</option>
-                                        <option value="Evet">Evet</option>
-                                        <option value="Hayır">Hayır</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Beni nereden buldun? *</label>
-                                <input className="field-input" type="text" name="hearAboutUs" required value={formData.hearAboutUs} onChange={handleChange} placeholder="Instagram, referans, YouTube..." />
-                            </div>
-
-                            <div className="field">
-                                <label className="field-label">Ek notlar</label>
-                                <textarea className="field-textarea" name="additionalNotes" value={formData.additionalNotes} onChange={handleChange} placeholder="Sağlık problemi, sakatlık vb." />
-                            </div>
-
-                            <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                                {isLoading ? 'Gönderiliyor...' : 'Formu tamamla'}
-                            </button>
-                        </form>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">What do you expect from your coach?</label>
+                            <textarea name="expectations" value={formData.expectations} onChange={handleChange} required rows={2} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-neon-purple transition-all outline-none" placeholder="Communication, strict diet, flexibility..." />
+                        </div>
                     </div>
-                </section>
+
+                    {/* Fitness Background */}
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold border-b border-white/10 pb-2 text-yellow-400">3. Fitness Background</h2>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Training History</label>
+                            <textarea name="trainingHistory" value={formData.trainingHistory} onChange={handleChange} required rows={3} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-yellow-400 transition-all outline-none" placeholder="How long have you been lifting? Any past sports?" />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Current Training Routine</label>
+                            <textarea name="currentTrainingRoutine" value={formData.currentTrainingRoutine} onChange={handleChange} required rows={3} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-yellow-400 transition-all outline-none" placeholder="What are you currently doing? e.g. 3 days push/pull/legs" />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Outside Physical Activity</label>
+                            <textarea name="outsidePhysicalActivity" value={formData.outsidePhysicalActivity} onChange={handleChange} required rows={2} className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:border-yellow-400 transition-all outline-none" placeholder="e.g. I walk 10k steps a day, play soccer on weekends" />
+                        </div>
+                    </div>
+
+                    <div className="pt-8">
+                        <button 
+                            type="submit" 
+                            disabled={isLoading}
+                            className="w-full glow-btn-cyan py-4 text-lg font-bold flex justify-center items-center"
+                        >
+                            {isLoading ? 'Submitting...' : 'Complete Profile & Go to Dashboard'}
+                        </button>
+                    </div>
+
+                </form>
             </div>
         </div>
     );

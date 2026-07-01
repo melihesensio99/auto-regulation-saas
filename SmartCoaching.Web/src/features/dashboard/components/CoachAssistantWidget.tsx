@@ -1,238 +1,94 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { dashboardService } from '../services/dashboard.service';
+import React from 'react';
+import { Bot, Send, Sparkles, FileText, Activity } from 'lucide-react';
 
-type ChatRole = 'assistant' | 'user';
-
-interface CoachAssistantWidgetProps {
-    contextAthleteId?: string | null;
-    contextAthleteName?: string | null;
-}
-
-interface ChatMessage {
-    id: string;
-    role: ChatRole;
-    text: string;
-    meta?: string | null;
-}
-
-const quickPrompts = [
-    'Bugun dikkat gerektiren sporculari ozetle.',
-    'Seçili sporcunun son gelişim kaydını yorumla.',
-    'Seçili sporcunun hedef kalorisini 2200 yap.',
-    'Bu haftaki aktif sporcuları çıkar.'
-];
-
-const initialMessages: ChatMessage[] = [
-    {
-        id: 'assistant-welcome',
-        role: 'assistant',
-        text: 'Merhaba. Sporcu verilerini hızlıca özetleyebilirim, eksikleri çıkarabilirim veya hedef güncellemelerini yapabilirim.',
-        meta: 'Hazır'
-    }
-];
-
-export const CoachAssistantWidget = ({ contextAthleteId, contextAthleteName }: CoachAssistantWidgetProps) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-    const [draft, setDraft] = useState('');
-    const [isSending, setIsSending] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-    const hasContext = Boolean(contextAthleteId && contextAthleteName);
-    const contextLabel = hasContext ? `${contextAthleteName}` : 'Takım geneli';
-
-    const canSend = draft.trim().length > 0 && !isSending;
-
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages, isOpen, isSending]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-
-        setMessages(prev => {
-            const baseMessages = prev.filter(message => message.id !== 'context-note');
-            if (!hasContext) {
-                return baseMessages;
-            }
-
-            return [
-                {
-                    id: 'context-note',
-                    role: 'assistant',
-                    text: `${contextAthleteName} için bağlam aktif. Bu alandaki komutlar doğrudan bu sporcuya uygulanacak.`,
-                    meta: 'Bağlam'
-                },
-                ...baseMessages
-            ];
-        });
-    }, [contextAthleteName, hasContext, isOpen]);
-
-    const badgeText = useMemo(() => {
-        if (isSending) return 'Yanıt hazırlanıyor';
-        if (error) return 'Bağlantı sorunu';
-        return 'Canlı';
-    }, [error, isSending]);
-
-    const sendMessage = async (messageText: string) => {
-        const trimmed = messageText.trim();
-        if (!trimmed || isSending) return;
-
-        setError(null);
-        setIsSending(true);
-        setMessages(prev => [
-            ...prev,
-            {
-                id: crypto.randomUUID(),
-                role: 'user',
-                text: trimmed
-            }
-        ]);
-        setDraft('');
-
-        try {
-            const response = await dashboardService.sendCoachAssistantMessage({
-                message: trimmed,
-                contextAthleteId: contextAthleteId ?? null,
-                contextAthleteName: contextAthleteName ?? null
-            });
-
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: crypto.randomUUID(),
-                    role: 'assistant',
-                    text: response.textReply || 'Bir yanıt üretilmedi.',
-                    meta: response.uiAction ? response.uiAction.replaceAll('_', ' ') : null
-                }
-            ]);
-        } catch {
-            setError('Asistan bağlantısı kurulamadı.');
-            setMessages(prev => [
-                ...prev,
-                {
-                    id: crypto.randomUUID(),
-                    role: 'assistant',
-                    text: 'Şu anda asistana ulaşılamıyor. Lütfen backend servisinin çalıştığını kontrol et.',
-                    meta: 'Hata'
-                }
-            ]);
-        } finally {
-            setIsSending(false);
-        }
-    };
-
+export const CoachAssistantWidget: React.FC = () => {
     return (
-        <div className={`coach-assistant ${isOpen ? 'coach-assistant--open' : ''}`}>
-            {!isOpen ? (
-                <button
-                    type="button"
-                    className="coach-assistant__launcher"
-                    onClick={() => setIsOpen(true)}
-                >
-                    <span className="coach-assistant__launcher-mark">AI</span>
-                    <span className="coach-assistant__launcher-copy">
-                        <strong>Koç Asistanı</strong>
-                        <span>Sohbet penceresini aç</span>
-                    </span>
-                </button>
-            ) : (
-                <section className="coach-assistant__panel surface animate-scale-in" aria-label="Koç asistanı sohbet penceresi">
-                    <header className="coach-assistant__header">
-                        <div className="coach-assistant__brand">
-                            <div className="coach-assistant__avatar">AI</div>
-                            <div>
-                                <span className="coach-assistant__eyebrow">Coach assistant</span>
-                                <strong>SmartCoaching</strong>
-                            </div>
-                        </div>
+        <div className="h-[calc(100vh-8rem)] flex gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Chat History Sidebar */}
+            <div className="w-80 glass-panel flex flex-col hidden lg:flex">
+                <div className="p-6 border-b border-white/10">
+                    <h3 className="text-lg font-bold">Chat History</h3>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {[
+                        'Summarize Alex\'s progress',
+                        'Diet adjustments for bulk',
+                        'Suggest leg day variations'
+                    ].map((title, i) => (
+                        <button key={i} className="w-full text-left p-3 rounded-xl hover:bg-white/5 text-gray-300 text-sm transition-colors border border-transparent hover:border-white/10 truncate">
+                            {title}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-                        <div className="coach-assistant__header-actions">
-                            <span className={`chip ${error ? 'chip--warning' : 'chip--success'}`}>{badgeText}</span>
-                            <button type="button" className="btn btn-secondary coach-assistant__close" onClick={() => setIsOpen(false)}>
-                                Kapat
-                            </button>
-                        </div>
-                    </header>
+            {/* Main Chat Area */}
+            <div className="flex-1 glass-panel flex flex-col relative overflow-hidden">
+                {/* Decorative background blur */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-neon-purple/5 rounded-full blur-[100px] pointer-events-none"></div>
 
-                    <div className="coach-assistant__body">
-                        <div className="coach-assistant__context">
-                            <span className="coach-assistant__context-label">Aktif bağlam</span>
-                            <strong>{contextLabel}</strong>
-                            <p>
-                                {hasContext
-                                    ? 'Bu sporcu seçiliyken yapılan komutlar doğrudan onun üzerinde çalışır.'
-                                    : 'Takım bazlı genel komutlar için bu alan açık.'}
-                            </p>
-                        </div>
+                <div className="p-6 border-b border-white/10 flex items-center gap-3 bg-black/20 z-10">
+                    <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center border border-neon-purple/50 shadow-[0_0_15px_rgba(138,43,226,0.3)]">
+                        <Bot className="w-5 h-5 text-neon-purple" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold glow-text">AI Coach Assistant</h2>
+                        <p className="text-xs text-gray-400">Powered by Mistral & Gemini</p>
+                    </div>
+                </div>
 
-                        <div className="coach-assistant__messages">
-                            {messages.map(message => (
-                                <article
-                                    key={message.id}
-                                    className={`coach-assistant__message coach-assistant__message--${message.role}`}
-                                >
-                                    {message.meta && <span className="coach-assistant__meta">{message.meta}</span>}
-                                    <p>{message.text}</p>
-                                </article>
-                            ))}
-                            {isSending && (
-                                <article className="coach-assistant__message coach-assistant__message--assistant">
-                                    <span className="coach-assistant__meta">Yazıyor</span>
-                                    <p>Koç verilerini kontrol ediyorum...</p>
-                                </article>
-                            )}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        <div className="coach-assistant__quick-actions">
-                            {quickPrompts.map(prompt => (
-                                <button
-                                    key={prompt}
-                                    type="button"
-                                    className="coach-assistant__quick-action"
-                                    onClick={() => sendMessage(prompt)}
-                                    disabled={isSending}
-                                >
-                                    {prompt}
-                                </button>
-                            ))}
+                <div className="flex-1 p-6 overflow-y-auto z-10 space-y-6">
+                    {/* User Message */}
+                    <div className="flex justify-end">
+                        <div className="max-w-[70%] bg-neon-cyan/10 border border-neon-cyan/30 text-white rounded-2xl rounded-tr-none p-4 shadow-[0_4px_20px_rgba(0,240,255,0.1)]">
+                            <p>Can you summarize the progress of all my active athletes this week?</p>
                         </div>
                     </div>
-
-                    <footer className="coach-assistant__composer">
-                        <textarea
-                            className="coach-assistant__input"
-                            placeholder="Koçuna bir şey sor..."
-                            value={draft}
-                            onChange={(e) => setDraft(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    void sendMessage(draft);
-                                }
-                            }}
-                            rows={3}
-                        />
-
-                        <div className="coach-assistant__composer-actions">
-                            <div className="caption">
-                                <span>Enter gönderir, Shift+Enter satır atlar.</span>
-                                {error && <span style={{ color: 'var(--warning-color)' }}> {error}</span>}
+                    
+                    {/* AI Message */}
+                    <div className="flex justify-start">
+                        <div className="max-w-[80%] glass-panel rounded-2xl rounded-tl-none p-5 relative">
+                            <div className="absolute -left-3 -top-3 w-8 h-8 bg-dark-bg rounded-full flex items-center justify-center">
+                                <Sparkles className="w-4 h-4 text-neon-purple" />
                             </div>
-                            <button
-                                type="button"
-                                className="btn btn-primary coach-assistant__send"
-                                onClick={() => void sendMessage(draft)}
-                                disabled={!canSend}
-                            >
-                                Gönder
-                            </button>
+                            <p className="text-gray-200 leading-relaxed">
+                                Here is a quick summary of your active athletes:
+                                <br/><br/>
+                                <strong>1. Alex Mitchell:</strong> Excellent adherence (95%). Weight is tracking perfectly towards the hypertrophy goal. AI suggests increasing volume on lateral delts.<br/>
+                                <strong>2. Sarah Jones:</strong> Missed 2 workouts this week due to stress. You might want to check in on her recovery.<br/>
+                                <strong>3. David Chen:</strong> Hitting macro targets consistently. Lost 1.2kg this week.
+                            </p>
                         </div>
-                    </footer>
-                </section>
-            )}
+                    </div>
+                </div>
+
+                {/* Prompt Suggestions & Input */}
+                <div className="p-6 bg-black/20 z-10 border-t border-white/5">
+                    <div className="flex gap-3 mb-4 overflow-x-auto pb-2">
+                        {[
+                            { label: 'Summarize Check-ins', icon: FileText },
+                            { label: 'Analyze Progress Logs', icon: Activity },
+                            { label: 'Optimize Diets', icon: Sparkles }
+                        ].map((btn, i) => (
+                            <button key={i} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 hover:border-neon-cyan/50 hover:bg-neon-cyan/10 text-sm text-gray-300 transition-all">
+                                <btn.icon className="w-4 h-4" />
+                                {btn.label}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    <div className="relative">
+                        <input 
+                            type="text" 
+                            placeholder="Ask the AI Assistant anything about your athletes or programs..." 
+                            className="w-full bg-black/40 border border-white/20 rounded-xl py-4 pl-6 pr-14 text-white placeholder-gray-500 focus:outline-none focus:border-neon-purple focus:ring-1 focus:ring-neon-purple shadow-[0_0_15px_rgba(138,43,226,0.1)] transition-all"
+                        />
+                        <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-neon-purple text-white hover:bg-neon-purple/80 hover:shadow-[0_0_15px_rgba(138,43,226,0.5)] transition-all">
+                            <Send className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

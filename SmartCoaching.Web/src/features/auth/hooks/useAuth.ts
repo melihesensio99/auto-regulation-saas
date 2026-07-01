@@ -2,23 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import type { LoginRequest } from '../types';
-import { decodeToken, getCurrentUserRole } from '@/shared/auth/token';
-
-const getAthleteRedirectPath = (token: string) => {
-    const payload = decodeToken(token);
-    const mustChangePassword = payload.mustChangePassword;
-    const isOnboardingCompleted = payload.isOnboardingCompleted;
-
-    if (mustChangePassword === 'True') {
-        return '/change-password';
-    }
-
-    if (isOnboardingCompleted === 'False') {
-        return '/onboarding';
-    }
-
-    return '/athlete/dashboard';
-};
+import { setStoredToken, getCurrentUserRole } from '@/shared/auth/token';
+import { getAthleteRedirectPath } from '@/features/auth/utils/authRedirect';
 
 export const useAuth = () => {
     const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +16,7 @@ export const useAuth = () => {
 
         try {
             const response = await authService.login(credentials);
-            localStorage.setItem('token', response.token);
+            setStoredToken(response.token);
 
             try {
                 const role = getCurrentUserRole();

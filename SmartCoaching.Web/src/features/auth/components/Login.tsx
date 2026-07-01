@@ -1,20 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-
-const featureItems = [
-    {
-        title: 'Günlük koç görünümü',
-        description: 'Sporcuların, programların ve haftalık trendlerin tek ekranda.'
-    },
-    {
-        title: 'Kaynaklı kararlar',
-        description: 'Program ve öneriler, veri + spor bilimi temelli ilerler.'
-    },
-    {
-        title: 'Hızlı aksiyon',
-        description: 'Yeni sporcu, onboarding ve progress kayıtlarına tek akıştan ulaş.'
-    }
-];
+import { Activity, Dumbbell, Zap } from 'lucide-react';
 
 export const Login = () => {
     const [email, setEmail] = useState('');
@@ -28,120 +14,107 @@ export const Login = () => {
     };
 
     return (
-        <div className="auth-shell page-shell">
-            <div className="auth-grid" style={{ width: 'min(1240px, 100%)' }}>
-                <section className="auth-visual surface">
-                    <div className="card-stack">
-                        <span className="kicker">SmartCoaching OS</span>
-                        <div>
-                            <h1 className="hero-title">Sporcu takibini tek akışa toplayan çalışma alanı.</h1>
-                            <p className="hero-copy" style={{ marginTop: 16 }}>
-                                Koç ve sporcu tarafında aynı dili konuşan, veri odaklı ve temiz bir deneyim.
-                            </p>
+        <div className="min-h-screen bg-dark-bg text-white flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background effects */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-neon-cyan/20 blur-[120px] rounded-full pointer-events-none"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-neon-purple/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+            <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
+                
+                {/* Left Side: Branding */}
+                <div className="flex flex-col justify-center space-y-8 p-8 hidden md:flex">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-neon-cyan/20 border border-neon-cyan flex items-center justify-center">
+                            <Activity className="w-6 h-6 text-neon-cyan" />
                         </div>
+                        <h1 className="text-3xl font-bold tracking-wider glow-text">SMARTCOACH</h1>
+                    </div>
+                    
+                    <div>
+                        <h2 className="text-4xl font-bold leading-tight mb-4">
+                            Premium Coaching <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan to-neon-purple">Re-imagined.</span>
+                        </h2>
+                        <p className="text-gray-400 text-lg">
+                            Elevate your fitness business with AI-powered nutrition tracking, dynamic workouts, and seamless communication.
+                        </p>
                     </div>
 
-                    <div className="auth-metrics" style={{ marginTop: 24 }}>
-                        <div className="metric-card">
-                            <span className="metric-card__label">Takım takibi</span>
-                            <span className="metric-card__value">Live</span>
-                            <div className="metric-card__hint">Günlük aktif sporcu görünümü</div>
+                    <div className="space-y-4 pt-8 border-t border-white/10">
+                        <div className="flex items-center gap-4 text-gray-300">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10"><Dumbbell className="w-5 h-5 text-neon-purple" /></div>
+                            <span>AI-generated Hypertrophy Programs</span>
                         </div>
-                        <div className="metric-card">
-                            <span className="metric-card__label">Planlar</span>
-                            <span className="metric-card__value">RAG</span>
-                            <div className="metric-card__hint">Kaynaklı bilgi akışı için hazır</div>
-                        </div>
-                        <div className="metric-card">
-                            <span className="metric-card__label">Odak</span>
-                            <span className="metric-card__value">Daily</span>
-                            <div className="metric-card__hint">Günlük takip ve karar destek</div>
+                        <div className="flex items-center gap-4 text-gray-300">
+                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10"><Zap className="w-5 h-5 text-neon-cyan" /></div>
+                            <span>Mistral Pixtral Calorie Scanning</span>
                         </div>
                     </div>
+                </div>
 
-                    <div className="card-stack" style={{ marginTop: 8 }}>
-                        {featureItems.map(item => (
-                            <article key={item.title} className="auth-feature">
-                                <h4>{item.title}</h4>
-                                <p>{item.description}</p>
-                            </article>
-                        ))}
+                {/* Right Side: Login Form */}
+                <div className="glass-panel p-8 md:p-12 w-full max-w-md mx-auto">
+                    <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
+                    <p className="text-gray-400 mb-8">Sign in to access your dashboard.</p>
+
+                    <div className="flex gap-2 mb-8 bg-black/40 p-1 rounded-xl border border-white/10">
+                        <button
+                            type="button"
+                            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${role === 'coach' ? 'bg-white/10 text-white shadow-md border border-white/5' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setRole('coach')}
+                        >
+                            Coach
+                        </button>
+                        <button
+                            type="button"
+                            className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${role === 'athlete' ? 'bg-white/10 text-white shadow-md border border-white/5' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => setRole('athlete')}
+                        >
+                            Athlete
+                        </button>
                     </div>
-                </section>
 
-                <section className="auth-panel surface">
-                    <div className="card-stack">
-                        <div>
-                            <span className="eyebrow">Welcome back</span>
-                            <h2 style={{ marginTop: 12, fontSize: '2rem' }}>Hesabına giriş yap</h2>
-                            <p style={{ marginTop: 8 }}>
-                                Koç ya da sporcu olarak devam et. Sistem seni doğru alana yönlendirecek.
-                            </p>
-                        </div>
-
-                        <div className="tab-bar" role="tablist" aria-label="Giriş tipi">
-                            <button
-                                type="button"
-                                className={`tab-btn ${role === 'coach' ? 'active' : ''}`}
-                                onClick={() => setRole('coach')}
-                            >
-                                Koç
-                            </button>
-                            <button
-                                type="button"
-                                className={`tab-btn ${role === 'athlete' ? 'active' : ''}`}
-                                onClick={() => setRole('athlete')}
-                            >
-                                Sporcu
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="card-stack">
-                            {error && (
-                                <div className="chip chip--danger" style={{ width: '100%', justifyContent: 'flex-start' }}>
-                                    {error}
-                                </div>
-                            )}
-
-                            <div className="field">
-                                <label className="field-label">E-posta adresi</label>
-                                <input
-                                    className="field-input"
-                                    type="email"
-                                    required
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    placeholder="ornek@mail.com"
-                                />
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400 text-sm">
+                                {error}
                             </div>
+                        )}
 
-                            <div className="field">
-                                <label className="field-label">Şifre</label>
-                                <input
-                                    className="field-input"
-                                    type="password"
-                                    required
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="••••••••"
-                                />
-                            </div>
-
-                            <button type="submit" className="btn btn-primary" disabled={isLoading}>
-                                {isLoading ? 'Giriş hazırlanıyor...' : 'Giriş yap'}
-                            </button>
-                        </form>
-
-                        <div className="soft-divider" />
-
-                        <div className="card-stack" style={{ gap: 8 }}>
-                            <div className="caption">Örnek akış</div>
-                            <p>
-                                Koç hesabı ile takım paneline, sporcu hesabı ile kişisel takip alanına geçersin.
-                            </p>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                            <input
+                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-all"
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="you@example.com"
+                            />
                         </div>
-                    </div>
-                </section>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                            <input
+                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white placeholder-gray-600 focus:outline-none focus:border-neon-cyan focus:ring-1 focus:ring-neon-cyan transition-all"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </div>
+
+                        <button 
+                            type="submit" 
+                            disabled={isLoading}
+                            className="w-full glow-btn-cyan py-3.5 flex justify-center mt-4"
+                        >
+                            {isLoading ? 'Authenticating...' : 'Sign In'}
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
     );

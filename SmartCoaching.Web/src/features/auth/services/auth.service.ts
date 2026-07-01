@@ -1,4 +1,5 @@
 import api from '@/shared/services/api';
+import { clearStoredToken } from '@/shared/auth/token';
 import type { ChangePasswordRequest, LoginRequest, LoginResponse } from '../types';
 
 export const authService = {
@@ -21,7 +22,7 @@ export const authService = {
     },
 
     logout: () => {
-        localStorage.removeItem('token');
+        clearStoredToken();
         window.location.href = '/login';
     }
 };

@@ -1,52 +1,41 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
+import { clearStoredToken } from '@/shared/auth/token';
 
 export const AthleteLayout = () => {
     const navigate = useNavigate();
-    const location = useLocation();
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        clearStoredToken();
         navigate('/login');
     };
 
     return (
-        <div className="page-shell page-shell--athlete">
-            <header className="athlete-header surface">
-                <div className="athlete-header__brand brand-logo" style={{ cursor: 'pointer' }} onClick={() => navigate('/athlete/dashboard')}>
-                    <div className="brand-mark">SC</div>
-                    <div>
-                        <div className="brand-text">SmartCoaching</div>
-                        <div className="caption">Athlete space</div>
+        <div className="min-h-screen bg-[linear-gradient(135deg,#0b101a_0%,#071824_100%)] text-white">
+            <header className="sticky top-0 z-20 border-b border-white/6 bg-[#08131f]/92 px-8 py-6 backdrop-blur-xl">
+                <div className="mx-auto flex w-full max-w-[1600px] justify-end">
+                    <div className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-black/15 px-4 py-3">
+                        <div className="grid h-10 w-10 place-items-center rounded-2xl bg-[#6a58b5] text-sm font-semibold text-white">
+                            AT
+                        </div>
+                        <div className="min-w-[170px]">
+                            <p className="text-[15px] font-medium text-white">Athlete Workspace</p>
+                            <p className="mt-0.5 text-sm text-white/42">Sporcu</p>
+                        </div>
+                        <button
+                            onClick={handleLogout}
+                            className="inline-flex items-center gap-2 rounded-2xl border border-white/10 px-4 py-2 text-sm text-white/65 transition hover:border-white/20 hover:text-white"
+                            title="Logout"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            Cikis yap
+                        </button>
                     </div>
-                </div>
-
-                <nav className="navbar-center">
-                    <button
-                        type="button"
-                        className={`tab-btn ${location.pathname === '/athlete/dashboard' ? 'active' : ''}`}
-                        onClick={() => navigate('/athlete/dashboard')}
-                    >
-                        Takip
-                    </button>
-                    <button
-                        type="button"
-                        className={`tab-btn ${location.pathname === '/athlete/programs' ? 'active' : ''}`}
-                        onClick={() => navigate('/athlete/programs')}
-                    >
-                        Programlarım
-                    </button>
-                </nav>
-
-                <div className="athlete-header__actions">
-                    <span className="chip">Kişisel panel</span>
-                    <button type="button" className="btn btn-secondary" onClick={handleLogout}>
-                        Çıkış yap
-                    </button>
                 </div>
             </header>
 
-            <main className="athlete-content surface" style={{ padding: 24, minHeight: 'calc(100vh - 120px)' }}>
-                <Outlet />
+            <main className="mx-auto w-full max-w-[1600px] px-8 py-8">
+                <Outlet context={{ onLogout: handleLogout }} />
             </main>
         </div>
     );
